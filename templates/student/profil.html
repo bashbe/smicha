@@ -1,0 +1,50 @@
+{% extends "student/_layout.html" %}
+{% block title %}פרופיל — סמיכה{% endblock %}
+{% block content %}
+{% set first_name = (profile.full_name or "תלמיד").split(" ")[0] %}
+<div class="stack animate-slide-up">
+  <div class="stack-sm center-text profile-header">
+    <div class="avatar-lg">{{ first_name[0] }}</div>
+    <div>
+      <div class="text-xl bold">{{ first_name }}</div>
+      <div class="text-xs muted">תלמיד סמיכה</div>
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card"><div class="accent">🪙</div><div class="text-2xl bold mt-2">{{ "{:,}".format(profile.total_points or 0) }}</div><div class="text-xs muted">נקודות</div></div>
+    <div class="card"><div class="accent">🔥</div><div class="text-2xl bold mt-2">{{ profile.streak_days or 0 }}</div><div class="text-xs muted">רצף ימים</div></div>
+    <div class="card"><div class="success">🎯</div><div class="text-2xl bold mt-2">{{ accuracy }}%</div><div class="text-xs muted">דיוק</div></div>
+    <div class="card"><div class="primary">📅</div><div class="text-2xl bold mt-2">{{ days_to_exam if days_to_exam is not none else "—" }}</div><div class="text-xs muted">ימים למבחן</div></div>
+  </div>
+
+  <div class="card">
+    <div class="text-sm semibold">פרטי המסלול</div>
+    <dl class="stack-sm text-sm mt-3">
+      <div class="row between profile-row"><dt class="muted">יעד שליטה</dt><dd class="semibold">{{ (profile.target_stability * 100) | round | int }}%{% if not profile.target_stability %}—{% endif %}</dd></div>
+      <div class="row between profile-row"><dt class="muted">תאריך מבחן</dt><dd class="semibold">{{ profile.exam_date or "—" }}</dd></div>
+      <div class="row between"><dt class="muted">סך שאלות שעניתי</dt><dd class="semibold">{{ total }}</dd></div>
+    </dl>
+  </div>
+
+  <a href="{{ url_for('student.settings') }}" class="btn btn-outline btn-block">✏️ ערוך הגדרות</a>
+
+  <details class="danger-zone">
+    <summary class="text-sm muted" style="cursor:pointer;list-style:none;">⚠️ אזור מתקדם</summary>
+    <div class="stack-sm mt-4">
+      <form method="POST" action="{{ url_for('student.advance_revisions') }}">
+        <button type="submit" class="btn btn-block btn-outline">⏩ הקדם את כל החזרות ביום אחד</button>
+      </form>
+      <p class="text-xs muted">יקדים ביום אחד את תאריך החזרה של כל הכרטיסים העתידיים.</p>
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:0.5rem 0;">
+      <p class="text-xs muted">איפוס הפרוגרס ימחק את כל ההיסטוריה, הנקודות והרצף שלך. פעולה זו אינה הפיכה.</p>
+      <form method="POST" action="{{ url_for('student.reset_progress') }}"
+            onsubmit="return confirm('האם אתה בטוח? כל הפרוגרס יימחק לצמיתות.')">
+        <button type="submit" class="btn btn-block btn-danger-outline">🗑️ אפס את כל הפרוגרס</button>
+      </form>
+    </div>
+  </details>
+
+  <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-block btn-danger-outline">🚪 התנתק</a>
+</div>
+{% endblock %}

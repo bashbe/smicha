@@ -1,0 +1,15 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "smiha-flask",
+      "runtimeExecutable": "python3.11",
+      "runtimeArgs": ["app.py"],
+      "port": 5001,
+      "autoPort": false,
+      "env": {
+        "FLASK_PORT": "5001"
+      }
+    }
+  ]
+}

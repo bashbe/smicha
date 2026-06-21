@@ -1,0 +1,39 @@
+{% extends "student/_layout.html" %}
+{% set show_nav = false %}
+{% block title %}חזרה יומית — סמיכה{% endblock %}
+{% block content %}
+{% if not questions %}
+  <div class="stack animate-slide-up page-empty">
+    <div class="emoji-xxl">✅</div>
+    <div>
+      <h2 class="text-xl bold mb-2">כל הכרטיסים עודכנו!</h2>
+      <p class="text-sm muted">אין שאלות לחזרה היום. חזור מחר או המשך ללמוד.</p>
+    </div>
+    {% if next_due_days %}
+    <div class="glass-card card-narrow center-text">
+      <div class="text-xs muted semibold mb-1">החזרה הבאה</div>
+      <div class="text-xl bold accent">
+        {% if next_due_days == 1 %}מחר{% else %}בעוד {{ next_due_days }} ימים{% endif %}
+      </div>
+      <div class="text-xs muted mt-1">{{ next_due_count }} כרטיסים</div>
+    </div>
+    {% endif %}
+    <div class="stack-sm narrow-centered">
+      <a href="{{ url_for('student.home') }}" class="btn btn-primary btn-block">חזרה לבית</a>
+      <a href="{{ url_for('student.parcours') }}" class="btn btn-outline btn-block">להמשיך ללמוד</a>
+    </div>
+  </div>
+{% else %}
+  <div id="player" class="animate-slide-up"
+       data-questions='{{ questions | tojson }}'
+       data-parcours-url="{{ url_for('student.parcours') }}"
+       data-home-url="{{ url_for('student.home') }}"
+       data-answer-url="{{ url_for('api.answer') }}"
+       data-today-stats-url="{{ url_for('student.today_stats') }}"
+       data-subject="חזרה"
+       data-siman="יומית"
+       data-streak="{{ profile.streak_days or 0 }}"
+       data-revision="true"></div>
+  <script src="{{ url_for('static', filename='js/chapitre.js') }}"></script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block body %}
+<div style="min-height:100vh;">
+  <main class="container">
+    {% include "_flash.html" %}
+    {% block content %}{% endblock %}
+  </main>
+  {% if show_nav | default(true) %}
+  <nav class="bottom-nav">
+    <div class="inner">
+      <a href="{{ url_for('student.home') }}" class="{{ 'active' if request.endpoint == 'student.home' }}">
+        <span>🏠</span><span>בית</span>
+      </a>
+      <a href="{{ url_for('student.parcours') }}" class="{{ 'active' if request.endpoint == 'student.parcours' }}">
+        <span>📑</span><span>מסלול</span>
+      </a>
+      <a href="{{ url_for('student.revision') }}" class="{{ 'active' if request.endpoint == 'student.revision' }}">
+        <span>🔄</span><span>חזרה</span>
+      </a>
+      <a href="{{ url_for('student.profil') }}" class="{{ 'active' if request.endpoint == 'student.profil' }}">
+        <span>👤</span><span>פרופיל</span>
+      </a>
+    </div>
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,204 @@
+{% extends "admin/_layout.html" %}
+{% block title %}אימות שאלות — ניהול{% endblock %}
+{% block content %}
+<div class="row between" style="margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem;align-items:flex-end;">
+  <div>
+    <h1 class="text-2xl bold">אימות שאלות</h1>
+    <p class="text-sm muted">ערוך והשלם שדות חסרים לפני אישור</p>
+  </div>
+  <form method="get" class="row gap-2" style="width:auto;align-items:center;">
+    <label style="margin:0;">סטטוס</label>
+    <select name="status" onchange="this.form.submit()" style="width:10rem;">
+      {% for v, l in [('pending','ממתינות'),('approved','מאושרות'),('rejected','נדחו')] %}
+      <option value="{{ v }}" {{ 'selected' if status == v }}>{{ l }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="grid" style="grid-template-columns:320px 1fr;align-items:start;">
+  <aside class="card" style="padding:0;max-height:75vh;overflow-y:auto;">
+    {% if not questions %}
+      <p class="center-text text-sm muted" style="padding:1.5rem;">אין שאלות בתור</p>
+    {% else %}
+      {% for q in questions %}
+      <a href="{{ url_for('admin.validate', status=status, q=q.id) }}"
+         style="display:block;border-bottom:1px solid var(--border);padding:0.75rem;text-align:right;{{ 'background:rgba(99,102,241,0.1);' if selected and selected.id == q.id }}">
+        <div class="semibold" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">{{ q.text or "— ללא טקסט —" }}</div>
+        <div class="row gap-1" style="margin-top:0.25rem;flex-wrap:wrap;">
+          <span class="badge">קושי {{ q.difficulty }}</span>
+          <span class="badge">{{ 'טור' if q.section == 'tur_shulchan_aruch' else 'שו"ע' }}</span>
+          {% if q.subject %}<span class="badge">{{ q.subject }}</span>{% endif %}
+          {% if q.siman is not none %}<span class="badge">סי' {{ q.siman }}</span>{% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    {% endif %}
+  </aside>
+
+  <section class="card">
+    {% if not selected %}
+      <p class="center-text muted">בחר שאלה</p>
+    {% else %}
+      {% set payload = selected.payload or {} %}
+      {% set qtype = payload.type or selected.question_type or 'multiple_choice' %}
+      {% set opts = {} %}
+      {% for o in payload.options or [] %}{% set _ = opts.update({o.number: o}) %}{% endfor %}
+      {% set correct_num = namespace(v=0) %}
+      {% for o in payload.options or [] %}{% if o.is_correct %}{% set correct_num.v = o.number %}{% endif %}{% endfor %}
+
+      <form method="post" id="vform" class="stack-sm">
+        <input type="hidden" name="action" value="approve" />
+        <input type="hidden" name="question_id" value="{{ selected.id }}" />
+
+        <div class="row gap-2 text-xs">
+          <span class="pill pill-primary">{{ type_label.get(qtype, '—') }}</span>
+          {% if selected.source_ref %}<span class="muted">מזהה מקור: {{ selected.source_ref }}</span>{% endif %}
+        </div>
+
+        <div class="card" style="background:rgba(30,41,59,0.4);">
+          <div class="grid grid-3">
+            <div>
+              <label>סוג שאלה</label>
+              <select name="question_type" id="qtype">
+                {% for t in question_types %}<option value="{{ t }}" {{ 'selected' if t == qtype }}>{{ type_label[t] }}</option>{% endfor %}
+              </select>
+            </div>
+            <div>
+              <label>רמת קושי</label>
+              <select name="difficulty">
+                {% for n in [1,2,3] %}<option value="{{ n }}" {{ 'selected' if (payload.difficulty_level or selected.difficulty or 2) == n }}>{{ n }}</option>{% endfor %}
+              </select>
+            </div>
+            <div>
+              <label>חלק הבחינה</label>
+              <select name="section">
+                <option value="shulchan_aruch" {{ 'selected' if (payload.exam_section or selected.section) == 'shulchan_aruch' }}>שו"ע</option>
+                <option value="tur_shulchan_aruch" {{ 'selected' if (payload.exam_section or selected.section) == 'tur_shulchan_aruch' }}>טור + שו"ע</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- multiple_choice / practical_scenario -->
+          <div class="type-block stack-sm" data-type="multiple_choice practical_scenario" style="margin-top:1rem;">
+            <div class="scenario-only" style="display:none;">
+              <label>תיאור המקרה</label>
+              <textarea name="scenario_text" rows="3">{{ payload.scenario_text or '' }}</textarea>
+            </div>
+            <div>
+              <label>טקסט השאלה</label>
+              <textarea name="question_text" rows="3">{{ payload.question_text or '' }}</textarea>
+            </div>
+            <label>תשובות — סמן אחת בלבד כנכונה</label>
+            {% for n in [1,2,3,4] %}
+            <div class="row gap-2" style="align-items:center;">
+              <input value="{{ n }}" disabled style="width:3rem;text-align:center;" />
+              <input name="option_text_{{ n }}" class="flex-1" placeholder="תשובה {{ n }}" value="{{ opts.get(n, {}).get('text', '') }}" />
+              <label style="margin:0;display:flex;align-items:center;gap:0.25rem;width:auto;">
+                <input type="radio" name="correct_option" value="{{ n }}" style="width:auto;" {{ 'checked' if correct_num.v == n }} /> נכונה
+              </label>
+            </div>
+            {% endfor %}
+          </div>
+
+          <!-- multiple_opinions_dropdown -->
+          <div class="type-block stack-sm" data-type="multiple_opinions_dropdown" style="margin-top:1rem;display:none;">
+            <div>
+              <label>טקסט השאלה</label>
+              <textarea name="question_text_op" rows="3">{{ payload.question_text or '' }}</textarea>
+            </div>
+            <div class="row between"><label>אפשרויות בדרופדאון</label><button type="button" class="btn btn-outline" onclick="addChoice()">+ הוסף</button></div>
+            <div id="choices">
+              {% for c in payload.dropdown_choices or ['',''] %}
+              <div class="row gap-2" style="margin-bottom:0.5rem;"><input name="dropdown_choice" class="flex-1" value="{{ c }}" placeholder="לדוגמה: מותר" /><button type="button" class="btn btn-outline" onclick="this.parentNode.remove()">🗑</button></div>
+              {% endfor %}
+            </div>
+            <div class="row between"><label>פוסקים ותשובה נכונה</label><button type="button" class="btn btn-outline" onclick="addDecisor()">+ הוסף</button></div>
+            <div id="decisors">
+              {% for d in payload.decisors or [] %}
+              <div class="row gap-2" style="margin-bottom:0.5rem;">
+                <input name="decisor_id" value="{{ d.id }}" placeholder="id" style="width:6rem;" />
+                <input name="decisor_name" class="flex-1" value="{{ d.name }}" placeholder="שם הפוסק" />
+                <input name="decisor_correct" class="flex-1" value="{{ d.correct_choice }}" placeholder="עמדה נכונה" />
+                <button type="button" class="btn btn-outline" onclick="this.parentNode.remove()">🗑</button>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- true_false -->
+          <div class="type-block stack-sm" data-type="true_false" style="margin-top:1rem;display:none;">
+            <div>
+              <label>טקסט ההצהרה</label>
+              <textarea name="statement_text" rows="3">{{ payload.statement_text or '' }}</textarea>
+            </div>
+            <div>
+              <label>התשובה הנכונה</label>
+              <select name="correct_answer">
+                <option value="true" {{ 'selected' if payload.correct_answer != false }}>נכון</option>
+                <option value="false" {{ 'selected' if payload.correct_answer == false }}>לא נכון</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top:1rem;">
+            <label>הסבר</label>
+            <textarea name="explanation" rows="3">{{ payload.explanation or selected.explanation or '' }}</textarea>
+          </div>
+        </div>
+
+        <div class="grid grid-3">
+          <div><label>נושא <span class="destructive">*</span></label><input name="subject" value="{{ selected.subject or '' }}" placeholder="לדוגמה: בשר בחלב" /></div>
+          <div><label>סימן <span class="destructive">*</span></label><input type="number" name="siman" value="{{ selected.siman if selected.siman is not none else '' }}" /></div>
+          <div><label>סעיף <span class="destructive">*</span></label><input type="number" name="seif" value="{{ selected.seif if selected.seif is not none else '' }}" /></div>
+        </div>
+        <div><label>רמז</label><textarea name="hint" rows="2">{{ selected.hint or '' }}</textarea></div>
+        <div><label>הערת מאמת (חובה לדחייה)</label><textarea name="note" rows="2" placeholder="לא חובה לאישור"></textarea></div>
+
+        <div class="row gap-2" style="padding-top:0.5rem;">
+          <button type="submit" class="btn btn-success">✓ שמור ואשר</button>
+          <button type="submit" class="btn btn-destructive" formnovalidate onclick="document.querySelector('#vform [name=action]').value='reject'">✗ דחה</button>
+        </div>
+      </form>
+
+      <script>
+        // For opinions, the question text field name differs; sync it before submit.
+        const form = document.getElementById("vform");
+        const qtypeSel = document.getElementById("qtype");
+        function refreshType() {
+          const t = qtypeSel.value;
+          document.querySelectorAll(".type-block").forEach((b) => {
+            b.style.display = b.dataset.type.split(" ").includes(t) ? "" : "none";
+          });
+          const sc = document.querySelector(".scenario-only");
+          if (sc) sc.style.display = t === "practical_scenario" ? "" : "none";
+        }
+        qtypeSel.addEventListener("change", refreshType);
+        refreshType();
+
+        form.addEventListener("submit", () => {
+          // map opinions question text into the shared question_text field
+          if (qtypeSel.value === "multiple_opinions_dropdown") {
+            const op = form.querySelector("[name=question_text_op]");
+            let qt = form.querySelector("[name=question_text]");
+            if (qt && op) qt.value = op.value;
+          }
+        });
+
+        function addChoice() {
+          const div = document.createElement("div");
+          div.className = "row gap-2"; div.style.marginBottom = "0.5rem";
+          div.innerHTML = '<input name="dropdown_choice" class="flex-1" placeholder="לדוגמה: מותר" /><button type="button" class="btn btn-outline" onclick="this.parentNode.remove()">🗑</button>';
+          document.getElementById("choices").appendChild(div);
+        }
+        function addDecisor() {
+          const div = document.createElement("div");
+          div.className = "row gap-2"; div.style.marginBottom = "0.5rem";
+          div.innerHTML = '<input name="decisor_id" value="dec_' + (document.querySelectorAll("[name=decisor_id]").length + 1) + '" style="width:6rem;" /><input name="decisor_name" class="flex-1" placeholder="שם הפוסק" /><input name="decisor_correct" class="flex-1" placeholder="עמדה נכונה" /><button type="button" class="btn btn-outline" onclick="this.parentNode.remove()">🗑</button>';
+          document.getElementById("decisors").appendChild(div);
+        }
+      </script>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}כניסה / הרשמה — סמיכה{% endblock %}
+{% block body %}
+<div class="row center" style="min-height:100vh;background:linear-gradient(to bottom,var(--background),var(--secondary));padding:1rem;">
+  <div class="card" style="width:100%;max-width:28rem;padding:2rem;border-radius:1rem;box-shadow:0 20px 50px rgba(0,0,0,0.4);">
+    <a href="{{ url_for('auth.index') }}" class="muted text-sm">← דף הבית</a>
+    <h1 class="text-2xl bold" style="margin-top:0.75rem;" id="title">כניסה לאפליקציה</h1>
+    <p class="muted text-sm" style="margin-top:0.25rem;" id="subtitle">ברוך הבא חזרה</p>
+
+    {% include "_flash.html" %}
+
+    <form method="post" class="stack-sm" style="margin-top:1.5rem;">
+      <input type="hidden" name="mode" id="mode" value="login" />
+      <div id="name-field" class="hidden">
+        <label for="name">שם מלא</label>
+        <input id="name" name="name" dir="rtl" />
+      </div>
+      <div>
+        <label for="email">דוא"ל</label>
+        <input id="email" name="email" type="email" required dir="ltr" />
+      </div>
+      <div>
+        <label for="password">סיסמה</label>
+        <input id="password" name="password" type="password" required dir="ltr" minlength="6" />
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="submit-btn">כניסה</button>
+    </form>
+
+    <button type="button" class="btn btn-block" style="margin-top:1rem;background:none;color:var(--primary);" id="toggle">
+      אין לך חשבון? הרשמה
+    </button>
+  </div>
+</div>
+<script>
+  let mode = "login";
+  const t = document.getElementById("toggle");
+  t.addEventListener("click", () => {
+    mode = mode === "login" ? "signup" : "login";
+    document.getElementById("mode").value = mode;
+    const signup = mode === "signup";
+    document.getElementById("name-field").classList.toggle("hidden", !signup);
+    document.getElementById("title").textContent = signup ? "הרשמה חדשה" : "כניסה לאפליקציה";
+    document.getElementById("subtitle").textContent = signup ? "צור חשבון להתחיל ללמוד" : "ברוך הבא חזרה";
+    document.getElementById("submit-btn").textContent = signup ? "הרשמה" : "כניסה";
+    t.textContent = signup ? "כבר יש לי חשבון, כניסה" : "אין לך חשבון? הרשמה";
+  });
+</script>
+{% endblock %}

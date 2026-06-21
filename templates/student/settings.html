@@ -1,0 +1,85 @@
+{% extends "student/_layout.html" %}
+{% block title %}הגדרות — סמיכה{% endblock %}
+{% block content %}
+<form method="post" class="stack animate-slide-up">
+  <div>
+    <h1 class="text-2xl bold">הגדרות מסלול</h1>
+    <p class="text-sm muted">שינויים לא ישפיעו על הפרוגרס הקיים</p>
+  </div>
+
+  <!-- Exam date -->
+  <div class="card stack-sm">
+    <div class="bold">📅 תאריך המבחן</div>
+    <input type="hidden" name="exam_date" id="settings_exam_date"
+           value="{{ profile.exam_date.isoformat() if profile.exam_date else '' }}">
+    <div id="settings-cal-root"></div>
+  </div>
+
+  <!-- Target stability -->
+  <div class="card stack-sm">
+    <div class="bold">🎯 רמת השליטה הרצויה</div>
+    {% set cur_stab = (profile.target_stability * 100) | round | int %}
+    {% for v, t, d, pct in [(0.80,'רמה בסיסית','אני רוצה להכיר את החומר','80%'),
+                             (0.90,'רמה טובה','אני רוצה לשלוט היטב','90%'),
+                             (0.99,'רמה מושלמת','אני רוצה לדעת הכל על בוריו','99%')] %}
+    {% set is_selected = (cur_stab == (v * 100) | round | int) %}
+    <label class="card opt-card opt-stability" style="{{ 'border-color:var(--primary);' if is_selected }}">
+      <input type="radio" name="target_stability" value="{{ v }}" class="hidden" {{ 'checked' if is_selected }} />
+      <div class="text-3xl extrabold opt-pct {{ '' if is_selected else 'muted' }}">{{ pct }}</div>
+      <div class="flex-1"><div class="bold">{{ t }}</div><div class="text-xs muted">{{ d }}</div></div>
+    </label>
+    {% endfor %}
+  </div>
+
+  <!-- Section selection -->
+  <div class="card stack-sm">
+    <div class="bold">📚 מקורות</div>
+    {% set cur_sections = profile.section or [] %}
+    <!-- שולחן ערוך: always locked -->
+    <label class="card opt-card" style="opacity:0.7;cursor:default;border-color:var(--primary);">
+      <input type="checkbox" class="input-checkbox-auto" checked disabled />
+      <div class="flex-1">
+        <div class="bold">שולחן ערוך</div>
+        <div class="text-xs muted">תמיד כלול</div>
+      </div>
+      <span class="text-xs muted">🔒</span>
+    </label>
+    <input type="hidden" name="section" value="shulchan_aruch">
+    {% for v, t, d in [('tur','טור','לימוד מעמיק'),
+                        ('psikei_admur','פסקי אדה"ז','שיטת אדמו"ר הזקן'),
+                        ('ptei_teshuva','פתחי תשובה ואחרונים','מרחיב הדעת')] %}
+    {% set checked = v in cur_sections %}
+    <label class="card opt-card opt-section" style="{{ 'border-color:var(--primary);' if checked }}">
+      <input type="checkbox" name="section" value="{{ v }}" class="input-checkbox-auto" {{ 'checked' if checked }} />
+      <div class="flex-1"><div class="bold">{{ t }}</div><div class="text-xs muted">{{ d }}</div></div>
+    </label>
+    {% endfor %}
+  </div>
+
+  <button type="submit" class="btn btn-primary btn-block btn-lg">שמור שינויים</button>
+  <a href="{{ url_for('student.profil') }}" class="btn btn-outline btn-block">ביטול</a>
+</form>
+
+<script src="{{ url_for('static', filename='js/hebrew-calendar.js') }}"></script>
+<script>
+  HebrewCalendar.init(
+    "settings-cal-root",
+    "settings_exam_date",
+    document.getElementById("settings_exam_date").value || null
+  );
+
+  document.querySelectorAll(".opt-stability input").forEach((r) => r.addEventListener("change", () => {
+    document.querySelectorAll(".opt-stability").forEach((l) => {
+      l.style.borderColor = "var(--border)";
+      l.querySelector(".opt-pct").classList.add("muted");
+    });
+    const lab = r.closest(".opt-stability");
+    lab.style.borderColor = "var(--primary)";
+    lab.querySelector(".opt-pct").classList.remove("muted");
+  }));
+
+  document.querySelectorAll(".opt-section input").forEach((c) => c.addEventListener("change", () => {
+    c.closest(".opt-section").style.borderColor = c.checked ? "var(--primary)" : "var(--border)";
+  }));
+</script>
+{% endblock %}

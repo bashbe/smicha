@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}סמיכה — לימוד והכנה למבחן{% endblock %}
+{% block body %}
+<div style="min-height:100vh;background:linear-gradient(to bottom,var(--background),var(--secondary),var(--background));">
+  <div class="container-wide" style="max-width:56rem;padding-top:4rem;padding-bottom:4rem;">
+    <div class="center-text">
+      <div class="pill" style="border:1px solid var(--border);background:var(--card);color:var(--muted-foreground);">
+        ✨ הכנה חכמה למבחן הסמיכה
+      </div>
+      <h1 class="text-5xl bold" style="margin-top:1.5rem;line-height:1.1;">
+        לימוד הסמיכה,<br /><span class="primary">בקצב שלך</span>
+      </h1>
+      <p class="muted text-lg" style="max-width:36rem;margin:1.25rem auto 0;">
+        תרגול ממוקד, חזרה מבוססת זיכרון לטווח ארוך ומעקב התקדמות —
+        הכל כדי שתגיע למבחן בביטחון מלא.
+      </p>
+      <div class="row center gap-2" style="margin-top:2.5rem;flex-wrap:wrap;">
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">📖 התחל ללמוד</a>
+        <a href="{{ url_for('admin.login') }}" class="btn btn-outline btn-lg">🛡️ כניסת ניהול</a>
+      </div>
+    </div>
+
+    <div class="grid grid-3" style="margin-top:5rem;">
+      {% for f in [
+        ('תרגול חכם','שאלות מותאמות לרמת הידע ולחלקים שאתה לומד.'),
+        ('חזרה ממוקדת','אלגוריתם זיכרון מחזיר אותך בדיוק לחומר שצריך לחזק.'),
+        ('מוטיבציה יומית','נקודות, רצפים וקומבו — לימוד שמתגמל אותך.')
+      ] %}
+      <div class="card">
+        <h3 class="text-lg semibold">{{ f[0] }}</h3>
+        <p class="muted text-sm" style="margin-top:0.5rem">{{ f[1] }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

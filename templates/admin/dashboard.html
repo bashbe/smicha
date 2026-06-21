@@ -1,0 +1,43 @@
+{% extends "admin/_layout.html" %}
+{% block title %}לוח בקרה — ניהול{% endblock %}
+{% block content %}
+<div class="stack">
+  <div>
+    <h1 class="text-2xl bold">לוח בקרה</h1>
+    <p class="text-sm muted">סקירת מצב מאגר השאלות</p>
+  </div>
+
+  <div class="grid grid-3">
+    {% set cards = [('ממתינות לאימות', counts.pending, '⏳', 'var(--warning)'),('מאושרות', counts.approved, '✅', 'var(--success)'),('נדחו', counts.rejected, '❌', 'var(--destructive)')] %}
+    {% for label, value, icon, color in cards %}
+    <div class="card">
+      <div style="height:2.5rem;width:2.5rem;border-radius:0.5rem;display:flex;align-items:center;justify-content:center;background:{{ color }}26;">{{ icon }}</div>
+      <div class="text-3xl bold" style="margin-top:0.75rem;">{{ value }}</div>
+      <div class="text-sm muted">{{ label }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h2 class="text-lg semibold" style="margin-bottom:0.75rem;">📄 שאלות לפי נושא</h2>
+      {% if not by_subject %}
+        <p class="text-sm muted">עוד אין שאלות במערכת.</p>
+      {% else %}
+        <ul style="list-style:none;padding:0;margin:0;" class="stack-sm">
+          {% for name, count in by_subject %}
+          <li class="row between text-sm"><span>{{ name }}</span><span class="muted">{{ count }}</span></li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+    <div class="card">
+      <h2 class="text-lg semibold" style="margin-bottom:0.75rem;">פעולות מהירות</h2>
+      <div class="stack-sm">
+        <a href="{{ url_for('admin.import_questions') }}" class="btn btn-primary">⬆️ ייבוא שאלות חדשות</a>
+        <a href="{{ url_for('admin.validate') }}" class="btn btn-outline">✅ אימות שאלות ממתינות ({{ counts.pending }})</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

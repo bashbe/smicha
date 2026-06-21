@@ -1,0 +1,50 @@
+{% extends "admin/_layout.html" %}
+{% block title %}משתמשים — ניהול{% endblock %}
+{% block content %}
+<div class="stack">
+  <div>
+    <h1 class="text-2xl bold">משתמשים</h1>
+    <p class="text-sm muted">{{ profiles|length }} תלמידים רשומים</p>
+  </div>
+
+  {% if not profiles %}
+  <div class="card"><p class="text-sm muted">עוד אין תלמידים רשומים.</p></div>
+  {% else %}
+  <div class="card" style="padding:0;overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;font-size:0.875rem;">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border);background:rgba(0,0,0,0.15);">
+          <th style="padding:0.75rem 1rem;text-align:right;font-weight:600;">שם</th>
+          <th style="padding:0.75rem 1rem;text-align:right;font-weight:600;">דוא"ל</th>
+          <th style="padding:0.75rem 1rem;text-align:right;font-weight:600;">תאריך בחינה</th>
+          <th style="padding:0.75rem 1rem;text-align:right;font-weight:600;">נקודות</th>
+          <th style="padding:0.75rem 1rem;text-align:right;font-weight:600;">רצף</th>
+          <th style="padding:0.75rem 1rem;text-align:right;font-weight:600;">פתקים</th>
+          <th style="padding:0.75rem 1rem;text-align:right;font-weight:600;">הצטרף</th>
+          <th style="padding:0.75rem 1rem;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for profile, user in profiles %}
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:0.75rem 1rem;">
+            {{ profile.full_name or user.full_name or '—' }}
+            {% if not profile.onboarded %}<span class="text-xs muted" style="margin-right:0.4rem;">(לא הושלם)</span>{% endif %}
+          </td>
+          <td style="padding:0.75rem 1rem;" class="muted">{{ user.email }}</td>
+          <td style="padding:0.75rem 1rem;">{{ profile.exam_date.strftime('%d/%m/%Y') if profile.exam_date else '—' }}</td>
+          <td style="padding:0.75rem 1rem;">{{ profile.total_points }}</td>
+          <td style="padding:0.75rem 1rem;">{{ profile.streak_days }} 🔥</td>
+          <td style="padding:0.75rem 1rem;">{{ card_counts.get(user.id, 0) }}</td>
+          <td style="padding:0.75rem 1rem;" class="muted text-xs">{{ profile.created_at.strftime('%d/%m/%Y') }}</td>
+          <td style="padding:0.75rem 1rem;">
+            <a href="{{ url_for('admin.user_detail', user_id=user.id) }}" class="btn btn-outline" style="font-size:0.75rem;padding:0.25rem 0.75rem;">פרופיל ▸</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

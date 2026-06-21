@@ -1,0 +1,48 @@
+{% extends "admin/_layout.html" %}
+{% block title %}ייבוא שאלות — ניהול{% endblock %}
+{% block content %}
+<div class="stack">
+  <div>
+    <h1 class="text-2xl bold">ייבוא שאלות</h1>
+    <p class="text-sm muted">העלאת JSON לפי 4 הפורמטים. נושא/סימן/סעיף יושלמו ע"י מאמת לפני פרסום.</p>
+  </div>
+
+  <form method="post" enctype="multipart/form-data">
+    <input type="hidden" name="action" value="preview" />
+    <label class="card center-text" style="display:flex;flex-direction:column;align-items:center;border:2px dashed var(--border);padding:3rem;cursor:pointer;">
+      <div style="font-size:2.5rem;">⬆️</div>
+      <p class="semibold" style="margin-top:0.75rem;">בחר קובץ JSON</p>
+      <p class="text-xs muted" style="margin-top:0.25rem;">multiple_choice · multiple_opinions_dropdown · practical_scenario · true_false</p>
+      <input type="file" name="file" accept="application/json,.json" style="margin-top:1rem;width:auto;" onchange="this.form.submit()" />
+    </label>
+  </form>
+
+  {% if rows %}
+  <div class="card row gap-4" style="flex-wrap:wrap;">
+    <div class="success">✓ תקינות: <strong>{{ valid_count }}</strong></div>
+    <div class="destructive">⚠ שגויות: <strong>{{ invalid_count }}</strong></div>
+    <form method="post" style="margin-inline-start:auto;width:auto;">
+      <input type="hidden" name="action" value="import" />
+      <input type="hidden" name="raw_json" value="{{ raw_json }}" />
+      <button type="submit" class="btn btn-primary" {{ 'disabled' if valid_count == 0 }}>ייבא הכל ({{ valid_count }})</button>
+    </form>
+  </div>
+
+  <div class="card" style="padding:0;overflow-x:auto;">
+    <table>
+      <thead><tr><th>מצב</th><th>סוג</th><th>טקסט</th></tr></thead>
+      <tbody>
+        {% for r in rows[:100] %}
+        <tr>
+          <td>{% if r.valid %}<span class="success">✓</span>{% else %}<span class="destructive" title="{{ r.issue }}">✗ {{ r.issue }}</span>{% endif %}</td>
+          <td class="text-xs muted">{{ type_label.get(r.raw.type, r.raw.type) if r.raw.type else "—" }}</td>
+          <td class="truncate">{{ r.raw.question_text or r.raw.scenario_text or r.raw.statement_text or "—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if rows | length > 100 %}<p class="center-text text-xs muted" style="padding:0.5rem;">מציג 100 ראשונות מתוך {{ rows | length }}</p>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

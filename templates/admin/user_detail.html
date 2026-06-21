@@ -1,0 +1,141 @@
+{% extends "admin/_layout.html" %}
+{% block title %}פרופיל תלמיד — ניהול{% endblock %}
+{% block content %}
+<div class="stack">
+
+  {# Header #}
+  <div class="row between">
+    <div>
+      <a href="{{ url_for('admin.users') }}" class="text-sm muted" style="text-decoration:none;">← חזרה לרשימה</a>
+      <h1 class="text-2xl bold" style="margin-top:0.25rem;">
+        {{ profile.full_name or user.full_name or user.email }}
+      </h1>
+      <p class="text-sm muted">{{ user.email }}</p>
+    </div>
+    <div class="text-xs muted" style="text-align:left;">
+      נרשם {{ profile.created_at.strftime('%d/%m/%Y') if profile else user.created_at.strftime('%d/%m/%Y') }}
+    </div>
+  </div>
+
+  {# Stats row #}
+  <div class="grid grid-3">
+    {% set stat_cards = [
+      ('נקודות', profile.total_points if profile else 0, '🏆', 'var(--warning)'),
+      ('רצף', (profile.streak_days|string + ' ימים') if profile else '—', '🔥', 'var(--primary)'),
+      ('פתקים פעילים', cards|length, '🗂️', 'var(--success)'),
+    ] %}
+    {% for label, value, icon, color in stat_cards %}
+    <div class="card">
+      <div style="height:2.5rem;width:2.5rem;border-radius:0.5rem;display:flex;align-items:center;justify-content:center;background:{{ color }}26;">{{ icon }}</div>
+      <div class="text-3xl bold" style="margin-top:0.75rem;">{{ value }}</div>
+      <div class="text-sm muted">{{ label }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="grid grid-2">
+
+    {# Profile info #}
+    <div class="card stack-sm">
+      <h2 class="text-lg semibold">פרופיל</h2>
+      {% if not profile %}
+      <p class="text-sm muted">אין פרופיל תלמיד עדיין.</p>
+      {% else %}
+      <div class="stack-sm text-sm">
+        <div class="row between"><span class="muted">מטרת הכנה</span><span>{{ profile.preparation_goal or '—' }}</span></div>
+        <div class="row between"><span class="muted">תאריך בחינה</span><span>{{ profile.exam_date.strftime('%d/%m/%Y') if profile.exam_date else '—' }}</span></div>
+        <div class="row between"><span class="muted">יציבות יעד (FSRS)</span><span>{{ '%.0f%%'|format(profile.target_stability * 100) }}</span></div>
+        <div class="row between"><span class="muted">מקצועות</span><span>{{ (profile.section or [])|join(', ') or '—' }}</span></div>
+        <div class="row between"><span class="muted">הצטרף</span><span>{{ profile.created_at.strftime('%d/%m/%Y') }}</span></div>
+        <div class="row between"><span class="muted">אונבורדינג</span>
+          <span style="color:{{ 'var(--success)' if profile.onboarded else 'var(--muted-foreground)' }}">{{ '✔ הושלם' if profile.onboarded else '✗ לא הושלם' }}</span>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    {# Answer stats #}
+    <div class="card stack-sm">
+      <h2 class="text-lg semibold">ביצועים</h2>
+      <div class="stack-sm text-sm">
+        <div class="row between"><span class="muted">סה"כ תשובות</span><span>{{ total_answers }}</span></div>
+        <div class="row between"><span class="muted">נכונות</span><span>{{ correct_answers }}</span></div>
+        <div class="row between"><span class="muted">דיוק</span>
+          <span>{% if total_answers %}{{ '%.1f%%'|format(correct_answers / total_answers * 100) }}{% else %}—{% endif %}</span>
+        </div>
+        <div class="row between"><span class="muted">יציבות ממוצעת (FSRS)</span>
+          <span>{{ '%.1f'|format(avg_stability) }} ימים</span>
+        </div>
+        <div class="row between"><span class="muted">פתקים לחזרה היום</span>
+          <span style="color:{{ 'var(--warning)' if due_today > 0 else 'inherit' }}">{{ due_today }}</span>
+        </div>
+        <div class="row between"><span class="muted">פעילות אחרונה</span>
+          <span>{{ profile.last_activity_date.strftime('%d/%m/%Y') if profile and profile.last_activity_date else '—' }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  {# FSRS Cards table #}
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="padding:1rem 1rem 0.75rem;border-bottom:1px solid var(--border);">
+      <h2 class="text-lg semibold">פתקי חזרה ({{ cards|length }})</h2>
+      <p class="text-xs muted">מסודר לפי יציבות — ככל שהיציבות גבוהה יותר, השאלה נזכרת טוב יותר</p>
+    </div>
+    {% if not cards %}
+    <p class="text-sm muted" style="padding:1rem;">עוד אין פתקי FSRS לתלמיד זה.</p>
+    {% else %}
+    <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border);background:rgba(0,0,0,0.15);">
+          <th style="padding:0.6rem 1rem;text-align:right;font-weight:600;">שאלה</th>
+          <th style="padding:0.6rem 1rem;text-align:right;font-weight:600;">נושא / סימן</th>
+          <th style="padding:0.6rem 1rem;text-align:right;font-weight:600;">יציבות</th>
+          <th style="padding:0.6rem 1rem;text-align:right;font-weight:600;">מצב</th>
+          <th style="padding:0.6rem 1rem;text-align:right;font-weight:600;">חזרה הבאה</th>
+          <th style="padding:0.6rem 1rem;text-align:right;font-weight:600;">חזרות</th>
+          <th style="padding:0.6rem 1rem;text-align:right;font-weight:600;">כשלים</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for card, question in cards %}
+        {% set overdue = card.due_date <= today %}
+        <tr style="border-bottom:1px solid var(--border);{{ 'opacity:0.65;' if overdue else '' }}">
+          <td style="padding:0.6rem 1rem;max-width:22rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            {{ question.text[:80] + '…' if question.text and question.text|length > 80 else (question.text or '—') }}
+          </td>
+          <td style="padding:0.6rem 1rem;" class="muted">
+            {{ question.subject or '—' }}{% if question.siman %} / {{ question.siman }}{% endif %}
+          </td>
+          <td style="padding:0.6rem 1rem;">
+            {% set s = card.stability %}
+            {% if s >= 30 %}
+              <span style="color:var(--success);">{{ '%.1f'|format(s) }}d ●</span>
+            {% elif s >= 7 %}
+              <span style="color:var(--warning);">{{ '%.1f'|format(s) }}d ●</span>
+            {% else %}
+              <span style="color:var(--destructive);">{{ '%.1f'|format(s) }}d ●</span>
+            {% endif %}
+          </td>
+          <td style="padding:0.6rem 1rem;">
+            {% set state_labels = {'new':'חדש','learning':'לומד','review':'חזרה','relearning':'לומד מחדש'} %}
+            <span class="text-xs" style="padding:0.15rem 0.5rem;border-radius:9999px;background:rgba(255,255,255,0.08);">
+              {{ state_labels.get(card.state, card.state) }}
+            </span>
+          </td>
+          <td style="padding:0.6rem 1rem;" class="{{ 'muted' if not overdue else '' }}" style="{{ 'color:var(--warning);' if overdue else '' }}">
+            {{ card.due_date.strftime('%d/%m/%Y') }}
+            {% if overdue %}<span style="color:var(--warning);"> ⚠</span>{% endif %}
+          </td>
+          <td style="padding:0.6rem 1rem;" class="muted">{{ card.reps }}</td>
+          <td style="padding:0.6rem 1rem;" class="{{ 'muted' if card.lapses == 0 else '' }}" style="{{ 'color:var(--destructive);' if card.lapses > 0 else '' }}">{{ card.lapses }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

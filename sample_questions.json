@@ -1,0 +1,39 @@
+[
+  {
+    "id": "q1",
+    "type": "multiple_choice",
+    "difficulty_level": 1,
+    "exam_section": "shulchan_aruch",
+    "question_text": "כמה זמן יש להמתין בין אכילת בשר לחלב למנהג בני אשכנז?",
+    "options": [
+      { "number": 1, "text": "שעה אחת", "is_correct": false },
+      { "number": 2, "text": "שלוש שעות", "is_correct": false },
+      { "number": 3, "text": "שש שעות", "is_correct": true },
+      { "number": 4, "text": "אין צורך להמתין", "is_correct": false }
+    ],
+    "explanation": "מנהג בני אשכנז להמתין שש שעות בין בשר לחלב.",
+    "tags": ["בשר בחלב"]
+  },
+  {
+    "id": "q2",
+    "type": "true_false",
+    "difficulty_level": 2,
+    "exam_section": "shulchan_aruch",
+    "statement_text": "מותר לאכול גבינה קשה מיד לאחר אכילת בשר.",
+    "correct_answer": false,
+    "explanation": "אסור לאכול חלב לאחר בשר עד שיעבור זמן ההמתנה."
+  },
+  {
+    "id": "q3",
+    "type": "multiple_opinions_dropdown",
+    "difficulty_level": 3,
+    "exam_section": "shulchan_aruch",
+    "question_text": "מהי עמדת כל פוסק לגבי המתנה לאחר אכילת תבשיל שיש בו טעם בשר?",
+    "dropdown_choices": ["צריך להמתין", "אין צריך להמתין"],
+    "decisors": [
+      { "id": "d1", "name": "השולחן ערוך", "correct_choice": "אין צריך להמתין" },
+      { "id": "d2", "name": "הרמ\"א", "correct_choice": "צריך להמתין" }
+    ],
+    "explanation": "נחלקו הפוסקים בדין המתנה לאחר תבשיל בשרי."
+  }
+]

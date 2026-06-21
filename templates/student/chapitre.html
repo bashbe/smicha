@@ -1,0 +1,22 @@
+{% extends "student/_layout.html" %}
+{% set show_nav = false %}
+{% block title %}{{ subject }} · סימן {{ siman }} — סמיכה{% endblock %}
+{% block content %}
+{% if not questions %}
+  <div class="glass-card center-text" style="padding:2rem;">
+    <p class="text-lg semibold">אין עדיין שאלות בסימן הזה</p>
+    <a href="{{ url_for('student.parcours') }}" class="primary" style="margin-top:1rem;display:inline-block;">חזרה למסלול</a>
+  </div>
+{% else %}
+  <div id="player" class="animate-slide-up"
+       data-questions='{{ questions | tojson }}'
+       data-parcours-url="{{ url_for('student.parcours') }}"
+       data-home-url="{{ url_for('student.home') }}"
+       data-answer-url="{{ url_for('api.answer') }}"
+       data-today-stats-url="{{ url_for('student.today_stats') }}"
+       data-subject="{{ subject }}"
+       data-siman="{{ siman }}"
+       data-streak="{{ profile.streak_days or 0 }}"></div>
+  <script src="{{ url_for('static', filename='js/chapitre.js') }}"></script>
+{% endif %}
+{% endblock %}

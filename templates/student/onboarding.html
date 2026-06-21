@@ -1,0 +1,187 @@
+{% extends "student/_layout.html" %}
+{% set show_nav = false %}
+{% block title %}הגדרת מסלול — סמיכה{% endblock %}
+{% block content %}
+<form method="post" id="onb" class="stack">
+  <div class="row center gap-1">
+    <span class="dot" data-dot="1"></span>
+    <span class="dot" data-dot="2"></span>
+    <span class="dot" data-dot="3"></span>
+    <span class="dot" data-dot="4"></span>
+    <span class="dot" data-dot="5"></span>
+  </div>
+
+  <!-- step 1: subject selection -->
+  <div class="step stack animate-slide-up" data-step="1">
+    <div class="center-text">
+      <div class="emoji-lg">📖</div>
+      <h2 class="text-2xl bold mt-2">מה אתה לומד עכשיו?</h2>
+      <p class="text-sm muted">בחר את הנושא הנוכחי שלך</p>
+    </div>
+    <div id="subject-cards" class="stack-sm">
+      <!-- Active -->
+      <div class="card opt-card subject-card" data-subject="basar_bechalav" id="card-bbc" style="cursor:pointer;">
+        <div style="font-size:1.5rem;">🥩🥛</div>
+        <div class="flex-1">
+          <div class="bold">בשר בחלב</div>
+          <div class="text-xs muted">הלכות בישול ואכילת בשר בחלב</div>
+        </div>
+      </div>
+      <!-- Locked -->
+      <div class="card opt-card" style="opacity:0.45;cursor:not-allowed;">
+        <div style="font-size:1.5rem;">🔒</div>
+        <div class="flex-1">
+          <div class="bold">תערובות</div>
+          <div class="text-xs muted">בקרוב</div>
+        </div>
+      </div>
+      <div class="card opt-card" style="opacity:0.45;cursor:not-allowed;">
+        <div style="font-size:1.5rem;">🔒</div>
+        <div class="flex-1">
+          <div class="bold">מליחה</div>
+          <div class="text-xs muted">בקרוב</div>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="btn btn-primary btn-block btn-lg" data-next="2" disabled id="next1">המשך</button>
+  </div>
+
+  <!-- step 2: exam date with Hebrew calendar -->
+  <div class="step stack hidden" data-step="2">
+    <div class="center-text">
+      <div class="emoji-lg">📅</div>
+      <h2 class="text-2xl bold mt-2">מתי המבחן שלך?</h2>
+      <p class="text-sm muted">נבנה עבורך תוכנית למידה מותאמת</p>
+    </div>
+    <input type="hidden" name="exam_date" id="exam_date" value="">
+    <div class="card" style="padding:1rem;">
+      <div id="cal-root"></div>
+    </div>
+    <button type="button" class="btn btn-primary btn-block btn-lg" data-next="3" disabled id="next2">המשך</button>
+  </div>
+
+  <!-- step 3: target stability -->
+  <div class="step stack hidden" data-step="3">
+    <div class="center-text">
+      <div class="emoji-lg">🎯</div>
+      <h2 class="text-2xl bold mt-2">רמת השליטה הרצויה</h2>
+      <p class="text-sm muted">איך אתה רוצה לדעת את החומר?</p>
+    </div>
+    {% for v, t, d, pct in [(0.80,'רמה בסיסית','אני רוצה להכיר את החומר','80%'),(0.90,'רמה טובה','אני רוצה לשלוט היטב','90%'),(0.99,'רמה מושלמת','אני רוצה לדעת הכל על בוריו','99%')] %}
+    <label class="card opt-card opt-stability">
+      <input type="radio" name="target_stability" value="{{ v }}" class="hidden" />
+      <div class="text-3xl extrabold muted opt-pct">{{ pct }}</div>
+      <div class="flex-1"><div class="bold">{{ t }}</div><div class="text-xs muted">{{ d }}</div></div>
+    </label>
+    {% endfor %}
+    <button type="button" class="btn btn-primary btn-block btn-lg" data-next="4" disabled id="next3">המשך</button>
+  </div>
+
+  <!-- step 4: sections / sources -->
+  <div class="step stack hidden" data-step="4">
+    <div class="center-text">
+      <h2 class="text-2xl bold">אילו מקורות לומדים?</h2>
+      <p class="text-sm muted">ניתן לבחור מספר מקורות · שולחן ערוך תמיד כלול</p>
+    </div>
+
+    <!-- שולחן ערוך — locked, always selected -->
+    <div class="card opt-card" style="opacity:0.75;cursor:default;border-color:var(--primary);">
+      <input type="checkbox" class="input-checkbox-auto" checked disabled style="display:none;" />
+      <div class="flex-1">
+        <div class="bold">שולחן ערוך</div>
+        <div class="text-xs muted">עם נושאי כלים — תמיד כלול</div>
+      </div>
+      <span class="text-xs muted">🔒</span>
+    </div>
+    <!-- Hidden field ensures shulchan_aruch is always submitted -->
+    <input type="hidden" name="section" value="shulchan_aruch">
+
+    {% for v, t, d in [('tur','טור','לימוד מעמיק'),('psikei_admur','פסקי אדה"ז','שיטת אדמו"ר הזקן'),('ptei_teshuva','פתחי תשובה ואחרונים','מרחיב הדעת')] %}
+    <label class="card opt-card opt-section">
+      <input type="checkbox" name="section" value="{{ v }}" class="input-checkbox-auto" />
+      <div class="flex-1"><div class="bold">{{ t }}</div><div class="text-xs muted">{{ d }}</div></div>
+    </label>
+    {% endfor %}
+
+    <button type="button" class="btn btn-primary btn-block btn-lg" data-next="5" id="next4">המשך</button>
+  </div>
+
+  <!-- step 5: confirmation -->
+  <div class="step stack hidden" data-step="5">
+    <div class="center-text">
+      <div class="emoji-xl">✨</div>
+      <h2 class="text-2xl bold mt-2">הכל מוכן!</h2>
+      <p class="text-sm muted" id="days-left"></p>
+    </div>
+    <button type="submit" class="btn btn-primary btn-block btn-lg">התחל את המסע שלי 🚀</button>
+  </div>
+</form>
+
+<script src="{{ url_for('static', filename='js/hebrew-calendar.js') }}"></script>
+<script>
+  const dots = document.querySelectorAll("[data-dot]");
+
+  function show(step) {
+    document.querySelectorAll(".step").forEach((s) =>
+      s.classList.toggle("hidden", s.dataset.step != step)
+    );
+    dots.forEach((d) => {
+      const n = parseInt(d.dataset.dot);
+      d.style.background =
+        n == step ? "var(--accent)" :
+        n <  step ? "var(--primary)" :
+        "rgba(148,163,184,0.4)";
+    });
+    if (step == 5) {
+      const ed = document.getElementById("exam_date").value;
+      if (ed) {
+        const days = Math.max(0, Math.ceil((new Date(ed) - Date.now()) / 86400000));
+        document.getElementById("days-left").textContent = "נותרו " + days + " ימים למבחן";
+      }
+    }
+    if (step == 2 && !document.getElementById("cal-root").hasChildNodes()) {
+      HebrewCalendar.init("cal-root", "exam_date", null);
+    }
+  }
+
+  // Next buttons
+  document.querySelectorAll("[data-next]").forEach((b) =>
+    b.addEventListener("click", () => show(b.dataset.next))
+  );
+
+  // Step 1: subject cards
+  document.getElementById("card-bbc").addEventListener("click", function () {
+    document.querySelectorAll(".subject-card").forEach((c) => c.style.borderColor = "var(--border)");
+    this.style.borderColor = "var(--primary)";
+    document.getElementById("next1").disabled = false;
+  });
+
+  // Step 2: exam date (populated by calendar widget)
+  document.getElementById("exam_date").addEventListener("change", () => {
+    document.getElementById("next2").disabled = !document.getElementById("exam_date").value;
+  });
+
+  // Step 3: stability
+  document.querySelectorAll(".opt-stability input").forEach((r) =>
+    r.addEventListener("change", () => {
+      document.querySelectorAll(".opt-stability").forEach((l) => {
+        l.style.borderColor = "var(--border)";
+        l.querySelector(".opt-pct").classList.add("muted");
+      });
+      const lab = r.closest(".opt-stability");
+      lab.style.borderColor = "var(--primary)";
+      lab.querySelector(".opt-pct").classList.remove("muted");
+      document.getElementById("next3").disabled = false;
+    })
+  );
+
+  // Step 4: section checkboxes highlight
+  document.querySelectorAll(".opt-section input").forEach((c) =>
+    c.addEventListener("change", () => {
+      c.closest(".opt-section").style.borderColor = c.checked ? "var(--primary)" : "var(--border)";
+    })
+  );
+
+  show(1);
+</script>
+{% endblock %}

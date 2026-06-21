@@ -1,0 +1,93 @@
+{% extends "student/_layout.html" %}
+{% block title %}בית — סמיכה{% endblock %}
+{% block content %}
+{% set first_name = (profile.full_name or "תלמיד").split(" ")[0] %}
+<div class="stack animate-slide-up">
+  <header class="row between">
+    <div class="row gap-1">
+      <div class="avatar-sm">{{ first_name[0] }}</div>
+      <div class="text-sm">
+        <div class="text-xs muted">שלום,</div>
+        <div class="semibold">{{ first_name }}</div>
+      </div>
+    </div>
+    <div class="pill pill-accent">🪙 {{ "{:,}".format(profile.total_points or 0) }}</div>
+  </header>
+
+  <div class="glass-card">
+    <div class="row-top between">
+      <div>
+        <div class="text-xs muted semibold">עד המבחן</div>
+        {% if days_to_exam is not none %}
+          <div class="row-baseline gap-1 mt-1">
+            <span class="text-5xl extrabold">{{ days_to_exam }}</span>
+            <span class="text-lg muted">ימים</span>
+          </div>
+        {% else %}
+          <div class="text-lg semibold muted mt-1">לא הוגדר תאריך</div>
+        {% endif %}
+      </div>
+      <span class="accent">📅</span>
+    </div>
+    {% if days_to_exam is not none %}
+    <div class="progress mt-6">
+      <span class="is-gradient" style="width:{{ prep_pct }}%;"></span>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="stack-sm">
+    {% if next_chapter %}
+      {% set continue_url = url_for('student.chapitre', subject=next_chapter.subject, siman=next_chapter.siman) %}
+    {% else %}
+      {% set continue_url = url_for('student.parcours') %}
+    {% endif %}
+    <a href="{{ continue_url }}" class="action-card action-card-primary">
+      <div class="row gap-3">
+        <div class="icon-box icon-box-primary">📖</div>
+        <div class="flex-1">
+          <div class="text-lg bold action-label">המשך הלמידה</div>
+          <div class="action-sub">
+            {% if next_chapter %}{{ next_chapter.subject }} · סימן {{ next_chapter.siman }}{% else %}התחל את המסלול{% endif %}
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <a href="{{ url_for('student.revision') }}" class="card action-card action-card-revision">
+      <div class="row gap-3">
+        <div class="icon-box icon-box-accent">🔄</div>
+        <div class="flex-1">
+          <div class="text-lg bold accent">חזרה יומית</div>
+          <div class="text-xs muted">
+            {% if due_count > 0 %}
+              {{ due_count }} כרטיסים ממתינים היום
+            {% elif next_due_days == 1 %}
+              מחר — {{ next_due_count }} כרטיסים
+            {% elif next_due_days %}
+              בעוד {{ next_due_days }} ימים — {{ next_due_count }} כרטיסים
+            {% else %}
+              אין כרטיסים מתוזמנים
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% if due_count > 0 %}
+        <span class="pill pill-danger pill-corner">{{ due_count }}</span>
+      {% endif %}
+    </a>
+  </div>
+
+  <a href="{{ url_for('student.profil') }}" class="card card-sm row between">
+    <div class="row gap-1 text-sm semibold">
+      <span class="{{ 'accent' if profile.streak_days else 'muted' }}">🔥</span>
+      <span>{{ profile.streak_days or 0 }} ימים רצופים</span>
+    </div>
+    <div class="row gap-1">
+      {% for active in days7 %}
+        <span class="dot {{ 'accent-dot' if active }}"></span>
+      {% endfor %}
+    </div>
+  </a>
+</div>
+{% endblock %}
