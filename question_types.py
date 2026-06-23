@@ -64,7 +64,7 @@ def _validate_common(q, issues: list):
         return None
     if q.get("difficulty_level") not in (1, 2, 3):
         issues.append("difficulty_level חייב להיות מספר בין 1 ל-3")
-    if q.get("exam_section") not in ("shulchan_aruch", "tur_shulchan_aruch"):
+    if q.get("exam_section") not in ("shulchan_aruch", "tur", "tur_shulchan_aruch", "psikei_admur", "ptei_teshuva"):
         issues.append("exam_section לא תקין")
     _add_text_issue(issues, q.get("explanation"), "הסבר")
     return qtype
