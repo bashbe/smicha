@@ -27,7 +27,7 @@
         <div class="semibold" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">{{ q.text or "— ללא טקסט —" }}</div>
         <div class="row gap-1" style="margin-top:0.25rem;flex-wrap:wrap;">
           <span class="badge">קושי {{ q.difficulty }}</span>
-          <span class="badge">{{ 'טור' if q.section == 'tur_shulchan_aruch' else 'שו"ע' }}</span>
+          <span class="badge">{{ (q.section | list | join(', ')) if q.section is iterable and q.section is not string else (q.section or 'שו"ע') }}</span>
           {% if q.subject %}<span class="badge">{{ q.subject }}</span>{% endif %}
           {% if q.siman is not none %}<span class="badge">סי' {{ q.siman }}</span>{% endif %}
         </div>
@@ -72,9 +72,11 @@
             </div>
             <div>
               <label>חלק הבחינה</label>
-              <select name="section">
-                <option value="shulchan_aruch" {{ 'selected' if (payload.exam_section or selected.section) == 'shulchan_aruch' }}>שו"ע</option>
-                <option value="tur_shulchan_aruch" {{ 'selected' if (payload.exam_section or selected.section) == 'tur_shulchan_aruch' }}>טור + שו"ע</option>
+              {% set cur_sections = (payload.exam_section if payload.exam_section is iterable and payload.exam_section is not string else [payload.exam_section]) if payload.exam_section else (selected.section if selected.section is iterable and selected.section is not string else [selected.section or 'shulchan_aruch']) %}
+              <select name="section" multiple size="5" style="height:auto;">
+                {% for val, lbl in [('shulchan_aruch','שו"ע'),('tur','טור'),('tur_shulchan_aruch','טור + שו"ע'),('psikei_admur','פסקי אדה"ז'),('ptei_teshuva','פתחי תשובה')] %}
+                <option value="{{ val }}" {{ 'selected' if val in cur_sections }}>{{ lbl }}</option>
+                {% endfor %}
               </select>
             </div>
           </div>

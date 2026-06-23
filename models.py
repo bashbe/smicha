@@ -87,7 +87,7 @@ class Question(db.Model):
     correct_answer = db.Column(db.Text)
     explanation = db.Column(db.Text)
     difficulty = db.Column(db.Integer, default=2, nullable=False)
-    section = db.Column(db.String(32), default="shulchan_aruch", nullable=False)
+    section = db.Column(db.JSON, default=lambda: ["shulchan_aruch"], nullable=False)
     tags = db.Column(db.JSON, default=list)
     status = db.Column(db.String(16), default="pending", nullable=False, index=True)
     created_by = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"))
@@ -104,6 +104,14 @@ class Question(db.Model):
     source_ref = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    def section_list(self) -> list[str]:
+        """Always returns section as a list, regardless of how it's stored."""
+        if isinstance(self.section, list):
+            return self.section
+        if isinstance(self.section, str) and self.section:
+            return [self.section]
+        return ["shulchan_aruch"]
 
     def as_dict(self) -> dict:
         return {

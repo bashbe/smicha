@@ -14,16 +14,36 @@ from question_types import normalize_db_question
 bp = Blueprint("student", __name__, url_prefix="/app")
 
 
-def allowed_sections(sections: list[str]) -> set[str]:
-    sections = sections or ["shulchan_aruch"]
+def _to_section_list(section) -> list[str]:
+    """Normalize a section value (str or list) to a list."""
+    if isinstance(section, list):
+        return section or ["shulchan_aruch"]
+    if isinstance(section, str) and section:
+        return [section]
+    return ["shulchan_aruch"]
+
+
+def allowed_sections(sections) -> set[str]:
+    """Return the set of section values the student has access to.
+    shulchan_aruch is always included. 'tur' and 'tur_shulchan_aruch' are treated as equivalent.
+    """
+    if not sections:
+        sections = ["shulchan_aruch"]
+    if isinstance(sections, str):
+        sections = [sections]
     allowed: set[str] = {"shulchan_aruch"}
-    if "tur" in sections or "tur_shulchan_aruch" in sections:
-        allowed.update({"tur", "tur_shulchan_aruch"})
-    if "psikei_admur" in sections:
-        allowed.add("psikei_admur")
-    if "ptei_teshuva" in sections:
-        allowed.add("ptei_teshuva")
+    for s in sections:
+        allowed.add(s)
+        if s == "tur":
+            allowed.add("tur_shulchan_aruch")
+        if s == "tur_shulchan_aruch":
+            allowed.add("tur")
     return allowed
+
+
+def question_in_sections(q, allowed: set[str]) -> bool:
+    """Return True if any of the question's sections is in the allowed set."""
+    return bool(set(_to_section_list(q.section)) & allowed)
 
 
 def get_profile() -> StudentProfile:
@@ -76,11 +96,13 @@ def home():
         return redirect(url_for("student.onboarding"))
 
     allowed = allowed_sections(sp.section)
-    qs = (
-        Question.query.filter(Question.status == "approved", Question.section.in_(allowed))
-        .with_entities(Question.subject, Question.siman)
+    all_qs = (
+        Question.query.filter(Question.status == "approved")
+        .with_entities(Question.subject, Question.siman, Question.section)
         .all()
     )
+    qs = [(subject, siman) for subject, siman, section in all_qs
+          if set(_to_section_list(section)) & allowed]
     prog = {f"{p.subject}|{p.siman}": p for p in Progression.query.filter_by(user_id=sp.id).all()}
 
     seen, unique = set(), []
@@ -146,11 +168,10 @@ def home():
 def parcours():
     sp = get_profile()
     allowed = allowed_sections(sp.section)
-    qs = Question.query.filter(
+    qs = [q for q in Question.query.filter(
         Question.status == "approved",
-        Question.section.in_(allowed),
         Question.question_type != "practical_scenario",
-    ).all()
+    ).all() if question_in_sections(q, allowed)]
 
     # subject → siman → seif → count
     by_subject: dict[str, dict[int, dict]] = {}
@@ -161,17 +182,17 @@ def parcours():
         by_subject[q.subject].setdefault(q.siman, {})
         by_subject[q.subject][q.siman][q.seif] = by_subject[q.subject][q.siman].get(q.seif, 0) + 1
 
-    # Consistent filters on both counts to prevent answered > total
     _correct_filters = [
         UserAnswer.is_correct == True,
-        Question.section.in_(allowed),
         Question.question_type != "practical_scenario",
     ]
+    # IDs of questions in allowed sections (Python-side filter for JSON column)
+    allowed_q_ids = [q.id for q in qs]
     correct_rows = (
         db.session.query(Question.subject, Question.siman,
                          func.count(distinct(UserAnswer.question_id)))
         .join(UserAnswer, UserAnswer.question_id == Question.id)
-        .filter(UserAnswer.user_id == sp.id, *_correct_filters)
+        .filter(UserAnswer.user_id == sp.id, Question.id.in_(allowed_q_ids), *_correct_filters)
         .group_by(Question.subject, Question.siman)
         .all()
     )
@@ -181,7 +202,7 @@ def parcours():
         db.session.query(Question.subject, Question.siman, Question.seif,
                          func.count(distinct(UserAnswer.question_id)))
         .join(UserAnswer, UserAnswer.question_id == Question.id)
-        .filter(UserAnswer.user_id == sp.id, *_correct_filters)
+        .filter(UserAnswer.user_id == sp.id, Question.id.in_(allowed_q_ids), *_correct_filters)
         .group_by(Question.subject, Question.siman, Question.seif)
         .all()
     )
@@ -220,9 +241,11 @@ def parcours():
     return render_template("student/parcours.html", groups=groups)
 
 
-def _load_chapitre(sp, base_filters: list) -> list | None:
+def _load_chapitre(sp, base_filters: list, allowed: set[str] | None = None) -> list | None:
     """Shared helper: fetch unanswered questions matching base_filters."""
     rows = Question.query.filter(*base_filters).order_by(Question.seif.asc()).all()
+    if allowed:
+        rows = [q for q in rows if question_in_sections(q, allowed)]
     if rows:
         correct_ids = {
             r[0] for r in
@@ -258,9 +281,8 @@ def chapitre_seif(subject: str, siman: int, seif: int):
         Question.siman == siman,
         Question.seif == seif,
         Question.status == "approved",
-        Question.section.in_(allowed),
         Question.question_type != "practical_scenario",
-    ])
+    ], allowed)
     if questions is None:
         flash("כל השאלות בסעיף זה הושלמו! עברו לחזרות 🎓", "success")
         return redirect(url_for("student.revision"))
@@ -282,9 +304,8 @@ def chapitre(subject: str, siman: int):
         Question.subject == subject,
         Question.siman == siman,
         Question.status == "approved",
-        Question.section.in_(allowed),
         Question.question_type != "practical_scenario",
-    ])
+    ], allowed)
     if questions is None:
         flash("כל השאלות בסימן זה הושלמו! עברו לחזרות 🎓", "success")
         return redirect(url_for("student.revision"))

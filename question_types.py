@@ -15,8 +15,23 @@ QUESTION_TYPES = [
     "true_false",
 ]
 
+VALID_SECTIONS = ("shulchan_aruch", "tur", "tur_shulchan_aruch", "psikei_admur", "ptei_teshuva")
+
 HEBREW_RE = re.compile(r"[֐-׿]")
 LATIN_RE = re.compile(r"[A-Za-zÀ-ÖØ-öø-ÿ]")
+
+
+def _normalize_sections(value) -> list[str]:
+    """Accept a string or list, always return a non-empty list of valid sections."""
+    if isinstance(value, str) and value:
+        sections = [value]
+    elif isinstance(value, list):
+        sections = [str(s).strip() for s in value if str(s).strip()]
+    else:
+        sections = []
+    valid = [s for s in sections if s in VALID_SECTIONS]
+    return valid if valid else ["shulchan_aruch"]
+
 
 
 def _text(v) -> str:
@@ -64,7 +79,9 @@ def _validate_common(q, issues: list):
         return None
     if q.get("difficulty_level") not in (1, 2, 3):
         issues.append("difficulty_level חייב להיות מספר בין 1 ל-3")
-    if q.get("exam_section") not in ("shulchan_aruch", "tur", "tur_shulchan_aruch", "psikei_admur", "ptei_teshuva"):
+    raw_section = q.get("exam_section")
+    sections = _normalize_sections(raw_section)
+    if not sections or any(s not in VALID_SECTIONS for s in sections):
         issues.append("exam_section לא תקין")
     _add_text_issue(issues, q.get("explanation"), "הסבר")
     return qtype
@@ -142,7 +159,7 @@ def normalize_imported_question(q) -> dict:
             return {"raw": q, "valid": False, "issue": " · ".join(issues)}
 
         difficulty = q["difficulty_level"]
-        section = q["exam_section"]
+        section = _normalize_sections(q.get("exam_section"))
         tags = _normalize_tags(q.get("tags"))
         explanation = _text(q.get("explanation"))
 
@@ -185,7 +202,7 @@ def build_payload_from_draft(row: dict) -> dict:
     payload = dict(row.get("payload") or {})
     payload["type"] = row.get("question_type") or payload.get("type")
     payload["difficulty_level"] = int(row.get("difficulty") or payload.get("difficulty_level") or 2)
-    payload["exam_section"] = row.get("section") or payload.get("exam_section") or "shulchan_aruch"
+    payload["exam_section"] = _normalize_sections(row.get("section") or payload.get("exam_section"))
     payload["explanation"] = row.get("explanation") or payload.get("explanation") or ""
     if isinstance(row.get("tags"), list):
         payload["tags"] = row["tags"]

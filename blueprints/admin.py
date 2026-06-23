@@ -206,7 +206,7 @@ def _payload_from_form(form, question_type: str) -> dict:
     payload: dict = {
         "type": question_type,
         "difficulty_level": int(form.get("difficulty") or 2),
-        "exam_section": form.get("section") or "shulchan_aruch",
+        "exam_section": form.getlist("section") or ["shulchan_aruch"],
         "explanation": form.get("explanation") or "",
         "tags": [t.strip() for t in (form.get("tags") or "").split(",") if t.strip()],
     }
@@ -317,7 +317,7 @@ def validate():
             q.siman = int(draft["siman"])
             q.seif = int(draft["seif"])
             q.difficulty = int(row.get("difficulty") or 2)
-            q.section = row.get("section") or "shulchan_aruch"
+            q.section = row.get("section") or ["shulchan_aruch"]
             q.tags = row.get("tags") or []
             q.status = "approved"
             q.validated_by = user.id
