@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon_home, icon_list, icon_repeat, icon_user %}
 {% block body %}
 <div style="min-height:100vh;">
   <main class="container">
@@ -9,16 +10,16 @@
   <nav class="bottom-nav">
     <div class="inner">
       <a href="{{ url_for('student.home') }}" class="{{ 'active' if request.endpoint == 'student.home' }}">
-        <span>🏠</span><span>בית</span>
+        {{ icon_home() }}<span>בית</span>
       </a>
       <a href="{{ url_for('student.parcours') }}" class="{{ 'active' if request.endpoint == 'student.parcours' }}">
-        <span>📑</span><span>מסלול</span>
+        {{ icon_list() }}<span>מסלול</span>
       </a>
       <a href="{{ url_for('student.revision') }}" class="{{ 'active' if request.endpoint == 'student.revision' }}">
-        <span>🔄</span><span>חזרה</span>
+        {{ icon_repeat() }}<span>חזרה</span>
       </a>
       <a href="{{ url_for('student.profil') }}" class="{{ 'active' if request.endpoint == 'student.profil' }}">
-        <span>👤</span><span>פרופיל</span>
+        {{ icon_user() }}<span>פרופיל</span>
       </a>
     </div>
   </nav>

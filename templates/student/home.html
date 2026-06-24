@@ -1,52 +1,79 @@
 {% extends "student/_layout.html" %}
+{% from "_icons.html" import icon_coin, icon_flame, icon_book, icon_repeat, icon_calendar %}
 {% block title %}בית — סמיכה{% endblock %}
 {% block content %}
 {% set first_name = (profile.full_name or "תלמיד").split(" ")[0] %}
 <div class="stack animate-slide-up">
-  <header class="row between">
-    <div class="row gap-1">
-      <div class="avatar-sm">{{ first_name[0] }}</div>
-      <div class="text-sm">
-        <div class="text-xs muted">שלום,</div>
-        <div class="semibold">{{ first_name }}</div>
+
+  <!-- Header : prénom + stats intégrés -->
+  <header>
+    <div class="row between">
+      <div class="row gap-2">
+        <div class="avatar-sm">{{ first_name[0] }}</div>
+        <div>
+          <div style="font-size:var(--text-xs);color:var(--muted-fg);">שלום,</div>
+          <div style="font-weight:700;font-size:var(--text-base);">{{ first_name }}</div>
+        </div>
+      </div>
+      <!-- Points + streak dans le header, pas de cartes séparées -->
+      <div class="row gap-3">
+        <div class="row gap-1" style="color:var(--muted-fg);font-size:var(--text-sm);">
+          <span style="color:{{ 'var(--brand)' if profile.streak_days else 'var(--muted-fg)' }};">
+            {{ icon_flame(16) }}
+          </span>
+          <span style="font-weight:600;">{{ profile.streak_days or 0 }}</span>
+        </div>
+        <div class="row gap-1" style="color:var(--brand);font-size:var(--text-sm);">
+          {{ icon_coin(16) }}
+          <span style="font-weight:700;">{{ "{:,}".format(profile.total_points or 0) }}</span>
+        </div>
       </div>
     </div>
-    <div class="pill pill-accent">🪙 {{ "{:,}".format(profile.total_points or 0) }}</div>
+
+    <!-- 7 jours activité — sous le header, pas dans une carte -->
+    <div class="row gap-1" style="margin-top:var(--space-2);padding-right:0.125rem;">
+      {% for active in days7 %}
+        <span class="dot {{ 'accent-dot' if active }}"></span>
+      {% endfor %}
+      <span style="font-size:var(--text-xs);color:var(--muted-fg);margin-right:var(--space-1);">7 ימים אחרונים</span>
+    </div>
   </header>
 
-  <div class="glass-card">
-    <div class="row-top between">
-      <div>
-        <div class="text-xs muted semibold">עד המבחן</div>
-        {% if days_to_exam is not none %}
-          <div class="row-baseline gap-1 mt-1">
-            <span class="text-5xl extrabold">{{ days_to_exam }}</span>
-            <span class="text-lg muted">ימים</span>
-          </div>
-        {% else %}
-          <div class="text-lg semibold muted mt-1">לא הוגדר תאריך</div>
-        {% endif %}
-      </div>
-      <span class="accent">📅</span>
-    </div>
+  <!-- Compteur de jours — typographique, sans carte -->
+  <div class="days-counter">
     {% if days_to_exam is not none %}
-    <div class="progress mt-6">
-      <span class="is-gradient" style="width:{{ prep_pct }}%;"></span>
-    </div>
+      <div class="row-baseline gap-2">
+        <span class="days-number">{{ days_to_exam }}</span>
+        <span class="days-label">ימים עד המבחן</span>
+      </div>
+      <div class="progress" style="margin-top:var(--space-2);">
+        <span class="is-gradient" style="width:{{ prep_pct }}%;"></span>
+      </div>
+    {% else %}
+      <div style="font-size:var(--text-2xl);font-family:'Secular One',sans-serif;color:var(--muted-fg);">
+        אין תאריך בחינה
+      </div>
+      <div class="days-label">
+        <a href="{{ url_for('student.settings') }}" style="color:var(--brand);">הגדר תאריך</a>
+      </div>
     {% endif %}
   </div>
 
+  <!-- Actions -->
   <div class="stack-sm">
     {% if next_chapter %}
       {% set continue_url = url_for('student.chapitre', subject=next_chapter.subject, siman=next_chapter.siman) %}
     {% else %}
       {% set continue_url = url_for('student.parcours') %}
     {% endif %}
+
     <a href="{{ continue_url }}" class="action-card action-card-primary">
       <div class="row gap-3">
-        <div class="icon-box icon-box-primary">📖</div>
+        <div class="icon-box icon-box-primary" style="background:rgba(13,17,23,0.2);">
+          {{ icon_book(20) }}
+        </div>
         <div class="flex-1">
-          <div class="text-lg bold action-label">המשך הלמידה</div>
+          <div class="action-label" style="font-size:var(--text-lg);">המשך הלמידה</div>
           <div class="action-sub">
             {% if next_chapter %}{{ next_chapter.subject }} · סימן {{ next_chapter.siman }}{% else %}התחל את המסלול{% endif %}
           </div>
@@ -56,10 +83,12 @@
 
     <a href="{{ url_for('student.revision') }}" class="card action-card action-card-revision">
       <div class="row gap-3">
-        <div class="icon-box icon-box-accent">🔄</div>
+        <div class="icon-box icon-box-accent">
+          {{ icon_repeat(20) }}
+        </div>
         <div class="flex-1">
-          <div class="text-lg bold accent">חזרה יומית</div>
-          <div class="text-xs muted">
+          <div style="font-size:var(--text-lg);font-weight:700;color:var(--brand);">חזרה יומית</div>
+          <div style="font-size:var(--text-xs);color:var(--muted-fg);">
             {% if due_count > 0 %}
               {{ due_count }} כרטיסים ממתינים היום
             {% elif next_due_days == 1 %}
@@ -78,16 +107,5 @@
     </a>
   </div>
 
-  <a href="{{ url_for('student.profil') }}" class="card card-sm row between">
-    <div class="row gap-1 text-sm semibold">
-      <span class="{{ 'accent' if profile.streak_days else 'muted' }}">🔥</span>
-      <span>{{ profile.streak_days or 0 }} ימים רצופים</span>
-    </div>
-    <div class="row gap-1">
-      {% for active in days7 %}
-        <span class="dot {{ 'accent-dot' if active }}"></span>
-      {% endfor %}
-    </div>
-  </a>
 </div>
 {% endblock %}
