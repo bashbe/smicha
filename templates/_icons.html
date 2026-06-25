@@ -7,7 +7,7 @@
 {% macro _svg(d, size=20, extra='') %}
 <svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none"
      stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
-     stroke-linejoin="round" aria-hidden="true" {{ extra }}>{{ d }}</svg>
+     stroke-linejoin="round" aria-hidden="true" {{ extra }}>{{ d | safe }}</svg>
 {% endmacro %}
 
 {% macro icon_home(size=20) %}
