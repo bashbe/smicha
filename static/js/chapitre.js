@@ -56,10 +56,27 @@
     return node;
   }
 
+  // Icônes SVG inline (miroir de templates/_icons.html) — pas d'emojis.
+  const ICON_PATHS = {
+    flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+    coin: '<circle cx="12" cy="12" r="9"/><path d="M12 7v1m0 8v1M9.5 9.5C9.5 8.67 10.17 8 11 8h2a1.5 1.5 0 0 1 0 3h-2a1.5 1.5 0 0 0 0 3h2a1.5 1.5 0 0 0 0-3"/>',
+    check: '<polyline points="20 6 9 17 4 12"/>',
+    x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  };
+  function icon(name, size) {
+    size = size || 16;
+    return el("span", {
+      style: "display:inline-flex;align-items:center;",
+      html: '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" ' +
+        'stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" ' +
+        'aria-hidden="true">' + ICON_PATHS[name] + '</svg>',
+    });
+  }
+
   function comboLabel(combo) {
     if (combo < 2) return null;
-    if (combo >= 5) return "🔥 ×" + combo + " ומעלה!";
-    return "🔥 ×" + combo;
+    if (combo >= 5) return "×" + combo + " ומעלה!";
+    return "×" + combo;
   }
 
   function parseAnswerMap(value) {
@@ -201,7 +218,7 @@
     circle.appendChild(circleText);
     wrap.appendChild(circle);
 
-    wrap.appendChild(el("h2", "text-2xl bold mt-6", "כל הכבוד! 🎉"));
+    wrap.appendChild(el("h2", "text-2xl bold mt-6", "כל הכבוד!"));
     wrap.appendChild(el("p", "text-sm muted", score + "% תשובות נכונות"));
 
     const stats = el("div", "row gap-4 player-complete-stats");
@@ -211,7 +228,7 @@
     stats.appendChild(ptsCol);
     stats.appendChild(el("div", "divider-v"));
     const comboCol = el("div", "center-text");
-    comboCol.appendChild(el("div", "text-3xl extrabold accent", "🔥 " + state.combo));
+    comboCol.appendChild(el("div", "row center gap-1 text-3xl extrabold accent", icon("flame", 24), state.combo));
     comboCol.appendChild(el("div", "text-xs muted", "רצף קומבו"));
     stats.appendChild(comboCol);
     wrap.appendChild(stats);
@@ -244,7 +261,11 @@
     root.innerHTML = "";
     const wrap = el("div", "stack center-text animate-slide-up player-complete");
 
-    wrap.appendChild(el("div", "emoji-xxl", "🎉"));
+    const doneMark = el("div", {
+      style: "height:4rem;width:4rem;border-radius:999px;background:var(--brand-dim);color:var(--brand);" +
+        "display:flex;align-items:center;justify-content:center;margin:0 auto;",
+    }, icon("check", 32));
+    wrap.appendChild(doneMark);
     wrap.appendChild(el("h2", "text-2xl bold mt-4", "סיום חזרות היומיות!"));
     wrap.appendChild(el("p", "text-sm muted", "עשית עבודה מצוינת היום"));
 
@@ -302,7 +323,7 @@
     const header = el("div", "row between");
     header.appendChild(backBtn);
     if (!isRevision) {
-      header.appendChild(el("div", "pill pill-accent", "🪙 " + state.sessionPoints));
+      header.appendChild(el("div", "pill pill-accent", icon("coin", 14), String(state.sessionPoints)));
     }
     root.appendChild(header);
 
@@ -320,7 +341,7 @@
 
     // retry badge
     if (state.feedback && state.feedback.isRetry) {
-      root.appendChild(el("div", "retry-hint", "חזרה על שאלה זו 🔁"));
+      root.appendChild(el("div", "retry-hint", "חזרה על שאלה זו"));
     }
 
     // question card
@@ -330,7 +351,7 @@
     }
     card.appendChild(el("p", "question-prompt", nq.prompt));
     if (state.combo >= 2 && !state.revealed) {
-      card.appendChild(el("div", "pill animate-pop-in combo-pill", comboLabel(state.combo)));
+      card.appendChild(el("div", "pill animate-pop-in combo-pill row gap-1", icon("flame", 13), comboLabel(state.combo)));
     }
     if (state.feedback && state.feedback.ratingBadge) {
       refs.ratingBadge = el("div", "pill animate-pop-in rating-badge-pos " + state.feedback.ratingTone, state.feedback.ratingBadge);
@@ -415,10 +436,10 @@
         const isCorrect = nq.correctKey === c.key;
         const isChosen = state.chosen === c.key;
         let cls = "choice" + (isTrueFalse ? " choice-tf" : "");
-        let icon = null;
+        let mark = null;
         if (state.revealed) {
-          if (isCorrect) { cls += " is-correct"; icon = el("span", "success", "✓"); }
-          else if (isChosen) { cls += " is-wrong"; icon = el("span", "destructive", "✗"); }
+          if (isCorrect) { cls += " is-correct"; mark = el("span", "success", icon("check", 18)); }
+          else if (isChosen) { cls += " is-wrong"; mark = el("span", "destructive", icon("x", 18)); }
           else cls += " is-dim";
         }
         const btn = el("button", cls);
@@ -429,7 +450,7 @@
           btn.appendChild(el("span", "text-lg bold", c.text));
         } else {
           btn.appendChild(el("span", "flex-1 line-height-loose", c.text));
-          btn.appendChild(icon || el("span", "key", c.label || String(i + 1)));
+          btn.appendChild(mark || el("span", "key", c.label || String(i + 1)));
         }
         answers.appendChild(btn);
       });
@@ -444,11 +465,13 @@
     if (state.revealed && state.feedback) {
       const exp = el("div", "animate-slide-up player-exp");
       if (!state.feedback.isCorrect && state.combo === 0) {
-        exp.appendChild(el("div", "exp-combo-break", "הקומבו נשבר 💔"));
+        exp.appendChild(el("div", "exp-combo-break", "הקומבו נשבר"));
       }
       if (q.seif !== null && q.seif !== undefined) {
+        const srcSubject = q.subject || cfg.subject;
+        const srcSiman = q.siman != null ? q.siman : Number(cfg.siman);
         exp.appendChild(el("div", "exp-source",
-          "מקור: " + cfg.subject + " · סימן " + toHebNum(Number(cfg.siman)) + " · סעיף " + toHebNum(q.seif)));
+          "מקור: " + srcSubject + " · סימן " + toHebNum(srcSiman) + " · סעיף " + toHebNum(q.seif)));
       }
       if (state.feedback.explanation) {
         exp.appendChild(el("p", "text-sm line-height-loose", state.feedback.explanation));

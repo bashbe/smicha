@@ -3,38 +3,37 @@
 {% block content %}
 <div class="stack-sm animate-slide-up">
   <div>
-    <h1 class="text-2xl bold">מסלול הלמידה</h1>
-    <p class="text-sm muted">בחר סעיף כדי להתחיל</p>
+    <h1>מסלול הלמידה</h1>
+    <p style="font-size:var(--text-sm);color:var(--muted-fg);margin-top:var(--space-1);">בחר סעיף כדי להתחיל</p>
   </div>
 
   {% if not groups %}
-    <div class="glass-card center-text" style="padding:2.5rem;">
-      <div class="emoji-lg">📑</div>
-      <p class="text-lg bold mt-4">עוד אין נושאים זמינים</p>
-      <p class="text-sm muted mt-1">המנהלים עדיין מכינים את החומר</p>
+    <div class="card center-text" style="padding:2.5rem;">
+      <p style="font-size:var(--text-lg);font-weight:700;">עוד אין נושאים זמינים</p>
+      <p style="font-size:var(--text-sm);color:var(--muted-fg);margin-top:var(--space-1);">המנהלים עדיין מכינים את החומר</p>
     </div>
   {% else %}
     {% for g in groups %}
     <div class="stack-sm">
-      <div class="row between" style="padding:0.25rem 0 0.5rem;">
-        <h2 class="text-xl bold">{{ g.subject }}</h2>
-        <span class="text-xs muted">{{ g.simanim|length }} סימנים · {{ g.total }} שאלות</span>
+      <div class="row between" style="padding:var(--space-2) 0 var(--space-1);">
+        <h2 style="font-family:'Secular One',sans-serif;font-size:var(--text-xl);">{{ g.subject }}</h2>
+        <span style="font-size:var(--text-xs);color:var(--muted-fg);">{{ g.simanim|length }} סימנים · {{ g.total }} שאלות</span>
       </div>
 
       {% for s in g.simanim %}
       <details class="card" style="padding:0;overflow:hidden;" {{ 'open' if loop.first }}>
         <summary class="siman-summary">
           <div class="row between gap-2">
-            <span class="bold">
-              {% if s.completed %}<span class="success">✓</span> {% endif %}
+            <span class="row gap-1" style="font-weight:700;">
+              {% if s.completed %}<span class="success" style="font-size:var(--text-sm);">✓</span>{% endif %}
               סימן {{ s.siman | to_hebrew }}
             </span>
-            <span class="text-xs {{ 'success semibold' if s.completed else 'muted' }}">
+            <span style="font-size:var(--text-xs);color:{{ 'var(--success)' if s.completed else 'var(--muted-fg)' }};font-weight:{{ '600' if s.completed else '400' }};">
               {{ s.answered }}/{{ s.count }}{% if s.completed %} · הושלם{% endif %}
             </span>
           </div>
           {% if not s.completed %}
-          <div class="progress" style="margin-top:0.5rem;">
+          <div class="progress" style="margin-top:var(--space-2);">
             <span style="width:{{ s.pct }}%;"></span>
           </div>
           {% endif %}
@@ -55,7 +54,7 @@
             {% endfor %}
           </div>
           {% else %}
-          <p class="text-xs muted">אין סעיפים</p>
+          <p style="font-size:var(--text-xs);color:var(--muted-fg);">אין סעיפים</p>
           {% endif %}
         </div>
       </details>

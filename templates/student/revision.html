@@ -4,13 +4,13 @@
 {% block content %}
 {% if not questions %}
   <div class="stack animate-slide-up page-empty">
-    <div class="emoji-xxl">✅</div>
+    <div style="font-size:3rem;line-height:1;">✓</div>
     <div>
-      <h2 class="text-xl bold mb-2">כל הכרטיסים עודכנו!</h2>
-      <p class="text-sm muted">אין שאלות לחזרה היום. חזור מחר או המשך ללמוד.</p>
+      <h2 class="mb-2">כל הכרטיסים עודכנו!</h2>
+      <p style="font-size:var(--text-sm);color:var(--muted-fg);">אין שאלות לחזרה היום. חזור מחר או המשך ללמוד.</p>
     </div>
     {% if next_due_days %}
-    <div class="glass-card card-narrow center-text">
+    <div class="card card-narrow center-text">
       <div class="text-xs muted semibold mb-1">החזרה הבאה</div>
       <div class="text-xl bold accent">
         {% if next_due_days == 1 %}מחר{% else %}בעוד {{ next_due_days }} ימים{% endif %}
