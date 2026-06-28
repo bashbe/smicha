@@ -255,9 +255,10 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
   position: relative;
 }
 
-/* ---- Parcours siman list ---- */
-.siman-group-summary { padding: 1rem; cursor: pointer; list-style: none; }
-.siman-group-body { border-top: 1px solid var(--border); background: rgba(30,41,59,0.4); padding: 0.75rem; }
+/* ---- Parcours ---- */
+.siman-summary { padding: 0.75rem 1rem; cursor: pointer; list-style: none; }
+.siman-summary::-webkit-details-marker { display: none; }
+.siman-body { border-top: 1px solid var(--border); padding: 0.75rem; }
 
 /* ---- Onboarding option cards ---- */
 .opt-card { border: 2px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 1rem; }

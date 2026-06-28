@@ -98,6 +98,7 @@ class Question(db.Model):
     siman = db.Column(db.Integer, index=True)
     seif = db.Column(db.Integer)
     hint = db.Column(db.Text)
+    parcours = db.Column(db.String(64), index=True)
     # third-migration fields
     question_type = db.Column(db.String(48), index=True)
     payload = db.Column(db.JSON)
@@ -128,6 +129,7 @@ class Question(db.Model):
             "siman": self.siman,
             "seif": self.seif,
             "hint": self.hint,
+            "parcours": self.parcours,
             "question_type": self.question_type,
             "payload": self.payload,
             "source_ref": self.source_ref,

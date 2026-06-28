@@ -218,10 +218,7 @@ def parcours():
             correct = correct_map.get(f"{subject}|{siman}", 0)
             completed = correct >= count and count > 0
             pct = min(100, round((correct / count) * 100)) if count > 0 else 0
-            prev_siman = ordered[idx - 1][0] if idx > 0 else None
-            prev_count = sum(ordered[idx - 1][1].values()) if idx > 0 else 0
-            prev_correct = correct_map.get(f"{subject}|{prev_siman}", 0) if prev_siman is not None else 0
-            locked = idx > 0 and (prev_count == 0 or (prev_correct / prev_count) < 0.8)
+            locked = False
             seifim = [
                 {
                     "seif": seif,

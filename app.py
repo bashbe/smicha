@@ -15,6 +15,34 @@ def create_app(config_object: type = Config) -> Flask:
 
     db.init_app(app)
 
+    @app.template_filter("to_hebrew")
+    def to_hebrew(n) -> str:
+        """Integer → Hebrew gematria (e.g. 89 → פ״ט, 1 → א׳)."""
+        try:
+            n = int(n)
+        except (TypeError, ValueError):
+            return str(n)
+        if n <= 0 or n > 900:
+            return str(n)
+        HUNDREDS = ['', 'ק', 'ר', 'ש', 'ת', 'תק', 'תר', 'תש', 'תת', 'תתק']
+        TENS     = ['', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ']
+        ONES     = ['', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט']
+        h, n = n // 100, n % 100
+        letters = HUNDREDS[h]
+        if n == 15:
+            letters += 'טו'
+        elif n == 16:
+            letters += 'טז'
+        else:
+            if n >= 10:
+                letters += TENS[n // 10]
+                n %= 10
+            if n:
+                letters += ONES[n]
+        if len(letters) == 1:
+            return letters + '׳'
+        return letters[:-1] + '״' + letters[-1]
+
     from blueprints.auth import bp as auth_bp
     from blueprints.student import bp as student_bp
     from blueprints.admin import bp as admin_bp

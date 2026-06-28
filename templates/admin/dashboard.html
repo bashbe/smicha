@@ -39,5 +39,28 @@
       </div>
     </div>
   </div>
+
+  {% if current_user and current_user.has_role('super_admin') %}
+  <div class="card" style="border:1px solid var(--destructive);background:rgba(239,68,68,0.05);">
+    <h2 class="text-lg semibold" style="color:var(--destructive);margin-bottom:0.5rem;">⚠️ אזור מסוכן — Super Admin בלבד</h2>
+    <p class="text-sm muted" style="margin-bottom:1rem;">איפוס מוחלט של בסיס הנתונים: מחיקת כל השאלות, המשתמשים, וההיסטוריה. פעולה זו בלתי הפיכה.</p>
+    <form method="post" action="{{ url_for('admin.reset_db') }}" id="reset-form" onsubmit="return confirmReset(event)">
+      <div class="row gap-2" style="flex-wrap:wrap;align-items:flex-end;">
+        <div>
+          <label class="text-sm">הקלד <strong>RESET</strong> לאישור</label>
+          <input type="text" name="confirm" placeholder="RESET" style="width:10rem;" autocomplete="off" />
+        </div>
+        <button type="submit" class="btn btn-destructive">🗑️ אפס את כל מסד הנתונים</button>
+      </div>
+    </form>
+  </div>
+  <script>
+    function confirmReset(e) {
+      const val = document.querySelector('#reset-form [name=confirm]').value;
+      if (val !== 'RESET') { e.preventDefault(); alert('הקלד RESET בדיוק כדי לאשר'); return false; }
+      return confirm('פעולה זו תמחק את כל הנתונים ללא אפשרות שחזור. להמשיך?');
+    }
+  </script>
+  {% endif %}
 </div>
 {% endblock %}

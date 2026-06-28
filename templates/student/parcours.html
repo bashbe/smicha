@@ -15,55 +15,52 @@
     </div>
   {% else %}
     {% for g in groups %}
-    <details class="card" style="padding:0;overflow:hidden;" {{ 'open' if loop.first }}>
-      <summary class="row between siman-group-summary">
-        <div>
-          <div class="text-lg bold">{{ g.subject }}</div>
-          <div class="text-xs muted">{{ g.simanim | length }} סימנים · {{ g.total }} שאלות</div>
-        </div>
-        <span class="muted">▾</span>
-      </summary>
-      <div class="stack-sm siman-group-body">
-        {% for s in g.simanim %}
-        <div class="card" style="border:2px solid {{ 'var(--success)' if s.completed else 'var(--border)' }};{{ 'opacity:0.5;' if s.locked }}">
+    <div class="stack-sm">
+      <div class="row between" style="padding:0.25rem 0 0.5rem;">
+        <h2 class="text-xl bold">{{ g.subject }}</h2>
+        <span class="text-xs muted">{{ g.simanim|length }} סימנים · {{ g.total }} שאלות</span>
+      </div>
+
+      {% for s in g.simanim %}
+      <details class="card" style="padding:0;overflow:hidden;" {{ 'open' if loop.first }}>
+        <summary class="siman-summary">
           <div class="row between gap-2">
-            <div class="row gap-1 bold">
-              {% if s.locked %}<span class="muted">🔒</span>{% endif %}
-              {% if s.completed %}<span class="success">✓</span>{% endif %}
-              {% if not s.locked %}
-                <a href="{{ url_for('student.chapitre', subject=g.subject, siman=s.siman) }}" class="bold" style="color:inherit;">
-                  סימן {{ s.siman }}
-                </a>
-              {% else %}
-                <span>סימן {{ s.siman }}</span>
-              {% endif %}
-            </div>
+            <span class="bold">
+              {% if s.completed %}<span class="success">✓</span> {% endif %}
+              סימן {{ s.siman | to_hebrew }}
+            </span>
             <span class="text-xs {{ 'success semibold' if s.completed else 'muted' }}">
               {{ s.answered }}/{{ s.count }}{% if s.completed %} · הושלם{% endif %}
             </span>
           </div>
           {% if not s.completed %}
-          <div class="progress mt-3">
+          <div class="progress" style="margin-top:0.5rem;">
             <span style="width:{{ s.pct }}%;"></span>
           </div>
           {% endif %}
+        </summary>
+        <div class="siman-body">
           {% if s.seifim %}
-          <div class="seif-grid mt-3">
+          <div class="seif-grid">
             {% for sf in s.seifim %}
-              {% if s.locked %}
-                <span class="seif-chip seif-chip-locked">{{ sf.seif }}</span>
-              {% elif sf.completed %}
-                <a href="{{ url_for('student.chapitre_seif', subject=g.subject, siman=s.siman, seif=sf.seif) }}" class="seif-chip seif-chip-done" title="סעיף {{ sf.seif }} — הושלם">{{ sf.seif }} ✓</a>
+              {% if sf.completed %}
+                <a href="{{ url_for('student.chapitre_seif', subject=g.subject, siman=s.siman, seif=sf.seif) }}"
+                   class="seif-chip seif-chip-done"
+                   title="סעיף {{ sf.seif | to_hebrew }} — הושלם">{{ sf.seif | to_hebrew }} ✓</a>
               {% else %}
-                <a href="{{ url_for('student.chapitre_seif', subject=g.subject, siman=s.siman, seif=sf.seif) }}" class="seif-chip seif-chip-active" title="סעיף {{ sf.seif }} — {{ sf.answered }}/{{ sf.count }}">{{ sf.seif }}</a>
+                <a href="{{ url_for('student.chapitre_seif', subject=g.subject, siman=s.siman, seif=sf.seif) }}"
+                   class="seif-chip seif-chip-active"
+                   title="סעיף {{ sf.seif | to_hebrew }} — {{ sf.answered }}/{{ sf.count }}">{{ sf.seif | to_hebrew }}</a>
               {% endif %}
             {% endfor %}
           </div>
+          {% else %}
+          <p class="text-xs muted">אין סעיפים</p>
           {% endif %}
         </div>
-        {% endfor %}
-      </div>
-    </details>
+      </details>
+      {% endfor %}
+    </div>
     {% endfor %}
   {% endif %}
 </div>

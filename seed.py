@@ -51,9 +51,10 @@ def run():
                         section=ins["section"],
                         tags=ins["tags"],
                         source_ref=ins["source_ref"],
-                        subject="בשר בחלב",
-                        siman=89,
-                        seif=i + 1,
+                        subject=ins.get("subject"),
+                        siman=ins.get("siman"),
+                        seif=ins.get("seif"),
+                        parcours=ins.get("parcours"),
                         status="approved",
                     )
                 )

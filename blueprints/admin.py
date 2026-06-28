@@ -6,7 +6,7 @@ import json
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 
-from auth_helpers import current_user, login_user, staff_required
+from auth_helpers import current_user, login_user, logout_user, staff_required
 from blueprints.auth import create_account
 from models import FsrsCard, Question, QuestionEdit, StudentProfile, User, UserAnswer, db
 from question_types import (
@@ -182,9 +182,10 @@ def import_questions():
                             section=ins["section"],
                             tags=ins["tags"],
                             source_ref=ins["source_ref"],
-                            subject=None,
-                            siman=None,
-                            seif=None,
+                            subject=ins.get("subject"),
+                            siman=ins.get("siman"),
+                            seif=ins.get("seif"),
+                            parcours=ins.get("parcours"),
                             status="pending",
                             created_by=user.id,
                         )
@@ -288,6 +289,7 @@ def validate():
                 "subject": (request.form.get("subject") or "").strip() or None,
                 "siman": request.form.get("siman"),
                 "seif": request.form.get("seif"),
+                "parcours": (request.form.get("parcours") or "").strip() or q.parcours,
                 "hint": request.form.get("hint"),
                 "source_ref": q.source_ref,
             }
@@ -296,15 +298,6 @@ def validate():
                 flash(synced["error"], "error")
                 return redirect(url_for("admin.validate", status="pending", q=qid))
             row = synced["row"]
-            if not row.get("subject"):
-                flash("שדה נושא חובה לפני אישור", "error")
-                return redirect(url_for("admin.validate", status="pending", q=qid))
-            if not draft["siman"]:
-                flash("שדה סימן חובה לפני אישור", "error")
-                return redirect(url_for("admin.validate", status="pending", q=qid))
-            if not draft["seif"]:
-                flash("שדה סעיף חובה לפני אישור", "error")
-                return redirect(url_for("admin.validate", status="pending", q=qid))
 
             q.text = row["text"]
             q.question_type = row["question_type"]
@@ -313,9 +306,10 @@ def validate():
             q.correct_answer = row["correct_answer"]
             q.explanation = row.get("explanation")
             q.hint = draft["hint"] or None
-            q.subject = row["subject"]
-            q.siman = int(draft["siman"])
-            q.seif = int(draft["seif"])
+            q.subject = row.get("subject")
+            q.siman = row.get("siman")
+            q.seif = row.get("seif")
+            q.parcours = row.get("parcours")
             q.difficulty = int(row.get("difficulty") or 2)
             q.section = row.get("section") or ["shulchan_aruch"]
             q.tags = row.get("tags") or []
@@ -349,3 +343,20 @@ def validate():
         question_types=QUESTION_TYPES,
         type_label=TYPE_LABEL,
     )
+
+
+@bp.route("/reset-db", methods=["POST"])
+@staff_required
+def reset_db():
+    user = current_user()
+    if not user.has_role("super_admin"):
+        return redirect(url_for("admin.denied"))
+    confirm = (request.form.get("confirm") or "").strip()
+    if confirm != "RESET":
+        flash("הקלד RESET כדי לאשר את האיפוס", "error")
+        return redirect(url_for("admin.dashboard"))
+    db.drop_all()
+    db.create_all()
+    logout_user()
+    flash("בסיס הנתונים אופס לחלוטין. יש להתחבר מחדש.", "success")
+    return redirect(url_for("admin.login"))

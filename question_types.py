@@ -16,6 +16,7 @@ QUESTION_TYPES = [
 ]
 
 VALID_SECTIONS = ("shulchan_aruch", "tur", "tur_shulchan_aruch", "psikei_admur", "ptei_teshuva")
+VALID_PARCOURS = ("bassar_bechalav",)
 
 HEBREW_RE = re.compile(r"[֐-׿]")
 LATIN_RE = re.compile(r"[A-Za-zÀ-ÖØ-öø-ÿ]")
@@ -84,6 +85,16 @@ def _validate_common(q, issues: list):
     if not sections or any(s not in VALID_SECTIONS for s in sections):
         issues.append("exam_section לא תקין")
     _add_text_issue(issues, q.get("explanation"), "הסבר")
+    # Mandatory metadata fields
+    if q.get("parcours") not in VALID_PARCOURS:
+        issues.append(f"parcours חייב להיות: {', '.join(VALID_PARCOURS)}")
+    _add_text_issue(issues, q.get("sujet"), "sujet")
+    siman = q.get("siman")
+    if not isinstance(siman, int) or isinstance(siman, bool) or siman <= 0:
+        issues.append("siman חייב להיות מספר שלם חיובי")
+    seif = q.get("seif")
+    if not isinstance(seif, int) or isinstance(seif, bool) or seif <= 0:
+        issues.append("seif חייב להיות מספר שלם חיובי")
     return qtype
 
 
@@ -192,6 +203,10 @@ def normalize_imported_question(q) -> dict:
                 "choices": choices,
                 "source_ref": _source_to_ref(q),
                 "tags": tags,
+                "parcours": q.get("parcours"),
+                "subject": _text(q.get("sujet")),
+                "siman": int(q["siman"]),
+                "seif": int(q["seif"]),
             },
         }
     except Exception as e:  # noqa: BLE001
@@ -204,6 +219,18 @@ def build_payload_from_draft(row: dict) -> dict:
     payload["difficulty_level"] = int(row.get("difficulty") or payload.get("difficulty_level") or 2)
     payload["exam_section"] = _normalize_sections(row.get("section") or payload.get("exam_section"))
     payload["explanation"] = row.get("explanation") or payload.get("explanation") or ""
+    payload["parcours"] = (row.get("parcours") or payload.get("parcours") or "").strip()
+    payload["sujet"] = (row.get("subject") or payload.get("sujet") or "").strip()
+    siman_val = row.get("siman") if row.get("siman") is not None else payload.get("siman")
+    try:
+        payload["siman"] = int(siman_val) if siman_val not in (None, "") else 0
+    except (ValueError, TypeError):
+        payload["siman"] = 0
+    seif_val = row.get("seif") if row.get("seif") is not None else payload.get("seif")
+    try:
+        payload["seif"] = int(seif_val) if seif_val not in (None, "") else 0
+    except (ValueError, TypeError):
+        payload["seif"] = 0
     if isinstance(row.get("tags"), list):
         payload["tags"] = row["tags"]
     elif isinstance(payload.get("tags"), list):
@@ -234,6 +261,10 @@ def sync_question_row_from_payload(row: dict) -> dict:
         correct_answer=ins["correct_answer"],
         source_ref=ins["source_ref"],
         tags=ins["tags"],
+        parcours=ins["parcours"],
+        subject=ins["subject"],
+        siman=ins["siman"],
+        seif=ins["seif"],
     )
     return {"row": merged, "error": None}
 

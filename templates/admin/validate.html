@@ -150,9 +150,19 @@
         </div>
 
         <div class="grid grid-3">
+          <div>
+            <label>פרוס <span class="destructive">*</span></label>
+            <select name="parcours">
+              <option value="bassar_bechalav" {{ 'selected' if (selected.parcours or '') == 'bassar_bechalav' }}>בשר בחלב</option>
+            </select>
+          </div>
           <div><label>נושא <span class="destructive">*</span></label><input name="subject" value="{{ selected.subject or '' }}" placeholder="לדוגמה: בשר בחלב" /></div>
           <div><label>סימן <span class="destructive">*</span></label><input type="number" name="siman" value="{{ selected.siman if selected.siman is not none else '' }}" /></div>
+        </div>
+        <div class="grid grid-3">
           <div><label>סעיף <span class="destructive">*</span></label><input type="number" name="seif" value="{{ selected.seif if selected.seif is not none else '' }}" /></div>
+          <div></div>
+          <div></div>
         </div>
         <div><label>רמז</label><textarea name="hint" rows="2">{{ selected.hint or '' }}</textarea></div>
         <div><label>הערת מאמת (חובה לדחייה)</label><textarea name="note" rows="2" placeholder="לא חובה לאישור"></textarea></div>
