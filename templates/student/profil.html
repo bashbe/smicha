@@ -1,5 +1,5 @@
 {% extends "student/_layout.html" %}
-{% from "_icons.html" import icon_coin, icon_flame, icon_target, icon_calendar, icon_settings, icon_logout %}
+{% from "_icons.html" import icon_settings, icon_logout %}
 {% block title %}פרופיל — סמיכה{% endblock %}
 {% block content %}
 {% set first_name = (profile.full_name or "תלמיד").split(" ")[0] %}
@@ -8,68 +8,58 @@
   <div class="stack-sm center-text profile-header">
     <div class="avatar-lg">{{ first_name[0] }}</div>
     <div>
-      <div style="font-family:'Secular One',sans-serif;font-size:var(--text-2xl);">{{ first_name }}</div>
-      <div style="font-size:var(--text-xs);color:var(--muted-fg);">תלמיד סמיכה</div>
+      <div style="font-family:'Secular One',sans-serif;font-size:var(--text-xl);">{{ first_name }}</div>
+      <div style="font-size:var(--text-sm);color:var(--muted);">תלמיד סמיכה</div>
     </div>
   </div>
 
-  <!-- 4 stats sans emojis -->
-  <div class="grid grid-2">
-    <div class="card card-sm">
-      <div style="color:var(--brand);display:flex;">{{ icon_coin(16) }}</div>
-      <div style="font-family:'Secular One',sans-serif;font-size:var(--text-2xl);margin-top:var(--space-2);">{{ "{:,}".format(profile.total_points or 0) }}</div>
-      <div style="font-size:var(--text-xs);color:var(--muted-fg);">נקודות</div>
+  <!-- Stats empilées, typographiques -->
+  <div>
+    <div class="stat-row">
+      <span class="stat-label">נקודות</span>
+      <span class="stat-value">{{ "{:,}".format(profile.total_points or 0) }}</span>
     </div>
-    <div class="card card-sm">
-      <div style="color:{{ 'var(--brand)' if profile.streak_days else 'var(--muted-fg)' }};display:flex;">{{ icon_flame(16) }}</div>
-      <div style="font-family:'Secular One',sans-serif;font-size:var(--text-2xl);margin-top:var(--space-2);">{{ profile.streak_days or 0 }}</div>
-      <div style="font-size:var(--text-xs);color:var(--muted-fg);">רצף ימים</div>
+    <div class="stat-row">
+      <span class="stat-label">רצף ימים</span>
+      <span class="stat-value">{{ profile.streak_days or 0 }}</span>
     </div>
-    <div class="card card-sm">
-      <div style="color:var(--success);display:flex;">{{ icon_target(16) }}</div>
-      <div style="font-family:'Secular One',sans-serif;font-size:var(--text-2xl);margin-top:var(--space-2);">{{ accuracy }}%</div>
-      <div style="font-size:var(--text-xs);color:var(--muted-fg);">דיוק</div>
+    <div class="stat-row">
+      <span class="stat-label">דיוק</span>
+      <span class="stat-value">{{ accuracy }}%</span>
     </div>
-    <div class="card card-sm">
-      <div style="color:var(--muted-fg);display:flex;">{{ icon_calendar(16) }}</div>
-      <div style="font-family:'Secular One',sans-serif;font-size:var(--text-2xl);margin-top:var(--space-2);">{{ days_to_exam if days_to_exam is not none else "—" }}</div>
-      <div style="font-size:var(--text-xs);color:var(--muted-fg);">ימים למבחן</div>
+    <div class="stat-row">
+      <span class="stat-label">ימים למבחן</span>
+      <span class="stat-value">{{ days_to_exam if days_to_exam is not none else "—" }}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">סך שאלות שעניתי</span>
+      <span class="stat-value">{{ total }}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">יעד שליטה</span>
+      <span class="stat-value">{{ (profile.target_stability * 100) | round | int }}%</span>
+    </div>
+    <div class="stat-row" style="border-bottom:none;">
+      <span class="stat-label">תאריך מבחן</span>
+      <span class="stat-value" style="font-size:var(--text-base);font-family:'Noto Sans Hebrew',sans-serif;font-weight:600;">{{ profile.exam_date or "—" }}</span>
     </div>
   </div>
 
-  <div class="card">
-    <div style="font-size:var(--text-sm);font-weight:600;">פרטי המסלול</div>
-    <dl class="stack-sm" style="font-size:var(--text-sm);margin-top:var(--space-3);">
-      <div class="row between profile-row">
-        <dt style="color:var(--muted-fg);">יעד שליטה</dt>
-        <dd style="font-weight:600;">{{ (profile.target_stability * 100) | round | int }}%</dd>
-      </div>
-      <div class="row between profile-row">
-        <dt style="color:var(--muted-fg);">תאריך מבחן</dt>
-        <dd style="font-weight:600;">{{ profile.exam_date or "—" }}</dd>
-      </div>
-      <div class="row between">
-        <dt style="color:var(--muted-fg);">סך שאלות שעניתי</dt>
-        <dd style="font-weight:600;">{{ total }}</dd>
-      </div>
-    </dl>
-  </div>
-
-  <a href="{{ url_for('student.settings') }}" class="btn btn-outline btn-block row gap-2 center">
+  <a href="{{ url_for('student.settings') }}" class="btn btn-ghost btn-block row gap-2 center">
     {{ icon_settings(16) }} ערוך הגדרות
   </a>
 
   <details class="danger-zone">
-    <summary style="font-size:var(--text-sm);color:var(--muted-fg);cursor:pointer;list-style:none;">
+    <summary style="font-size:var(--text-sm);color:var(--muted);cursor:pointer;list-style:none;">
       אזור מתקדם
     </summary>
     <div class="stack-sm mt-4">
       <form method="POST" action="{{ url_for('student.advance_revisions') }}">
-        <button type="submit" class="btn btn-block btn-outline">הקדם את כל החזרות ביום אחד</button>
+        <button type="submit" class="btn btn-block btn-ghost">הקדם את כל החזרות ביום אחד</button>
       </form>
-      <p style="font-size:var(--text-xs);color:var(--muted-fg);">יקדים ביום אחד את תאריך החזרה של כל הכרטיסים העתידיים.</p>
+      <p style="font-size:var(--text-sm);color:var(--muted);">יקדים ביום אחד את תאריך החזרה של כל הכרטיסים העתידיים.</p>
       <div class="divider"></div>
-      <p style="font-size:var(--text-xs);color:var(--muted-fg);">איפוס הפרוגרס ימחק את כל ההיסטוריה, הנקודות והרצף שלך. פעולה זו אינה הפיכה.</p>
+      <p style="font-size:var(--text-sm);color:var(--muted);">איפוס הפרוגרס ימחק את כל ההיסטוריה, הנקודות והרצף שלך. פעולה זו אינה הפיכה.</p>
       <form method="POST" action="{{ url_for('student.reset_progress') }}"
             onsubmit="return confirm('האם אתה בטוח? כל הפרוגרס יימחק לצמיתות.')">
         <button type="submit" class="btn btn-block btn-danger-outline">אפס את כל הפרוגרס</button>
@@ -77,7 +67,7 @@
     </div>
   </details>
 
-  <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-block btn-danger-outline row gap-2 center">
+  <a href="{{ url_for('auth.logout') }}" class="btn btn-block btn-danger-outline row gap-2 center">
     {{ icon_logout(16) }} התנתק
   </a>
 

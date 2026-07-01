@@ -1,70 +1,57 @@
 {% extends "student/_layout.html" %}
-{% from "_icons.html" import icon_book %}
+{% from "_icons.html" import icon_book, icon_chevron_left, icon_check %}
 {% block title %}מסלול — סמיכה{% endblock %}
 {% block content %}
-<div class="stack-sm animate-slide-up">
-  <div>
-    <h1>מסלול הלמידה</h1>
-    <p style="font-size:var(--text-sm);color:var(--muted-fg);margin-top:var(--space-1);">בחר סעיף כדי להתחיל</p>
-  </div>
+<div class="animate-slide-up">
 
   {% if not groups %}
-    <div class="stack animate-slide-up page-empty">
-      <div style="color:var(--muted-fg);">{{ icon_book(48) }}</div>
+    <div class="stack page-empty">
+      <div style="color:var(--muted);">{{ icon_book(48) }}</div>
       <div>
         <h2 class="mb-2">עוד אין נושאים זמינים</h2>
-        <p style="font-size:var(--text-sm);color:var(--muted-fg);">הצוות מכין כעת את חומר הלימוד. יש לחזור בקרוב.</p>
+        <p style="font-size:var(--text-sm);color:var(--muted);">הצוות מכין כעת את חומר הלימוד. יש לחזור בקרוב.</p>
       </div>
     </div>
   {% else %}
     {% for g in groups %}
-    <div class="stack-sm">
-      <div class="row between" style="padding:var(--space-2) 0 var(--space-1);">
-        <h2 style="font-family:'Secular One',sans-serif;font-size:var(--text-xl);">{{ g.subject }}</h2>
-        <span style="font-size:var(--text-xs);color:var(--muted-fg);">{{ g.simanim|length }} סימנים · {{ g.total }} שאלות</span>
-      </div>
+    <!-- Rappel contextuel discret : un seul sujet étudié à la fois -->
+    <div class="parcours-subject">{{ g.subject }}</div>
 
-      {% for s in g.simanim %}
-      <details class="card" style="padding:0;overflow:hidden;" {{ 'open' if loop.first }}>
-        <summary class="siman-summary">
-          <div class="row between gap-2">
-            <span class="row gap-1" style="font-weight:700;">
-              {% if s.completed %}<span class="success" style="font-size:var(--text-sm);">✓</span>{% endif %}
-              סימן {{ s.siman | to_hebrew }}
-            </span>
-            <span style="font-size:var(--text-xs);color:{{ 'var(--success)' if s.completed else 'var(--muted-fg)' }};font-weight:{{ '600' if s.completed else '400' }};">
-              {{ s.answered }}/{{ s.count }}{% if s.completed %} · הושלם{% endif %}
-            </span>
+    {% for s in g.simanim %}
+    <details class="siman-item" {{ 'open' if loop.first }}>
+      <summary>
+        <div class="siman-line">
+          <span class="siman-name">
+            סימן {{ s.siman | to_hebrew }}
+            {% if s.completed %}<span class="success" style="font-size:var(--text-sm);"> ✓</span>{% endif %}
+          </span>
+          <div class="progress">
+            <span class="{{ 'is-success' if s.completed }}" style="width:{{ s.pct }}%;"></span>
           </div>
-          {% if not s.completed %}
-          <div class="progress" style="margin-top:var(--space-2);">
-            <span style="width:{{ s.pct }}%;"></span>
-          </div>
-          {% endif %}
-        </summary>
-        <div class="siman-body">
-          {% if s.seifim %}
-          <div class="seif-grid">
-            {% for sf in s.seifim %}
-              {% if sf.completed %}
-                <a href="{{ url_for('student.chapitre_seif', subject=g.subject, siman=s.siman, seif=sf.seif) }}"
-                   class="seif-chip seif-chip-done"
-                   title="סעיף {{ sf.seif | to_hebrew }} — הושלם">{{ sf.seif | to_hebrew }} ✓</a>
-              {% else %}
-                <a href="{{ url_for('student.chapitre_seif', subject=g.subject, siman=s.siman, seif=sf.seif) }}"
-                   class="seif-chip seif-chip-active"
-                   title="סעיף {{ sf.seif | to_hebrew }} — {{ sf.answered }}/{{ sf.count }}">{{ sf.seif | to_hebrew }}</a>
-              {% endif %}
-            {% endfor %}
-          </div>
-          {% else %}
-          <p style="font-size:var(--text-xs);color:var(--muted-fg);">אין סעיפים</p>
-          {% endif %}
+          <span class="siman-chevron">{{ icon_chevron_left(18) }}</span>
         </div>
-      </details>
-      {% endfor %}
-    </div>
+      </summary>
+      <div class="seif-rows">
+        {% if s.seifim %}
+          {# Une ligne par seif. Quand le regroupement par sujet sera disponible,
+             le format devient « סעיף X - Y — נושא ». #}
+          {% for sf in s.seifim %}
+          <a href="{{ url_for('student.chapitre_seif', subject=g.subject, siman=s.siman, seif=sf.seif) }}"
+             class="seif-row">
+            <span>סעיף {{ sf.seif | to_hebrew }}</span>
+            {% if sf.completed %}
+              <span class="seif-check">{{ icon_check(16) }}</span>
+            {% endif %}
+          </a>
+          {% endfor %}
+        {% else %}
+          <p style="font-size:var(--text-sm);color:var(--muted);">אין סעיפים</p>
+        {% endif %}
+      </div>
+    </details>
+    {% endfor %}
     {% endfor %}
   {% endif %}
+
 </div>
 {% endblock %}

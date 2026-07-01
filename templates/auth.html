@@ -1,67 +1,44 @@
 {% extends "base.html" %}
 {% block title %}כניסה — סמיכה{% endblock %}
 {% block body %}
-<div style="min-height:100vh;display:flex;align-items:center;padding:1.5rem;">
-  <div style="width:100%;max-width:64rem;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;">
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:var(--space-2);">
+  <div style="width:100%;max-width:360px;">
 
-    <!-- Décoratif gauche (RTL = colonne gauche) -->
-    <div style="display:flex;flex-direction:column;justify-content:center;padding:2rem 0;" aria-hidden="true">
-      <div style="font-family:'Secular One',sans-serif;font-size:clamp(4rem,10vw,7rem);line-height:1;color:var(--brand);opacity:0.12;user-select:none;">
-        ס
+    <a href="{{ url_for('auth.index') }}"
+       style="font-size:var(--text-sm);color:var(--muted);display:inline-flex;align-items:center;gap:4px;margin-bottom:var(--space-3);">
+      → דף הבית
+    </a>
+
+    {% include "_flash.html" %}
+
+    <h1 id="title" style="margin-bottom:0.25rem;">כניסה לאפליקציה</h1>
+    <p id="subtitle" style="font-size:var(--text-sm);color:var(--muted);margin:0 0 var(--space-3);">ברוך הבא חזרה</p>
+
+    <form method="post" class="stack-sm">
+      <input type="hidden" name="mode" id="mode" value="login" />
+
+      <div id="name-field" class="hidden">
+        <label for="name">שם מלא</label>
+        <input id="name" name="name" dir="rtl" placeholder="ישראל ישראלי" />
       </div>
-      <p style="font-size:var(--text-sm);color:var(--muted-fg);margin-top:var(--space-3);max-width:28ch;line-height:1.65;">
-        523 שאלות על שולחן ערוך יורה דעה.
-        חזרה מבוססת FSRS — בדיוק כשצריך.
-      </p>
-    </div>
+      <div>
+        <label for="email">דוא"ל</label>
+        <input id="email" name="email" type="email" required dir="ltr" placeholder="you@example.com" />
+      </div>
+      <div>
+        <label for="password">סיסמה</label>
+        <input id="password" name="password" type="password" required dir="ltr" minlength="6" placeholder="••••••" />
+      </div>
+      <button type="submit" class="btn btn-primary btn-block btn-lg" id="submit-btn" style="margin-top:var(--space-1);">כניסה</button>
+    </form>
 
-    <!-- Formulaire droite (RTL = colonne droite) -->
-    <div>
-      <a href="{{ url_for('auth.index') }}"
-         style="font-size:var(--text-sm);color:var(--muted-fg);display:inline-flex;align-items:center;gap:4px;margin-bottom:1.5rem;">
-        ← דף הבית
-      </a>
-
-      {% include "_flash.html" %}
-
-      <h1 id="title" style="margin-bottom:0.25rem;">כניסה לאפליקציה</h1>
-      <p id="subtitle" style="font-size:var(--text-sm);color:var(--muted-fg);margin-bottom:1.75rem;">ברוך הבא חזרה</p>
-
-      <form method="post" class="stack-sm">
-        <input type="hidden" name="mode" id="mode" value="login" />
-
-        <div id="name-field" class="hidden">
-          <label for="name">שם מלא</label>
-          <input id="name" name="name" dir="rtl" placeholder="ישראל ישראלי" />
-        </div>
-        <div>
-          <label for="email">דוא"ל</label>
-          <input id="email" name="email" type="email" required dir="ltr" placeholder="you@example.com" />
-        </div>
-        <div>
-          <label for="password">סיסמה</label>
-          <input id="password" name="password" type="password" required dir="ltr" minlength="6" placeholder="••••••" />
-        </div>
-        <button type="submit" class="btn btn-primary btn-block btn-lg" id="submit-btn" style="margin-top:var(--space-1);">כניסה</button>
-      </form>
-
-      <button type="button" id="toggle"
-              style="width:100%;margin-top:var(--space-3);background:none;border:none;color:var(--muted-fg);font-size:var(--text-sm);cursor:pointer;padding:0.5rem;font-family:inherit;">
-        אין לך חשבון? <span style="color:var(--brand);font-weight:600;">הרשמה</span>
-      </button>
-    </div>
+    <button type="button" id="toggle"
+            style="width:100%;margin-top:var(--space-3);background:none;border:none;color:var(--muted);font-size:var(--text-sm);cursor:pointer;padding:var(--space-1);font-family:inherit;">
+      אין לך חשבון? <span style="color:var(--accent);font-weight:600;">הרשמה</span>
+    </button>
 
   </div>
 </div>
-
-<style>
-@media (max-width: 640px) {
-  div[style*="grid-template-columns:1fr 1fr"] {
-    grid-template-columns: 1fr !important;
-  }
-  div[aria-hidden="true"] { display: none !important; }
-}
-</style>
 
 <script>
   let mode = "login";
@@ -75,8 +52,8 @@
     document.getElementById("subtitle").textContent = signup ? "צור חשבון להתחיל ללמוד" : "ברוך הבא חזרה";
     document.getElementById("submit-btn").textContent = signup ? "הרשמה" : "כניסה";
     t.innerHTML = signup
-      ? 'כבר יש לי חשבון? <span style="color:var(--brand);font-weight:600;">כניסה</span>'
-      : 'אין לך חשבון? <span style="color:var(--brand);font-weight:600;">הרשמה</span>';
+      ? 'כבר יש לי חשבון? <span style="color:var(--accent);font-weight:600;">כניסה</span>'
+      : 'אין לך חשבון? <span style="color:var(--accent);font-weight:600;">הרשמה</span>';
   });
 </script>
 {% endblock %}

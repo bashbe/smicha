@@ -1,15 +1,15 @@
 {% extends "student/_layout.html" %}
-{% from "_icons.html" import icon_lock, icon_book, icon_calendar, icon_target %}
+{% from "_icons.html" import icon_lock, icon_book %}
 {% set show_nav = false %}
 {% block title %}הגדרת מסלול — סמיכה{% endblock %}
 {% block content %}
 <form method="post" id="onb" class="stack">
 
-  <!-- Progress : numéro en Secular One, pas un simple label muet -->
+  <!-- Progression : numéro + points -->
   <div class="row between" style="align-items:flex-end;">
     <div class="row-baseline gap-1">
-      <span id="step-number" style="font-family:'Secular One',sans-serif;font-size:var(--text-2xl);color:var(--brand);line-height:1;">1</span>
-      <span style="font-size:var(--text-xs);color:var(--muted-fg);">מתוך 5</span>
+      <span id="step-number" style="font-family:'Secular One',sans-serif;font-size:var(--text-2xl);color:var(--accent);line-height:1;">1</span>
+      <span style="font-size:var(--text-sm);color:var(--muted);">מתוך 5</span>
     </div>
     <div class="row gap-1">
       <span class="dot" data-dot="1"></span>
@@ -24,28 +24,28 @@
   <div class="step stack animate-slide-up" data-step="1">
     <div>
       <h2>מה אתה לומד עכשיו?</h2>
-      <p style="font-size:var(--text-sm);color:var(--muted-fg);margin-top:var(--space-1);">בחר את הנושא הנוכחי שלך</p>
+      <p style="font-size:var(--text-sm);color:var(--muted);margin-top:var(--space-1);">בחר את הנושא הנוכחי שלך</p>
     </div>
     <div id="subject-cards" class="stack-sm">
       <div class="card opt-card subject-card" data-subject="basar_bechalav" id="card-bbc" style="cursor:pointer;">
-        <div class="icon-box icon-box-primary">{{ icon_book(18) }}</div>
+        <span style="color:var(--muted);display:flex;">{{ icon_book(18) }}</span>
         <div class="flex-1">
           <div style="font-weight:700;">בשר בחלב</div>
-          <div style="font-size:var(--text-xs);color:var(--muted-fg);">הלכות בישול ואכילת בשר בחלב</div>
+          <div style="font-size:var(--text-sm);color:var(--muted);">הלכות בישול ואכילת בשר בחלב</div>
         </div>
       </div>
       <div class="card opt-card" style="opacity:0.4;cursor:not-allowed;">
-        <div class="icon-box" style="color:var(--muted-fg);">{{ icon_lock(16) }}</div>
+        <span style="color:var(--muted);display:flex;">{{ icon_lock(16) }}</span>
         <div class="flex-1">
           <div style="font-weight:700;">תערובות</div>
-          <div style="font-size:var(--text-xs);color:var(--muted-fg);">בקרוב</div>
+          <div style="font-size:var(--text-sm);color:var(--muted);">בקרוב</div>
         </div>
       </div>
       <div class="card opt-card" style="opacity:0.4;cursor:not-allowed;">
-        <div class="icon-box" style="color:var(--muted-fg);">{{ icon_lock(16) }}</div>
+        <span style="color:var(--muted);display:flex;">{{ icon_lock(16) }}</span>
         <div class="flex-1">
           <div style="font-weight:700;">מליחה</div>
-          <div style="font-size:var(--text-xs);color:var(--muted-fg);">בקרוב</div>
+          <div style="font-size:var(--text-sm);color:var(--muted);">בקרוב</div>
         </div>
       </div>
     </div>
@@ -56,10 +56,10 @@
   <div class="step stack hidden" data-step="2">
     <div>
       <h2>מתי המבחן שלך?</h2>
-      <p style="font-size:var(--text-sm);color:var(--muted-fg);margin-top:var(--space-1);">נבנה עבורך תוכנית למידה מותאמת</p>
+      <p style="font-size:var(--text-sm);color:var(--muted);margin-top:var(--space-1);">נבנה עבורך תוכנית למידה מותאמת</p>
     </div>
     <input type="hidden" name="exam_date" id="exam_date" value="">
-    <div class="card" style="padding:1rem;">
+    <div class="card">
       <div id="cal-root"></div>
     </div>
     <button type="button" class="btn btn-primary btn-block btn-lg" data-next="3" disabled id="next2">המשך</button>
@@ -69,15 +69,15 @@
   <div class="step stack hidden" data-step="3">
     <div>
       <h2>רמת השליטה הרצויה</h2>
-      <p style="font-size:var(--text-sm);color:var(--muted-fg);margin-top:var(--space-1);">כמה טוב אתה רוצה לדעת את החומר?</p>
+      <p style="font-size:var(--text-sm);color:var(--muted);margin-top:var(--space-1);">כמה טוב אתה רוצה לדעת את החומר?</p>
     </div>
     {% for v, t, d, pct in [(0.80,'רמה בסיסית','מכיר את החומר','80%'),(0.90,'רמה טובה','שולט היטב','90%'),(0.99,'רמה מושלמת','דע הכל על בוריו','99%')] %}
     <label class="card opt-card opt-stability">
       <input type="radio" name="target_stability" value="{{ v }}" class="hidden" />
-      <div style="font-family:'Secular One',sans-serif;font-size:var(--text-2xl);color:var(--muted-fg);" class="opt-pct">{{ pct }}</div>
+      <div style="font-family:'Secular One',sans-serif;font-size:var(--text-xl);color:var(--muted);" class="opt-pct">{{ pct }}</div>
       <div class="flex-1">
         <div style="font-weight:700;">{{ t }}</div>
-        <div style="font-size:var(--text-xs);color:var(--muted-fg);">{{ d }}</div>
+        <div style="font-size:var(--text-sm);color:var(--muted);">{{ d }}</div>
       </div>
     </label>
     {% endfor %}
@@ -88,16 +88,16 @@
   <div class="step stack hidden" data-step="4">
     <div>
       <h2>אילו מקורות לומדים?</h2>
-      <p style="font-size:var(--text-sm);color:var(--muted-fg);margin-top:var(--space-1);">ניתן לבחור מספר מקורות · שולחן ערוך תמיד כלול</p>
+      <p style="font-size:var(--text-sm);color:var(--muted);margin-top:var(--space-1);">ניתן לבחור מספר מקורות · שולחן ערוך תמיד כלול</p>
     </div>
 
-    <div class="card opt-card" style="opacity:0.75;cursor:default;border-color:var(--brand);">
+    <div class="card opt-card" style="opacity:0.75;cursor:default;border-color:var(--accent);">
       <input type="checkbox" class="input-checkbox-auto" checked disabled style="display:none;" />
       <div class="flex-1">
         <div style="font-weight:700;">שולחן ערוך</div>
-        <div style="font-size:var(--text-xs);color:var(--muted-fg);">עם נושאי כלים — תמיד כלול</div>
+        <div style="font-size:var(--text-sm);color:var(--muted);">עם נושאי כלים — תמיד כלול</div>
       </div>
-      <span style="color:var(--muted-fg);display:flex;">{{ icon_lock(14) }}</span>
+      <span style="color:var(--muted);display:flex;">{{ icon_lock(14) }}</span>
     </div>
     <input type="hidden" name="section" value="shulchan_aruch">
 
@@ -106,7 +106,7 @@
       <input type="checkbox" name="section" value="{{ v }}" class="input-checkbox-auto" />
       <div class="flex-1">
         <div style="font-weight:700;">{{ t }}</div>
-        <div style="font-size:var(--text-xs);color:var(--muted-fg);">{{ d }}</div>
+        <div style="font-size:var(--text-sm);color:var(--muted);">{{ d }}</div>
       </div>
     </label>
     {% endfor %}
@@ -117,9 +117,9 @@
   <!-- step 5: confirmation -->
   <div class="step stack hidden" data-step="5">
     <div class="center-text">
-      <div style="font-family:'Secular One',sans-serif;font-size:var(--text-4xl);color:var(--brand);">✓</div>
+      <div style="font-family:'Secular One',sans-serif;font-size:var(--text-4xl);color:var(--accent);">✓</div>
       <h2 style="margin-top:var(--space-2);">הכל מוכן!</h2>
-      <p style="font-size:var(--text-sm);color:var(--muted-fg);margin-top:var(--space-1);" id="days-left"></p>
+      <p style="font-size:var(--text-sm);color:var(--muted);margin-top:var(--space-1);" id="days-left"></p>
     </div>
     <button type="submit" class="btn btn-primary btn-block btn-lg">התחל ללמוד</button>
   </div>
