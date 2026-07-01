@@ -49,7 +49,7 @@ def login():
                 if not user or not user.check_password(password):
                     raise ValueError("דוא\"ל או סיסמה שגויים")
                 login_user(user)
-            return redirect(url_for("student.parcours"))
+            return redirect(url_for("student.home"))
         except ValueError as e:
             flash(str(e), "error")
 

@@ -1,37 +1,95 @@
 {% extends "base.html" %}
-{% block title %}סמיכה — לימוד והכנה למבחן{% endblock %}
-{% block body %}
-<div style="min-height:100vh;background:linear-gradient(to bottom,var(--background),var(--secondary),var(--background));">
-  <div class="container-wide" style="max-width:56rem;padding-top:4rem;padding-bottom:4rem;">
-    <div class="center-text">
-      <div class="pill" style="border:1px solid var(--border);background:var(--card);color:var(--muted-foreground);">
-        ✨ הכנה חכמה למבחן הסמיכה
-      </div>
-      <h1 class="text-5xl bold" style="margin-top:1.5rem;line-height:1.1;">
-        לימוד הסמיכה,<br /><span class="primary">בקצב שלך</span>
-      </h1>
-      <p class="muted text-lg" style="max-width:36rem;margin:1.25rem auto 0;">
-        תרגול ממוקד, חזרה מבוססת זיכרון לטווח ארוך ומעקב התקדמות —
-        הכל כדי שתגיע למבחן בביטחון מלא.
-      </p>
-      <div class="row center gap-2" style="margin-top:2.5rem;flex-wrap:wrap;">
-        <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">📖 התחל ללמוד</a>
-        <a href="{{ url_for('admin.login') }}" class="btn btn-outline btn-lg">🛡️ כניסת ניהול</a>
-      </div>
-    </div>
+{% block title %}סמיכה — הכנה לבחינת הסמיכה{% endblock %}
 
-    <div class="grid grid-3" style="margin-top:5rem;">
-      {% for f in [
-        ('תרגול חכם','שאלות מותאמות לרמת הידע ולחלקים שאתה לומד.'),
-        ('חזרה ממוקדת','אלגוריתם זיכרון מחזיר אותך בדיוק לחומר שצריך לחזק.'),
-        ('מוטיבציה יומית','נקודות, רצפים וקומבו — לימוד שמתגמל אותך.')
-      ] %}
-      <div class="card">
-        <h3 class="text-lg semibold">{{ f[0] }}</h3>
-        <p class="muted text-sm" style="margin-top:0.5rem">{{ f[1] }}</p>
+{% block body %}
+<div style="min-height:100vh;display:flex;flex-direction:column;">
+
+  <!-- Hero asymétrique -->
+  <div style="flex:1;display:flex;align-items:center;padding:3rem 1.5rem 2rem;">
+    <div style="width:100%;max-width:64rem;margin:0 auto;">
+      <div class="landing-hero">
+
+        <!-- Colonne texte (droite en RTL) -->
+        <div class="landing-text">
+          <p style="font-size:var(--text-xs);font-weight:700;letter-spacing:0.1em;color:var(--muted-fg);text-transform:uppercase;margin:0 0 1.5rem;">
+            הכנה לבחינת סמיכה
+          </p>
+          <h1 style="font-size:clamp(2rem,5vw,3.25rem);margin-bottom:1.25rem;line-height:1.1;">
+            לימוד הסמיכה,<br />
+            <span style="color:var(--brand);">בקצב שלך</span>
+          </h1>
+          <p style="color:var(--muted-fg);font-size:var(--text-lg);line-height:1.65;margin:0 0 2.5rem;max-width:36ch;">
+            523 שאלות על שולחן ערוך יורה דעה —
+            עם חזרה מבוססת FSRS ומעקב התקדמות מפורט.
+          </p>
+
+          <div style="display:flex;flex-direction:column;gap:var(--space-2);max-width:18rem;">
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg btn-block">
+              התחל ללמוד
+            </a>
+            <a href="{{ url_for('admin.login') }}"
+               style="font-size:var(--text-sm);color:var(--muted-fg);text-align:center;padding:0.5rem;">
+              כניסת מנהל →
+            </a>
+          </div>
+
+          <!-- 2 stats inline, pas de cartes identiques -->
+          <div style="display:flex;gap:var(--space-4);margin-top:3rem;padding-top:2rem;border-top:1px solid var(--border);">
+            <div>
+              <div style="font-family:'Secular One',sans-serif;font-size:var(--text-2xl);color:var(--foreground);">523</div>
+              <div style="font-size:var(--text-xs);color:var(--muted-fg);margin-top:2px;">שאלות ביורה דעה</div>
+            </div>
+            <div style="width:1px;background:var(--border);"></div>
+            <div>
+              <div style="font-family:'Secular One',sans-serif;font-size:var(--text-2xl);color:var(--foreground);">FSRS</div>
+              <div style="font-size:var(--text-xs);color:var(--muted-fg);margin-top:2px;">חזרה בדיוק כשצריך</div>
+            </div>
+            <div style="width:1px;background:var(--border);"></div>
+            <div>
+              <div style="font-family:'Secular One',sans-serif;font-size:var(--text-2xl);color:var(--foreground);">∞</div>
+              <div style="font-size:var(--text-xs);color:var(--muted-fg);margin-top:2px;">חזרות מותאמות אישית</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colonne déco (gauche en RTL) — folio géant -->
+        <div class="landing-folio" aria-hidden="true">
+          <div style="font-family:'Secular One',sans-serif;font-size:clamp(6rem,18vw,11rem);line-height:1;color:var(--brand);opacity:0.15;user-select:none;">
+            א
+          </div>
+          <div style="font-size:var(--text-sm);color:var(--muted-fg);margin-top:var(--space-2);opacity:0.7;">
+            יורה דעה · סימן א׳
+          </div>
+        </div>
+
       </div>
-      {% endfor %}
     </div>
   </div>
+
 </div>
+
+<style>
+.landing-hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+.landing-folio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+}
+@media (max-width: 700px) {
+  .landing-hero {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .landing-folio {
+    align-items: flex-start;
+    order: -1;
+  }
+}
+</style>
 {% endblock %}
