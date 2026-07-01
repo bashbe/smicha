@@ -5,3 +5,13 @@
 ---
 Bug additionnel trouvé en corrigeant #3 (pas dans la liste initiale) :
 4) le score affiché sur l'écran de fin de siman ("X מתוך N" réponses correctes) restait bloqué à 0 même quand toutes les réponses étaient correctes du premier coup — CORRIGÉ : dans `pick()` (static/js/chapitre.js), `prevResult` était lu après avoir déjà écrasé `state.results[origIdx]` avec le résultat de la tentative en cours, donc la comparaison ne pouvait jamais être vraie. `prevResult` est maintenant capturé au tout début de `pick()`, avant toute écriture. Vérifié : écran de fin affiche désormais "3 מתוך 3 · 100%" pour 3 bonnes réponses.
+
+5) dans le login/inscription, le bouton était trop proche du champ mot de passe — CORRIGÉ : `margin-top` du bouton submit passé de `--space-1` (8px) à `--space-3` (24px) dans `templates/auth.html`.
+
+6) le menu était à gauche au lieu de droite sur desktop alors que l'app est RTL — CORRIGÉ : sidebar desktop passée de `left: 0` + `border-left` + `padding-left: 200px` à `right: 0` + `border-right` + `padding-right: 200px` dans `static/css/styles.css`.
+
+7) le toggle mode clair/sombre était dans la barre de navigation — CORRIGÉ : retiré du nav (`templates/student/_layout.html`), ajouté dans la page profil (`templates/student/profil.html`) avec un label dynamique "מצב לילה / מצב יום" selon le thème actif.
+
+8) le pourcentage de bonnes réponses dans l'écran de fin de révision était faussé car il comptait toutes les tentatives (incluant les retries) — CORRIGÉ : `today_stats` dans `blueprints/student.py` recompte désormais les cartes uniques par `question_id` ; si une carte a été tentée plusieurs fois, seule la meilleure tentative compte (correcte dès qu'une réponse est juste).
+
+9) la page parcours n'affichait pas les stats de l'élève — CORRIGÉ : ajout d'un header en haut de `templates/student/parcours.html` avec le sujet étudié à gauche et les icônes flamme (streak) + pièce (points) à droite, dans le même format que la page d'accueil. `profile` est maintenant passé au template depuis `blueprints/student.py`.
