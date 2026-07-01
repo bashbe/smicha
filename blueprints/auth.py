@@ -43,7 +43,6 @@ def login():
                     raise ValueError("הסיסמה חייבת להכיל לפחות 6 תווים")
                 user = create_account(email, password, request.form.get("name"))
                 login_user(user)
-                flash("נרשמת בהצלחה", "success")
             else:
                 user = User.query.filter_by(email=email).first()
                 if not user or not user.check_password(password):

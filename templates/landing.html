@@ -52,13 +52,17 @@
           </div>
         </div>
 
-        <!-- Colonne déco (gauche en RTL) — folio géant -->
-        <div class="landing-folio" aria-hidden="true">
-          <div style="font-family:'Secular One',sans-serif;font-size:clamp(6rem,18vw,11rem);line-height:1;color:var(--brand);opacity:0.15;user-select:none;">
-            א
-          </div>
-          <div style="font-size:var(--text-sm);color:var(--muted-fg);margin-top:var(--space-2);opacity:0.7;">
+        <!-- Colonne déco (gauche en RTL) — fil de progression daf -->
+        <div class="landing-daf" aria-hidden="true">
+          <div class="daf-thread-label" style="font-size:var(--text-sm);">
             יורה דעה · סימן א׳
+          </div>
+          <div class="row gap-1" style="margin-top:var(--space-3);padding-top:var(--space-2);border-top:1px solid var(--border);width:12rem;">
+            <span class="dot current accent-dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
           </div>
         </div>
 
@@ -75,7 +79,7 @@
   gap: 4rem;
   align-items: center;
 }
-.landing-folio {
+.landing-daf {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -86,7 +90,7 @@
     grid-template-columns: 1fr;
     gap: 2rem;
   }
-  .landing-folio {
+  .landing-daf {
     align-items: flex-start;
     order: -1;
   }

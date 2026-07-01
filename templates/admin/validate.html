@@ -74,19 +74,15 @@
               <label>חלק הבחינה</label>
               {% set cur_sections = (payload.exam_section if payload.exam_section is iterable and payload.exam_section is not string else [payload.exam_section]) if payload.exam_section else (selected.section if selected.section is iterable and selected.section is not string else [selected.section or 'shulchan_aruch']) %}
               <select name="section" multiple size="5" style="height:auto;">
-                {% for val, lbl in [('shulchan_aruch','שו"ע'),('tur','טור'),('tur_shulchan_aruch','טור + שו"ע'),('psikei_admur','פסקי אדה"ז'),('ptei_teshuva','פתחי תשובה')] %}
+                {% for val, lbl in [('shulchan_aruch','שו"ע'),('tur','טור'),('psikei_admur','פסקי אדה"ז'),('ptei_teshuva','פתחי תשובה')] %}
                 <option value="{{ val }}" {{ 'selected' if val in cur_sections }}>{{ lbl }}</option>
                 {% endfor %}
               </select>
             </div>
           </div>
 
-          <!-- multiple_choice / practical_scenario -->
-          <div class="type-block stack-sm" data-type="multiple_choice practical_scenario" style="margin-top:1rem;">
-            <div class="scenario-only" style="display:none;">
-              <label>תיאור המקרה</label>
-              <textarea name="scenario_text" rows="3">{{ payload.scenario_text or '' }}</textarea>
-            </div>
+          <!-- multiple_choice -->
+          <div class="type-block stack-sm" data-type="multiple_choice" style="margin-top:1rem;">
             <div>
               <label>טקסט השאלה</label>
               <textarea name="question_text" rows="3">{{ payload.question_text or '' }}</textarea>
@@ -182,8 +178,6 @@
           document.querySelectorAll(".type-block").forEach((b) => {
             b.style.display = b.dataset.type.split(" ").includes(t) ? "" : "none";
           });
-          const sc = document.querySelector(".scenario-only");
-          if (sc) sc.style.display = t === "practical_scenario" ? "" : "none";
         }
         qtypeSel.addEventListener("change", refreshType);
         refreshType();

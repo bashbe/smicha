@@ -5,9 +5,12 @@
 {% block content %}
 <form method="post" id="onb" class="stack">
 
-  <!-- Progress : numéroté, pas des dots décoratifs -->
-  <div class="row between" style="font-size:var(--text-xs);color:var(--muted-fg);">
-    <span id="step-label">שלב 1 מתוך 5</span>
+  <!-- Progress : numéro en Secular One, pas un simple label muet -->
+  <div class="row between" style="align-items:flex-end;">
+    <div class="row-baseline gap-1">
+      <span id="step-number" style="font-family:'Secular One',sans-serif;font-size:var(--text-2xl);color:var(--brand);line-height:1;">1</span>
+      <span style="font-size:var(--text-xs);color:var(--muted-fg);">מתוך 5</span>
+    </div>
     <div class="row gap-1">
       <span class="dot" data-dot="1"></span>
       <span class="dot" data-dot="2"></span>
@@ -126,7 +129,7 @@
 <script src="{{ url_for('static', filename='js/hebrew-calendar.js') }}"></script>
 <script>
   const dots = document.querySelectorAll("[data-dot]");
-  const stepLabel = document.getElementById("step-label");
+  const stepNumber = document.getElementById("step-number");
 
   function show(step) {
     step = parseInt(step);
@@ -141,7 +144,7 @@
         "var(--border)";
       d.style.opacity = n < step ? "0.5" : "1";
     });
-    stepLabel.textContent = "שלב " + step + " מתוך 5";
+    stepNumber.textContent = step;
     if (step === 5) {
       const ed = document.getElementById("exam_date").value;
       if (ed) {

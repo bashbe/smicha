@@ -25,7 +25,7 @@ def _to_section_list(section) -> list[str]:
 
 def allowed_sections(sections) -> set[str]:
     """Return the set of section values the student has access to.
-    shulchan_aruch is always included. 'tur' and 'tur_shulchan_aruch' are treated as equivalent.
+    shulchan_aruch is always included.
     """
     if not sections:
         sections = ["shulchan_aruch"]
@@ -34,10 +34,6 @@ def allowed_sections(sections) -> set[str]:
     allowed: set[str] = {"shulchan_aruch"}
     for s in sections:
         allowed.add(s)
-        if s == "tur":
-            allowed.add("tur_shulchan_aruch")
-        if s == "tur_shulchan_aruch":
-            allowed.add("tur")
     return allowed
 
 
@@ -170,7 +166,6 @@ def parcours():
     allowed = allowed_sections(sp.section)
     qs = [q for q in Question.query.filter(
         Question.status == "approved",
-        Question.question_type != "practical_scenario",
     ).all() if question_in_sections(q, allowed)]
 
     # subject → siman → seif → count
@@ -184,7 +179,6 @@ def parcours():
 
     _correct_filters = [
         UserAnswer.is_correct == True,
-        Question.question_type != "practical_scenario",
     ]
     # IDs of questions in allowed sections (Python-side filter for JSON column)
     allowed_q_ids = [q.id for q in qs]
@@ -278,7 +272,6 @@ def chapitre_seif(subject: str, siman: int, seif: int):
         Question.siman == siman,
         Question.seif == seif,
         Question.status == "approved",
-        Question.question_type != "practical_scenario",
     ], allowed)
     if questions is None:
         flash("כל השאלות בסעיף זה הושלמו! עברו לחזרות 🎓", "success")
@@ -301,7 +294,6 @@ def chapitre(subject: str, siman: int):
         Question.subject == subject,
         Question.siman == siman,
         Question.status == "approved",
-        Question.question_type != "practical_scenario",
     ], allowed)
     if questions is None:
         flash("כל השאלות בסימן זה הושלמו! עברו לחזרות 🎓", "success")
@@ -328,8 +320,7 @@ def revision():
             FsrsCard.user_id == sp.id,
             FsrsCard.due_date <= today,
             Question.status == "approved",
-            Question.question_type != "practical_scenario",
-        )
+            )
         .order_by(FsrsCard.due_date.asc())
         .all()
     )

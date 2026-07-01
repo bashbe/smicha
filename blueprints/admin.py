@@ -20,7 +20,6 @@ bp = Blueprint("admin", __name__, url_prefix="/admin")
 TYPE_LABEL = {
     "multiple_choice": "רב-ברירה",
     "multiple_opinions_dropdown": "התאמת פוסקים",
-    "practical_scenario": "מקרה מעשי",
     "true_false": "נכון/לא נכון",
 }
 
@@ -214,10 +213,8 @@ def _payload_from_form(form, question_type: str) -> dict:
     if form.get("source_id"):
         payload["id"] = form.get("source_id")
 
-    if question_type in ("multiple_choice", "practical_scenario"):
+    if question_type == "multiple_choice":
         payload["question_text"] = form.get("question_text") or ""
-        if question_type == "practical_scenario":
-            payload["scenario_text"] = form.get("scenario_text") or ""
         correct = form.get("correct_option")
         payload["options"] = [
             {

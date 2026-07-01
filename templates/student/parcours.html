@@ -1,4 +1,5 @@
 {% extends "student/_layout.html" %}
+{% from "_icons.html" import icon_book %}
 {% block title %}מסלול — סמיכה{% endblock %}
 {% block content %}
 <div class="stack-sm animate-slide-up">
@@ -8,9 +9,12 @@
   </div>
 
   {% if not groups %}
-    <div class="card center-text" style="padding:2.5rem;">
-      <p style="font-size:var(--text-lg);font-weight:700;">עוד אין נושאים זמינים</p>
-      <p style="font-size:var(--text-sm);color:var(--muted-fg);margin-top:var(--space-1);">המנהלים עדיין מכינים את החומר</p>
+    <div class="stack animate-slide-up page-empty">
+      <div style="color:var(--muted-fg);">{{ icon_book(48) }}</div>
+      <div>
+        <h2 class="mb-2">עוד אין נושאים זמינים</h2>
+        <p style="font-size:var(--text-sm);color:var(--muted-fg);">הצוות מכין כעת את חומר הלימוד. יש לחזור בקרוב.</p>
+      </div>
     </div>
   {% else %}
     {% for g in groups %}

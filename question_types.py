@@ -11,11 +11,10 @@ import re
 QUESTION_TYPES = [
     "multiple_choice",
     "multiple_opinions_dropdown",
-    "practical_scenario",
     "true_false",
 ]
 
-VALID_SECTIONS = ("shulchan_aruch", "tur", "tur_shulchan_aruch", "psikei_admur", "ptei_teshuva")
+VALID_SECTIONS = ("shulchan_aruch", "tur", "psikei_admur", "ptei_teshuva")
 VALID_PARCOURS = ("bassar_bechalav",)
 
 HEBREW_RE = re.compile(r"[֐-׿]")
@@ -130,11 +129,6 @@ def normalize_imported_question(q) -> dict:
             _add_text_issue(issues, q.get("question_text"), "טקסט השאלה")
             _validate_numbered_options(q, issues)
 
-        if qtype == "practical_scenario":
-            _add_text_issue(issues, q.get("scenario_text"), "תיאור המקרה")
-            _add_text_issue(issues, q.get("question_text"), "טקסט השאלה")
-            _validate_numbered_options(q, issues)
-
         if qtype == "multiple_opinions_dropdown":
             _add_text_issue(issues, q.get("question_text"), "טקסט השאלה")
             dropdown_choices = q.get("dropdown_choices") if isinstance(q.get("dropdown_choices"), list) else []
@@ -174,7 +168,7 @@ def normalize_imported_question(q) -> dict:
         tags = _normalize_tags(q.get("tags"))
         explanation = _text(q.get("explanation"))
 
-        if qtype in ("multiple_choice", "practical_scenario"):
+        if qtype == "multiple_choice":
             prompt = _text(q.get("question_text"))
             correct = next(o for o in q["options"] if o.get("is_correct") is True)
             correct_answer = str(correct["number"])
@@ -318,7 +312,7 @@ def normalize_db_question(row: dict) -> dict:
     return {
         "type": qtype,
         "prompt": _text(payload.get("question_text")) or row.get("text") or "",
-        "scenario": _text(payload.get("scenario_text")) if qtype == "practical_scenario" else None,
+        "scenario": None,
         "choices": [{"key": str(o["number"]), "label": str(o["number"]), "text": _text(o.get("text"))} for o in opts],
         "correctKey": str(correct_opt["number"]) if correct_opt else str(row.get("correct_answer") or ""),
         "explanation": explanation,

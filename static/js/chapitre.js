@@ -113,6 +113,7 @@
     const nq = q.normalized;
     const origIdx = origIdxMap[q.id];
     const elapsed = Date.now() - state.start;
+    const prevResult = state.results[origIdx];
     state.chosen = key;
     state.revealed = true;
 
@@ -137,7 +138,6 @@
     }
 
     state.combo = data.combo;
-    const prevResult = state.results[origIdx];
     state.results[origIdx] = data.is_correct ? "correct" : "wrong";
 
     if (data.is_correct) {
@@ -228,7 +228,7 @@
     stats.appendChild(ptsCol);
     stats.appendChild(el("div", "divider-v"));
     const comboCol = el("div", "center-text");
-    comboCol.appendChild(el("div", "row center gap-1 text-3xl extrabold accent", icon("flame", 24), state.combo));
+    comboCol.appendChild(el("div", "row center gap-1 text-3xl extrabold accent", icon("flame", 24), String(state.combo)));
     comboCol.appendChild(el("div", "text-xs muted", "רצף קומבו"));
     stats.appendChild(comboCol);
     wrap.appendChild(stats);
@@ -243,8 +243,10 @@
     actions.appendChild(homeLink);
     actions.appendChild(moreLink);
     wrap.appendChild(actions);
+    wrap.appendChild(el("div", "text-xs muted mt-2", "חוזר לבית אוטומטית..."));
 
     root.appendChild(wrap);
+    setTimeout(() => { window.location.href = cfg.home; }, 4000);
   }
 
   async function renderRevisionComplete() {

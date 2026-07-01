@@ -37,10 +37,6 @@
   --muted-foreground:    var(--muted-fg);
   --input:               var(--border);
 
-  /* Token signature — pas dans shadcn */
-  --siman:               var(--brand);
-  --siman-folio-opacity: 0.04;
-
   /* --- Espacement (base 6 px) --- */
   --space-1: 0.375rem;   /* 6 px  */
   --space-2: 0.75rem;    /* 12 px */
@@ -64,7 +60,6 @@
   --text-xl:     1.25rem;    /* 20 px */
   --text-2xl:    1.625rem;   /* 26 px */
   --text-4xl:    2.5rem;     /* 40 px */
-  --text-folio:  6rem;       /* 96 px — élément signature */
 
   /* Legacy aliases utilisés dans les templates existants */
   --radius: var(--radius-lg);
@@ -446,20 +441,11 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
   margin-top: var(--space-1);
 }
 
-/* ---- Folio (élément signature — lecteur de questions) ---- */
-.player-wrap > #player { position: relative; z-index: 1; }
-.folio-number {
-  position: absolute;
-  top: -0.5rem;
-  right: var(--space-2);
-  font-family: 'Secular One', sans-serif;
-  font-size: var(--text-folio);
-  color: var(--siman);
-  opacity: var(--siman-folio-opacity);
-  line-height: 1;
-  pointer-events: none;
-  user-select: none;
-  z-index: 0;
+/* ---- Fil du daf (élément signature — lecteur de questions) ---- */
+.daf-thread-label {
+  font-size: var(--text-xs);
+  color: var(--muted-fg);
+  letter-spacing: 0.02em;
 }
 
 /* ---- Parcours — liste de simanim ---- */
@@ -515,8 +501,8 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 .danger-zone { border: 1px solid rgba(184,58,58,0.2); border-radius: var(--radius-lg); padding: 1rem; }
 
 /* ---- Player (chapitre) ---- */
-.player-dots    { margin-top: 1.25rem; }
-.player-card    { position: relative; margin-top: 0.75rem; overflow: hidden; }
+.player-dots    { margin-top: 1.25rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
+.player-card    { position: relative; margin-top: 0.75rem; }
 .player-answers { position: relative; margin-top: 1.25rem; }
 .player-exp     { margin-top: 1.25rem; border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius-lg); padding: 1.25rem; }
 .player-complete { min-height: 70vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
