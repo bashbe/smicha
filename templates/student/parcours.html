@@ -4,6 +4,18 @@
 {% block content %}
 <div class="animate-slide-up">
 
+  <!-- Points et streak en haut -->
+  <div class="row between" style="padding-bottom:var(--space-2);border-bottom:1px solid var(--border);margin-bottom:var(--space-2);">
+    <div class="row gap-1" style="align-items:baseline;">
+      <span style="font-family:'Secular One',sans-serif;font-size:var(--text-xl);color:var(--accent);">{{ "{:,}".format(profile.total_points or 0) }}</span>
+      <span style="font-size:var(--text-sm);color:var(--muted);">נקודות</span>
+    </div>
+    <div class="row gap-1" style="align-items:baseline;">
+      <span style="font-family:'Secular One',sans-serif;font-size:var(--text-xl);">{{ profile.streak_days or 0 }}</span>
+      <span style="font-size:var(--text-sm);color:var(--muted);">ימי רצף</span>
+    </div>
+  </div>
+
   {% if not groups %}
     <div class="stack page-empty">
       <div style="color:var(--muted);">{{ icon_book(48) }}</div>

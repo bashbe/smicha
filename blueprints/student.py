@@ -229,7 +229,7 @@ def parcours():
             })
         groups.append({"subject": subject, "simanim": simanim, "total": sum(s["count"] for s in simanim)})
 
-    return render_template("student/parcours.html", groups=groups)
+    return render_template("student/parcours.html", groups=groups, profile=sp)
 
 
 def _load_chapitre(sp, base_filters: list, allowed: set[str] | None = None) -> list | None:
@@ -440,8 +440,17 @@ def today_stats():
         )
         .all()
     )
+    # Compter les cartes uniques (pas les tentatives multiples)
+    seen: dict[str, bool] = {}
+    for a in answers:
+        if a.question_id not in seen:
+            seen[a.question_id] = a.is_correct
+        elif a.is_correct:
+            seen[a.question_id] = True
+    cards_reviewed = len(seen)
+    correct_today = sum(1 for v in seen.values() if v)
     return jsonify({
         "points_today": sum(a.points_earned for a in answers),
-        "cards_reviewed": len(answers),
-        "correct_today": sum(1 for a in answers if a.is_correct),
+        "cards_reviewed": cards_reviewed,
+        "correct_today": correct_today,
     })

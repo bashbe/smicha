@@ -147,7 +147,7 @@ button { font-family: inherit; cursor: pointer; }
 
 /* Desktop : sidebar fixe, contenu centré */
 @media (min-width: 640px) {
-  .app-shell.has-nav { padding-left: 200px; }
+  .app-shell.has-nav { padding-right: 200px; }
   .app-shell.has-nav .container { padding-bottom: var(--space-4); }
 }
 
@@ -338,10 +338,10 @@ textarea { resize: vertical; }
 
 @media (min-width: 640px) {
   .bottom-nav {
-    inset-inline: auto; left: 0; top: 0; bottom: 0;
+    inset-inline: auto; right: 0; top: 0; bottom: 0;
     width: 200px;
     border-top: none;
-    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
   }
   .bottom-nav .inner {
     flex-direction: column; justify-content: flex-start;
