@@ -1,78 +1,553 @@
-# סמיכה — Smiha Path (Flask + SQL)
+# סמיכה — Smiha Path (Flask + SQLAlchemy)
 
-Réécriture en **Python / Flask / SQLAlchemy** de l'application TanStack Start + Supabase
-d'origine. Application RTL hébraïque de préparation à l'examen de Smiha : parcours de
-questions, répétition espacée (FSRS), points / combos / séries, et back-office d'import
-et de validation des questions.
+Application web de préparation à l'examen de **Smiha** (ordination rabbinique). Portage complet depuis l'app d'origine TanStack Start + Supabase vers **Python / Flask / SQLAlchemy**.
 
-## Stack
+L'app est entièrement en hébreu (RTL), thème sombre navy/indigo/ambre.
 
-- **Flask** — serveur web + templates Jinja2 (rendu côté serveur, RTL)
-- **Flask-SQLAlchemy** — ORM ; **SQLite** par défaut (configurable vers Postgres/MySQL)
-- Authentification par session + hachage de mots de passe (Werkzeug) — remplace Supabase Auth
-- Logique métier portée 1:1 depuis TypeScript : `fsrs.py`, `points.py`, `question_types.py`
+> **Règles de maintenance** :
+>
+> **Format des questions** — toute modification (`question_types.py` : champs obligatoires, types autorisés, structure `payload`) doit immédiatement déclencher :
+> 1. La mise à jour de ce README (sections [Format JSON des questions](#format-json-des-questions) et [Modèle de données](#modèle-de-données))
+> 2. La mise à jour de `sample_questions.json` pour refléter le nouveau format
+>
+> **Toute modification du code** — vérifier manuellement les interfaces concernées avant de considérer la tâche terminée :
+> - Parcours étudiant : `/app/home`, `/app/parcours`, `/app/chapitre/…`, `/app/revision`
+> - Back-office : `/admin/dashboard`, `/admin/import`, `/admin/validate`
+> - Flux d'inscription/connexion : `/auth`, onboarding
+> - RTL/hébreu : s'assurer que l'alignement et la numérotation hébraïque restent corrects
+>
+> Ne pas déclarer une modification terminée sans avoir navigué dans les pages impactées.
 
-## Installation
+---
+
+## Table des matières
+
+1. [Contexte métier](#contexte-métier)
+2. [Stack technique](#stack-technique)
+3. [Installation rapide](#installation-rapide)
+4. [Configuration](#configuration)
+5. [Structure du projet](#structure-du-projet)
+6. [Modèle de données](#modèle-de-données)
+7. [Format JSON des questions](#format-json-des-questions)
+8. [Routes et API](#routes-et-api)
+9. [Logique métier clé](#logique-métier-clé)
+10. [Pipeline d'import des questions](#pipeline-dimport-des-questions)
+11. [Rôles et authentification](#rôles-et-authentification)
+12. [Commandes utiles](#commandes-utiles)
+
+---
+
+## Contexte métier
+
+Les étudiants préparent un examen de Halakha (loi juive) structuré autour de :
+
+- **Parcours** (`parcours`) → **Sujets** (`sujet`) → **Simanim** (chapitres) → **Seifim** (sous-sections)
+- Chaque question appartient à un ou plusieurs **sections de révision** (`exam_section` : `shulchan_aruch`, `tur`, etc.)
+- La répétition espacée (algorithme FSRS-4.5) adapte le calendrier de révision à chaque étudiant
+- Un système de **points / combos / séries** (streak) gamifie la progression
+- Un back-office permet à une équipe de **importateurs / validateurs** de gérer la banque de questions
+
+---
+
+## Stack technique
+
+| Couche | Technologie |
+|---|---|
+| Serveur | Flask 3.0, Python 3.8+ |
+| ORM / BDD | Flask-SQLAlchemy 3.1, SQLite (dev) / Postgres (prod) |
+| Templates | Jinja2 (SSR, RTL) |
+| Auth | Sessions Flask + Werkzeug (PBKDF2) |
+| JS côté client | Vanilla JS (uniquement dans `static/js/chapitre.js`) |
+| Dépendances | 3 paquets (`Flask`, `Flask-SQLAlchemy`, `Werkzeug`) |
+
+Aucune dépendance externe (pas d'API tierce, pas d'IA, pas de CDN obligatoire).
+
+---
+
+## Installation rapide
 
 ```bash
 cd smiha-flask
+
+# 1. Installer les dépendances
 python -m pip install -r requirements.txt
-python seed.py        # crée la base + comptes de démo + questions d'exemple
-python app.py         # http://localhost:5000
+
+# 2. Initialiser la base de données + comptes de démo + questions d'exemple
+python seed.py
+
+# 3. Lancer le serveur de développement (debug + auto-reload)
+python app.py
+# → http://localhost:5000
 ```
 
 ### Comptes de démonstration
 
-| Rôle        | Email                     | Mot de passe  |
-|-------------|---------------------------|---------------|
-| super_admin | bcbeneghmos@gmail.com     | password123   |
-| student     | student@example.com       | password123   |
+| Rôle | Email | Mot de passe |
+|---|---|---|
+| super_admin | bcbeneghmos@gmail.com | password123 |
+| student | student@example.com | password123 |
 
-> Comme dans l'app d'origine, l'email `SUPER_ADMIN_EMAIL` (config) est automatiquement
-> promu `super_admin` à l'inscription ; tout autre compte devient `student`.
+> `seed.py` est idempotent à condition de partir d'une base vide. Pour tout remettre à zéro, supprimez `smiha.db` et relancez `python seed.py`. Un super_admin peut aussi utiliser le bouton **Réinitialiser la base** dans le dashboard admin.
 
-## Configuration (variables d'environnement)
+---
 
-- `DATABASE_URL` — ex. `postgresql+psycopg://user:pw@host/db` (défaut : SQLite local)
-- `SECRET_KEY` — clé de session (à changer en production)
-- `SUPER_ADMIN_EMAIL` — email auto-promu super_admin
+## Configuration
 
-## Structure
+Toutes les variables se trouvent dans `config.py` et sont surchargeables par variables d'environnement :
+
+| Variable | Défaut | Description |
+|---|---|---|
+| `SECRET_KEY` | `"dev-change-me-in-production"` | Clé de signature des sessions Flask — **changer impérativement en prod** |
+| `DATABASE_URL` | `sqlite:///smiha.db` | URL de connexion SQLAlchemy. Passer `postgresql+psycopg://...` pour Postgres |
+| `SUPER_ADMIN_EMAIL` | `bcbeneghmos@gmail.com` | Email automatiquement promu `super_admin` à l'inscription |
+| `FLASK_PORT` | `5000` | Port d'écoute (lu dans `app.py`) |
+
+Exemple production :
+
+```bash
+export SECRET_KEY="votre-clé-aléatoire-longue"
+export DATABASE_URL="postgresql+psycopg://user:password@localhost:5432/smiha"
+export SUPER_ADMIN_EMAIL="admin@votre-org.com"
+```
+
+---
+
+## Structure du projet
 
 ```
-app.py                 factory Flask + enregistrement des blueprints
-config.py              configuration
-models.py              modèles SQLAlchemy (schéma issu des migrations Supabase)
-auth_helpers.py        session, décorateurs login_required / staff_required
-fsrs.py                planificateur de répétition espacée (port de src/lib/fsrs.ts)
-points.py              calcul des points/combos (port de src/lib/points.ts)
-question_types.py      normalisation/validation des 4 types (port de question-types.ts)
-seed.py                données de démarrage
-blueprints/
-  auth.py              landing, /auth (login/signup étudiant), /logout
-  student.py           /app : onboarding, home, parcours, chapitre, profil, revision
-  admin.py             /admin : login, dashboard, import, validate
-  api.py               /api/answer (enregistrement réponse + FSRS + points + progression)
-templates/             Jinja2 (base, student/*, admin/*)
-static/css/styles.css  thème sombre navy/indigo/ambre RTL (port de styles.css)
-static/js/chapitre.js  lecteur de questions interactif
+smiha-flask/
+├── app.py                  # Factory Flask : init DB, enregistrement blueprints, filtre to_hebrew
+├── config.py               # Classe Config (variables d'env)
+├── models.py               # 8 modèles SQLAlchemy
+├── auth_helpers.py         # Session, g.user, @login_required, @staff_required
+├── fsrs.py                 # Algorithme FSRS-4.5 (246 lignes, port du TS original)
+├── points.py               # Calcul points / combos / streak (54 lignes)
+├── question_types.py       # Normalisation + validation des 4 types de questions
+├── seed.py                 # Initialisation BDD + données de démo
+├── requirements.txt        # Flask, Flask-SQLAlchemy, Werkzeug
+├── sample_questions.json   # 3 questions d'exemple (MC, TF, dropdown) — maintenir en sync avec question_types.py
+│
+├── blueprints/
+│   ├── auth.py             # Landing page, /auth (login/signup), /logout
+│   ├── student.py          # /app/* : onboarding, home, parcours, chapitre, profil, révision
+│   ├── admin.py            # /admin/* : dashboard, import, validation, gestion utilisateurs
+│   └── api.py              # POST /api/answer (cœur de la boucle d'apprentissage)
+│
+├── templates/
+│   ├── base.html           # Layout HTML de base (lang="he" dir="rtl")
+│   ├── landing.html
+│   ├── auth.html
+│   ├── student/            # onboarding, home, parcours, chapitre, revision, profil, settings
+│   └── admin/              # login, denied, dashboard, users, user_detail, import, validate
+│
+└── static/
+    ├── css/styles.css      # Thème navy/indigo/ambre, utilitaires RTL
+    └── js/
+        ├── chapitre.js     # Lecteur de questions interactif (463 lignes, vanilla JS)
+        └── hebrew-calendar.js
 ```
+
+---
 
 ## Modèle de données
 
-Tables (équivalent du schéma Postgres/Supabase final, après les 4 migrations) :
-`users` (auth+profil), `user_roles`, `student_profiles`, `questions`, `question_edits`,
-`progression`, `user_answers`, `fsrs_cards`.
+### `users`
+Compte de base. Méthodes utiles : `set_password()`, `check_password()`, `has_role(role)`, `is_staff()`.
 
-Les 4 types de questions sont préservés : `multiple_choice`,
-`multiple_opinions_dropdown`, `practical_scenario`, `true_false`.
+| Colonne | Type | Notes |
+|---|---|---|
+| `id` | UUID (PK) | |
+| `email` | String (unique) | |
+| `password_hash` | String | PBKDF2 via Werkzeug |
+| `full_name` | String | |
+| `created_at` | DateTime | |
 
-## Différences avec l'original
+Relations : `roles` (→ UserRole), `student_profile` (→ StudentProfile, 1:1)
 
-- L'auth Supabase (JWT + RLS) est remplacée par des sessions Flask ; les règles RLS sont
-  appliquées dans le code via les décorateurs et les filtres par `user_id`.
-- L'import JSON et la validation se font côté serveur (les 4 formats et toutes les règles
-  de validation hébraïques sont conservés).
-- Le SPA React est remplacé par des pages rendues côté serveur ; seul le lecteur de
-  chapitre reste piloté en JavaScript (`static/js/chapitre.js`) via l'API `/api/answer`.
+---
+
+### `user_roles`
+Contrainte unique `(user_id, role)`. Valeurs de `role` : `"super_admin"`, `"importer"`, `"validator"`, `"student"`.
+
+---
+
+### `student_profiles`
+| Colonne | Type | Notes |
+|---|---|---|
+| `id` | UUID (FK users.id, PK) | |
+| `preparation_goal` | String | `"discovery"` / `"serious"` / `"intensive"` |
+| `target_stability` | Float | Seuil FSRS cible, défaut 0.90 |
+| `exam_date` | Date | Date de l'examen (pression temporelle FSRS) |
+| `section` | JSON | Liste de sections, ex. `["shulchan_aruch", "tur"]` |
+| `total_points` | Integer | Cumulatif |
+| `streak_days` | Integer | Jours consécutifs d'activité |
+| `last_activity_date` | Date | Pour calcul du streak |
+| `onboarded` | Boolean | False jusqu'à passage de /app/onboarding |
+
+---
+
+### `questions`
+
+> Toute modification de ce tableau doit être reflétée dans la section [Format JSON des questions](#format-json-des-questions) et dans `sample_questions.json`.
+
+| Colonne | Type | Notes |
+|---|---|---|
+| `id` | UUID (PK) | |
+| `text` | Text | Texte hébreu |
+| `choices` | JSON | Options de réponse |
+| `correct_answer` | String | |
+| `explanation` | Text | Explication après réponse |
+| `difficulty` | Integer | 1 (facile), 2 (moyen), 3 (difficile) |
+| `section` | JSON | Liste de sections de révision |
+| `question_type` | Enum | `multiple_choice`, `true_false`, `multiple_opinions_dropdown`, `practical_scenario` |
+| `payload` | JSON | Structure spécifique au type |
+| `status` | String | `"pending"` / `"approved"` / `"rejected"` |
+| `parcours` | String | Parcours d'apprentissage — valeurs dans `VALID_PARCOURS` (ex : `"bassar_bechalav"`) |
+| `subject` | String | Sujet Halakhique en hébreu (ex : `"בשר בחלב"`) — champ JSON `sujet` à l'import |
+| `siman` | Integer | Numéro de chapitre (entier positif, obligatoire) |
+| `seif` | Integer | Numéro de sous-section (entier positif, obligatoire) |
+| `hint` | Text | Indice (optionnel) |
+| `source_ref` | String | Référence source |
+| `tags` | JSON | Liste de tags libres (optionnel) |
+| `created_by` / `validated_by` | FK users | |
+
+Méthodes : `as_dict()`, `section_list()`.
+
+---
+
+### `fsrs_cards`
+État de répétition espacée par paire `(user_id, question_id)`.
+
+| Colonne | Type | Notes |
+|---|---|---|
+| `due_date` | Date (indexé) | Prochain passage en révision |
+| `stability` | Float | Rétention estimée |
+| `fsrs_difficulty` | Float | Difficulté FSRS (≠ `questions.difficulty`) |
+| `reps` | Integer | Nombre de révisions |
+| `lapses` | Integer | Nombre d'oublis |
+| `state` | String | `"new"` / `"learning"` / `"review"` / `"relearning"` |
+| `avg_response_time_ms` | Float | |
+| `target_stability` | Float | Copié depuis StudentProfile à la création |
+
+---
+
+### `user_answers`
+Trace de chaque réponse soumise. Ne jamais modifier rétroactivement.
+
+---
+
+### `progression`
+Avancement par `(user_id, subject, siman)`. Marqué `"completed"` quand toutes les questions du chapitre sont répondues correctement.
+
+---
+
+### `question_edits`
+Journal d'audit : chaque action d'un validateur (approve / correct / reject) est enregistrée avec diff JSON.
+
+---
+
+## Format JSON des questions
+
+> **Règle** : ce format est la source de vérité pour l'import. Toute modification de `_validate_common()` dans `question_types.py` doit être reflétée ici **et** dans `sample_questions.json`.
+
+### Champs communs à tous les types (obligatoires)
+
+| Champ JSON | Type | Valeurs autorisées | Colonne DB |
+|---|---|---|---|
+| `type` | string | `multiple_choice`, `true_false`, `multiple_opinions_dropdown`, `practical_scenario` | `question_type` |
+| `parcours` | string | `"bassar_bechalav"` (liste dans `VALID_PARCOURS`) | `parcours` |
+| `sujet` | string | texte hébreu non vide | `subject` |
+| `siman` | integer | > 0 | `siman` |
+| `seif` | integer | > 0 | `seif` |
+| `difficulty_level` | integer | 1, 2, 3 | `difficulty` |
+| `exam_section` | string ou liste | `"shulchan_aruch"`, `"tur"`, … | `section` |
+
+### Champ optionnel
+
+| Champ JSON | Type | Description |
+|---|---|---|
+| `tags` | array of strings | Mots-clés libres (ex : `["המתנה", "מחלוקת"]`) |
+
+### Champs spécifiques par type
+
+#### `multiple_choice`
+```json
+{
+  "type": "multiple_choice",
+  "parcours": "bassar_bechalav",
+  "sujet": "בשר בחלב",
+  "siman": 89,
+  "seif": 1,
+  "difficulty_level": 1,
+  "exam_section": "shulchan_aruch",
+  "question_text": "כמה זמן יש להמתין בין אכילת בשר לחלב למנהג בני אשכנז?",
+  "options": [
+    { "number": 1, "text": "שעה אחת",       "is_correct": false },
+    { "number": 2, "text": "שלוש שעות",     "is_correct": false },
+    { "number": 3, "text": "שש שעות",       "is_correct": true  },
+    { "number": 4, "text": "אין צורך להמתין", "is_correct": false }
+  ],
+  "explanation": "מנהג בני אשכנז להמתין שש שעות בין בשר לחלב.",
+  "tags": ["המתנה"]
+}
 ```
+Règles : exactement 4 options numérotées 1–4, exactement une seule `is_correct: true`.
+
+#### `true_false`
+```json
+{
+  "type": "true_false",
+  "parcours": "bassar_bechalav",
+  "sujet": "בשר בחלב",
+  "siman": 89,
+  "seif": 2,
+  "difficulty_level": 2,
+  "exam_section": "shulchan_aruch",
+  "statement_text": "מותר לאכול גבינה קשה מיד לאחר אכילת בשר.",
+  "correct_answer": false,
+  "explanation": "אסור לאכול חלב לאחר בשר עד שיעבור זמן ההמתנה."
+}
+```
+
+#### `multiple_opinions_dropdown`
+```json
+{
+  "type": "multiple_opinions_dropdown",
+  "parcours": "bassar_bechalav",
+  "sujet": "בשר בחלב",
+  "siman": 89,
+  "seif": 3,
+  "difficulty_level": 3,
+  "exam_section": "shulchan_aruch",
+  "question_text": "מהי עמדת כל פוסק לגבי המתנה לאחר אכילת תבשיל שיש בו טעם בשר?",
+  "dropdown_choices": ["צריך להמתין", "אין צריך להמתין"],
+  "decisors": [
+    { "id": "d1", "name": "השולחן ערוך", "correct_choice": "אין צריך להמתין" },
+    { "id": "d2", "name": "הרמ\"א",       "correct_choice": "צריך להמתין"     }
+  ],
+  "explanation": "נחלקו הפוסקים בדין המתנה לאחר תבשיל בשרי.",
+  "tags": ["מחלוקת פוסקים"]
+}
+```
+Règles : ≥ 2 decisors, chaque `correct_choice` doit être dans `dropdown_choices`.
+
+#### `practical_scenario`
+Structure similaire à `multiple_choice` avec un champ `scenario_text` additionnel décrivant le contexte pratique.
+
+---
+
+## Routes et API
+
+### Authentification (`/`)
+
+| Méthode | Route | Description |
+|---|---|---|
+| GET | `/` | Landing page |
+| GET/POST | `/auth` | Login ou signup étudiant (formulaire double mode) |
+| GET | `/logout` | Déconnexion |
+
+---
+
+### Espace étudiant (`/app/*`) — `@login_required`
+
+| Méthode | Route | Description |
+|---|---|---|
+| GET | `/app/` | Redirige vers onboarding ou home |
+| GET/POST | `/app/onboarding` | Choix de l'objectif, date d'examen, sections |
+| GET | `/app/home` | Dashboard : compte à rebours, cartes dues, streak, % préparation |
+| GET | `/app/parcours` | Table des matières : sujet → simanim rétractables → seifim en chips hébraïques |
+| GET | `/app/chapitre/<subject>/<siman>[/<seif>]` | Lecture d'un chapitre |
+| GET | `/app/revision` | Cartes dues du jour (répétition espacée) |
+| POST | `/app/advance-revisions` | Avance toutes les cartes dues de 1 jour (outil de test) |
+| POST | `/app/reset-progress` | Efface UserAnswer + FsrsCard + Progression (nucléaire) |
+| GET | `/app/profil` | Profil : total réponses, précision % |
+| GET/POST | `/app/settings` | Modifier date examen, target_stability, sections |
+| GET | `/app/today-stats` | JSON : points du jour, cartes révisées, précision |
+
+---
+
+### Back-office (`/admin/*`) — `@staff_required`
+
+| Méthode | Route | Description |
+|---|---|---|
+| GET/POST | `/admin/login` | Authentification staff |
+| GET | `/admin/` ou `/admin/dashboard` | Comptages par statut, répartition par sujet |
+| GET | `/admin/users` | Liste étudiants + nombre de cartes |
+| GET | `/admin/users/<user_id>` | Détail étudiant (progression, stabilité, réponses) |
+| GET/POST | `/admin/import` | Import JSON (prévisualisation → confirmation) |
+| GET/POST | `/admin/validate` | File de questions `pending` : approuver / rejeter |
+| POST | `/admin/reset-db` | **super_admin uniquement** — efface et recrée toutes les tables (confirmation texte `"RESET"` requise) |
+
+---
+
+### API JSON (`/api/*`) — `@login_required`
+
+#### `POST /api/answer`
+
+Corps JSON attendu :
+```json
+{
+  "question_id": "uuid",
+  "given_answer": "texte de la réponse",
+  "response_time_ms": 8500,
+  "combo": 3
+}
+```
+
+Réponse JSON :
+```json
+{
+  "is_correct": true,
+  "correct_key": "texte correct",
+  "points": 24,
+  "combo": 4,
+  "streak": 7,
+  "total_points": 1240,
+  "explanation": "...",
+  "rating_badge": "⚡ Rapide !"
+}
+```
+
+**Effets de bord** (dans l'ordre) :
+1. Enregistre un `UserAnswer`
+2. Crée ou met à jour la `FsrsCard` (scheduling FSRS)
+3. Met à jour (ou crée) la `Progression` du chapitre
+4. Met à jour `StudentProfile` : `total_points`, `streak_days`, `last_activity_date`
+
+---
+
+## Logique métier clé
+
+### Algorithme FSRS-4.5 (`fsrs.py`)
+
+Port complet de l'algorithme publié FSRS-4.5 (18 poids, paramètres par défaut).
+
+- **Rating automatique** (pas de choix utilisateur) : déduit du `response_time_ms` et de la difficulté
+  - Difficulté 1 (facile) : rapide < 8 s, moyen < 20 s
+  - Difficulté 2 (moyen) : rapide < 10 s, moyen < 25 s
+  - Difficulté 3 (difficile) : rapide < 15 s, moyen < 35 s
+  - Rating 1 = mauvais, 2 = lent, 3 = moyen, 4 = rapide
+- **Rétentabilité** : `R(t, S) = (1 + FACTOR × t / S)^DECAY`
+- **Pression exam** : intervalles compressés de 50 % si < 7 jours, 80 % si < 30 jours
+- `target_stability` est configurable par étudiant (défaut 0.90)
+- Intervalle max : 365 jours
+
+### Système de points (`points.py`)
+
+```
+points = (base + bonus_difficulté + bonus_vitesse) × multiplicateur_combo × multiplicateur_streak
+
+base = 10
+bonus_difficulté : {1: +2, 2: +4, 3: +6}
+bonus_vitesse    : {rapide: +5, moyen: +2, lent: 0}
+combo            : {2: ×1.1, 3: ×1.2, 4: ×1.3, 5+: ×1.5}
+streak           : {7+ jours: ×1.2, 30+ jours: ×1.5}
+
+Mauvaise réponse → 0 points, combo réinitialisé
+```
+
+### Validation des questions (`question_types.py`)
+
+`normalize_imported_question()` valide et normalise les 4 types à l'import :
+
+| Type | Règles spécifiques |
+|---|---|
+| `multiple_choice` | 4 options numérotées, une seule bonne réponse |
+| `true_false` | Booléen simple |
+| `multiple_opinions_dropdown` | ≥ 2 "decisors" (opinions), choix parmi liste |
+| `practical_scenario` | QCM avec contexte de scénario |
+
+Valide aussi les **champs communs obligatoires** : `parcours` (valeur dans `VALID_PARCOURS`), `sujet` (texte hébreu non vide), `siman` (entier > 0), `seif` (entier > 0), `difficulty_level` (1, 2 ou 3).
+
+### Filtre Jinja2 `to_hebrew` (`app.py`)
+
+Convertit un entier en notation hébraïque (gematria) avec geresh/gershayim :
+- `1` → `א׳`, `10` → `י׳`, `89` → `פ״ט`
+- Cas spéciaux : 15 → `ט״ו`, 16 → `ט״ז` (évite les combinaisons יה / יו)
+- Utilisé dans les templates : `{{ s.siman | to_hebrew }}`, `{{ sf.seif | to_hebrew }}`
+
+### Page Parcours (`/app/parcours`)
+
+- En-tête par **sujet** (ex : `בשר בחלב`) avec compteur de simanim et questions
+- Chaque **siman** est un `<details>` rétractable avec son numéro en hébreu (פ״ט, צ׳, …)
+- À l'intérieur : **seifim** en chips cliquables avec indicateur ✓ si complété et barre de progression
+- Aucun siman n'est verrouillé — l'étudiant accède librement à n'importe quel seif
+
+### Filtrage des sections
+
+Une question n'est proposée à un étudiant que si **toutes** ses sections sont incluses dans celles de l'étudiant. Formellement : `question.sections ⊆ student.sections`. Pas d'alias (tur/shulchan_aruch), pas de section implicite.
+
+---
+
+## Pipeline d'import des questions
+
+```
+Importer (JSON) → Prévisualisation (normalize_imported_question) → Sauvegarde status="pending"
+                                                                          ↓
+Validateur → /admin/validate → Édite métadonnées (subject/siman/seif/parcours, difficulté, tags)
+                                    ↓                        ↓
+                              Approuve → status="approved"   Rejette → status="rejected" + note
+                                    ↓
+                         Audit enregistré dans question_edits
+```
+
+Le format JSON d'import accepte un tableau d'objets. Chaque objet est normalisé par `question_types.py`. Les erreurs de validation sont remontées ligne par ligne dans la prévisualisation — aucune question n'est importée si le lot contient des erreurs.
+
+---
+
+## Rôles et authentification
+
+**Mécanisme** : session Flask (`session["user_id"]`) + chargement dans `g.user` avant chaque requête via `@app.before_request`.
+
+| Rôle | Accès | Attribution |
+|---|---|---|
+| `student` | `/app/*` | Par défaut à l'inscription |
+| `importer` | `/admin/*` + import JSON | Manuel (super_admin) |
+| `validator` | `/admin/*` + validation | Manuel (super_admin) |
+| `super_admin` | Tout + reset DB | Auto si email = `SUPER_ADMIN_EMAIL`, sinon manuel |
+
+Décorateurs disponibles dans `auth_helpers.py` :
+- `@login_required` — redirige vers `/auth` si non connecté
+- `@staff_required` — redirige vers `/admin/denied` si pas de rôle staff
+
+Un utilisateur peut avoir plusieurs rôles simultanément (table `user_roles`).
+
+---
+
+## Commandes utiles
+
+```bash
+# Réinitialiser la base de données (repart de zéro)
+rm smiha.db && python seed.py          # Linux/Mac
+Remove-Item smiha.db; python seed.py   # PowerShell
+
+# Lancer en mode développement (debug + auto-reload)
+python app.py
+
+# Vérifier l'état de la base en SQLite
+sqlite3 smiha.db ".tables"
+sqlite3 smiha.db "SELECT email, role FROM users JOIN user_roles ON users.id=user_roles.user_id;"
+
+# Variables d'env pour la prod (Bash)
+export SECRET_KEY="..." DATABASE_URL="postgresql+psycopg://..." SUPER_ADMIN_EMAIL="..."
+python app.py
+
+# Git — sauvegarder les credentials GitHub une seule fois (ex. sur PythonAnywhere)
+git config --global credential.helper store
+```
+
+---
+
+## Points d'attention pour un futur développeur
+
+- **RTL** : tous les templates ont `lang="he" dir="rtl"`. Ajouter du HTML sans tester en hébreu peut casser l'alignement.
+- **`section` est une liste JSON** sur `StudentProfile` et `Question`. Utiliser `question.section_list()` pour la lire de façon cohérente.
+- **Filtrage strict des sections** : une question n'est proposée que si toutes ses sections sont dans celles de l'étudiant. Pas d'alias, pas d'implicite.
+- **Champs obligatoires des questions** : `parcours`, `sujet`/`subject`, `siman`, `seif` sont requis depuis l'import. Modifier leur validation dans `question_types.py` **doit** s'accompagner d'une mise à jour de ce README et de `sample_questions.json`.
+- **`VALID_PARCOURS`** dans `question_types.py` est la liste des parcours autorisés. Ajouter un parcours = ajouter ici + mettre à jour ce README.
+- **Pas de tests automatisés** : la couverture est nulle. Toute régression doit être vérifiée manuellement. Écrire des tests pytest avant d'ajouter une feature complexe.
+- **`FsrsCard.target_stability`** est copié depuis `StudentProfile` à la création de la carte. Modifier le profil étudiant ne met pas à jour les cartes existantes — prévu par design.
+- **`/app/reset-progress`** efface `UserAnswer`, `FsrsCard`, `Progression` sans confirmation supplémentaire. Protéger en prod si nécessaire.
+- **`/admin/reset-db`** efface **toutes** les tables et déconnecte l'utilisateur. Réservé au `super_admin`, requiert la saisie du mot `"RESET"` en confirmation.
+- **`seed.py`** insère les comptes de démo avec des mots de passe en clair dans le code. Ne pas utiliser en prod.
+- **`chapitre.js`** gère l'état du combo côté client et l'envoie avec chaque réponse. Le serveur fait confiance à cette valeur — un client malveillant pourrait l'altérer.
