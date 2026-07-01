@@ -4,17 +4,23 @@
 {% block content %}
 <div class="animate-slide-up">
 
-  <!-- Points et streak en haut -->
-  <div class="row between" style="padding-bottom:var(--space-2);border-bottom:1px solid var(--border);margin-bottom:var(--space-2);">
-    <div class="row gap-1" style="align-items:baseline;">
-      <span style="font-family:'Secular One',sans-serif;font-size:var(--text-xl);color:var(--accent);">{{ "{:,}".format(profile.total_points or 0) }}</span>
-      <span style="font-size:var(--text-sm);color:var(--muted);">נקודות</span>
+  {% from "_icons.html" import icon_coin, icon_flame %}
+  <!-- Header : sujet à gauche, points+streak à droite -->
+  <header style="padding-bottom:var(--space-2);border-bottom:1px solid var(--border);margin-bottom:var(--space-2);">
+    <div class="row between">
+      <div style="font-weight:700;font-size:var(--text-base);">{% for g in groups %}{{ g.subject }}{% if not loop.last %} · {% endif %}{% endfor %}</div>
+      <div class="row gap-3">
+        <div class="row gap-1" style="font-size:var(--text-sm);color:{{ 'var(--accent)' if profile.streak_days else 'var(--muted)' }};">
+          {{ icon_flame(16) }}
+          <span style="font-weight:600;">{{ profile.streak_days or 0 }}</span>
+        </div>
+        <div class="row gap-1" style="font-size:var(--text-sm);color:var(--fg);">
+          {{ icon_coin(16) }}
+          <span style="font-weight:700;">{{ "{:,}".format(profile.total_points or 0) }}</span>
+        </div>
+      </div>
     </div>
-    <div class="row gap-1" style="align-items:baseline;">
-      <span style="font-family:'Secular One',sans-serif;font-size:var(--text-xl);">{{ profile.streak_days or 0 }}</span>
-      <span style="font-size:var(--text-sm);color:var(--muted);">ימי רצף</span>
-    </div>
-  </div>
+  </header>
 
   {% if not groups %}
     <div class="stack page-empty">
