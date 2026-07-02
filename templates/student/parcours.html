@@ -10,7 +10,7 @@
     <div class="row between">
       <div style="font-weight:700;font-size:var(--text-base);">{% for g in groups %}{{ g.subject }}{% if not loop.last %} · {% endif %}{% endfor %}</div>
       <div class="row gap-3">
-        <div class="row gap-1" style="font-size:var(--text-sm);color:{{ 'var(--accent)' if profile.streak_days else 'var(--muted)' }};">
+        <div class="row gap-1" style="font-size:var(--text-sm);color: { { 'var(--accent)' if profile.streak_days else 'var(--muted)' }};">
           {{ icon_flame(16) }}
           <span style="font-weight:600;">{{ profile.streak_days or 0 }}</span>
         </div>
@@ -33,7 +33,6 @@
   {% else %}
     {% for g in groups %}
     <!-- Rappel contextuel discret : un seul sujet étudié à la fois -->
-    <div class="parcours-subject">{{ g.subject }}</div>
 
     {% for s in g.simanim %}
     <details class="siman-item" {{ 'open' if loop.first }}>
@@ -44,7 +43,7 @@
             {% if s.completed %}<span class="success" style="font-size:var(--text-sm);"> ✓</span>{% endif %}
           </span>
           <div class="progress">
-            <span class="{{ 'is-success' if s.completed }}" style="width:{{ s.pct }}%;"></span>
+            <span class="{{ 'is-success' if s.completed }}" style="width: {{ s.pct }}%;"></span>
           </div>
           <span class="siman-chevron">{{ icon_chevron_left(18) }}</span>
         </div>
