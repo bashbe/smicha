@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, Response, flash, redirect, render_template, request, url_for
 
 from auth_helpers import current_user, login_user, logout_user, staff_required
 from blueprints.auth import create_account
@@ -339,6 +339,23 @@ def validate():
         status=status,
         question_types=QUESTION_TYPES,
         type_label=TYPE_LABEL,
+    )
+
+
+@bp.route("/export/rejected")
+@staff_required
+def export_rejected():
+    questions = Question.query.filter_by(status="rejected").order_by(Question.created_at.desc()).all()
+    data = []
+    for q in questions:
+        d = q.as_dict()
+        d["validator_note"] = q.validator_note
+        data.append(d)
+    payload = json.dumps(data, ensure_ascii=False, indent=2)
+    return Response(
+        payload,
+        mimetype="application/json",
+        headers={"Content-Disposition": "attachment; filename=rejected_questions.json"},
     )
 
 

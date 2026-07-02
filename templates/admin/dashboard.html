@@ -36,6 +36,7 @@
       <div class="stack-sm">
         <a href="{{ url_for('admin.import_questions') }}" class="btn btn-primary">⬆️ ייבוא שאלות חדשות</a>
         <a href="{{ url_for('admin.validate') }}" class="btn btn-outline">✅ אימות שאלות ממתינות ({{ counts.pending }})</a>
+        <a href="{{ url_for('admin.export_rejected') }}" class="btn btn-outline">⬇️ ייצוא שאלות שנדחו ({{ counts.rejected }}) JSON</a>
       </div>
     </div>
   </div>
