@@ -336,6 +336,94 @@ Structure similaire à `multiple_choice` avec un champ `scenario_text` additionn
 
 ---
 
+## Générer des questions JSON avec une IA
+
+> Cette section s'adresse à quiconque veut utiliser un LLM pour produire des questions en masse.  
+> **Règle** : l'IA doit lire la section [Format JSON des questions](#format-json-des-questions) ci-dessus avant de générer quoi que ce soit — les contraintes y sont définitives.
+
+### Prompt template
+
+```
+Tu es un expert en Halakha (loi juive). Génère [N] questions en hébreu
+au format JSON valide pour l'application Smiha Path.
+
+Contraintes impératives :
+- Respecte scrupuleusement le format de la section "Format JSON des questions" du README
+- Valeurs autorisées pour "parcours"  : "bassar_bechalav"
+- Valeurs autorisées pour "exam_section" : "shulchan_aruch", "tur", "psikei_admur", "ptei_teshuva"
+- Les valeurs de "exam_section" doivent être celles maîtrisées par le sujet traité
+  (ex : une question qui couvre aussi le Tur → ["shulchan_aruch", "tur"])
+- "siman" et "seif" sont des entiers > 0
+- "difficulty_level" : 1 (facile), 2 (moyen), 3 (difficile)
+- Tous les textes de questions, options et explications en hébreu
+
+Sujet : [SUJET EN HÉBREU, ex. בשר בחלב]
+Siman : [N]
+Types à générer : [multiple_choice | true_false | multiple_opinions_dropdown]
+
+Retourne uniquement un tableau JSON valide, sans texte avant ou après.
+```
+
+### Exemple de lot JSON valide
+
+```json
+[
+  {
+    "type": "multiple_choice",
+    "parcours": "bassar_bechalav",
+    "sujet": "בשר בחלב",
+    "siman": 89,
+    "seif": 1,
+    "difficulty_level": 1,
+    "exam_section": "shulchan_aruch",
+    "question_text": "כמה זמן יש להמתין בין אכילת בשר לחלב למנהג בני אשכנז?",
+    "options": [
+      { "number": 1, "text": "שעה אחת",        "is_correct": false },
+      { "number": 2, "text": "שלוש שעות",      "is_correct": false },
+      { "number": 3, "text": "שש שעות",        "is_correct": true  },
+      { "number": 4, "text": "אין צורך להמתין", "is_correct": false }
+    ],
+    "explanation": "מנהג בני אשכנז להמתין שש שעות בין בשר לחלב."
+  },
+  {
+    "type": "true_false",
+    "parcours": "bassar_bechalav",
+    "sujet": "בשר בחלב",
+    "siman": 89,
+    "seif": 2,
+    "difficulty_level": 2,
+    "exam_section": ["shulchan_aruch", "tur"],
+    "statement_text": "לדעת הטור, מותר לאכול גבינה קשה מיד לאחר בשר.",
+    "correct_answer": false,
+    "explanation": "גם לדעת הטור יש להמתין."
+  },
+  {
+    "type": "multiple_opinions_dropdown",
+    "parcours": "bassar_bechalav",
+    "sujet": "בשר בחלב",
+    "siman": 89,
+    "seif": 3,
+    "difficulty_level": 3,
+    "exam_section": ["shulchan_aruch", "tur"],
+    "question_text": "מהי עמדת כל פוסק לגבי המתנה לאחר תבשיל בשרי?",
+    "dropdown_choices": ["צריך להמתין", "אין צריך להמתין"],
+    "decisors": [
+      { "id": "d1", "name": "השולחן ערוך", "correct_choice": "אין צריך להמתין" },
+      { "id": "d2", "name": "הרמ\"א",       "correct_choice": "צריך להמתין"     }
+    ],
+    "explanation": "נחלקו הפוסקים בדין המתנה לאחר תבשיל בשרי."
+  }
+]
+```
+
+### Points de vigilance pour la génération IA
+
+- **`exam_section` multi-valeur** : une question couvrant plusieurs sources doit lister toutes les sections pertinentes (`["shulchan_aruch", "tur"]`). Elle ne sera proposée qu'aux étudiants ayant **toutes** ces sections.
+- **Validation à l'import** : tout lot est passé par `normalize_imported_question()` — les erreurs sont remontées ligne par ligne avant sauvegarde. Aucune question n'est importée si le lot contient une erreur.
+- **Statut initial** : toute question importée arrive avec `status="pending"` et doit être approuvée par un validateur avant d'être proposée aux étudiants.
+
+---
+
 ## Routes et API
 
 ### Authentification (`/`)
@@ -473,9 +561,37 @@ Convertit un entier en notation hébraïque (gematria) avec geresh/gershayim :
 - À l'intérieur : **seifim** en chips cliquables avec indicateur ✓ si complété et barre de progression
 - Aucun siman n'est verrouillé — l'étudiant accède librement à n'importe quel seif
 
-### Filtrage des sections
+### Sections d'examen
 
-Une question n'est proposée à un étudiant que si **toutes** ses sections sont incluses dans celles de l'étudiant. Formellement : `question.sections ⊆ student.sections`. Pas d'alias (tur/shulchan_aruch), pas de section implicite.
+Les sections représentent les **sources halakhiques** étudiées. Chaque question est taguée avec une ou plusieurs sections ; chaque étudiant choisit les sources qu'il étudie à l'onboarding (et peut les modifier dans les paramètres).
+
+#### Sections valides (`VALID_SECTIONS` dans `question_types.py`)
+
+| Valeur | Nom | Contenu |
+|---|---|---|
+| `shulchan_aruch` | Shoulhan Arouh | Texte du Shoulhan Arouh (Rav Yossef Karo) + Rama + commentateurs principaux (Sha'h, Taz…) — **toujours inclus, obligatoire** |
+| `tur` | Tour | Texte du Tour (Rav Yaakov ben Asher) + Beit Yossef + Darkei Moshe |
+| `psikei_admur` | Piskei Admour HaZaken | Décisions du Admour HaZaken (Rabbi Shneur Zalman de Liadi) + minhag Chabad |
+| `ptei_teshuva` | Pitchei Teshouva | Commentaire Pitchei Teshouva + Aharonim complémentaires |
+
+#### Règle de filtrage — ALL (sous-ensemble strict)
+
+Une question n'est proposée à un étudiant que si **toutes** ses sections sont incluses dans les sections de l'étudiant.
+
+Formellement : `question.sections ⊆ student.sections`
+
+```
+question.section = ["shulchan_aruch", "tur"]
+
+étudiant A sections = ["shulchan_aruch"]          → question invisible (tur manquant)
+étudiant B sections = ["shulchan_aruch", "tur"]   → question visible ✓
+```
+
+Implémenté dans `allowed_sections()` + `question_in_sections()` (`blueprints/student.py`).
+
+#### Règle métier : `shulchan_aruch` toujours inclus
+
+`shulchan_aruch` est automatiquement injecté dans l'ensemble autorisé de tout étudiant par `allowed_sections()`, même s'il n'est pas explicitement dans `StudentProfile.section`. À l'onboarding et dans les paramètres, la case correspondante est verrouillée et toujours cochée.
 
 ---
 
@@ -542,7 +658,7 @@ git config --global credential.helper store
 
 - **RTL** : tous les templates ont `lang="he" dir="rtl"`. Ajouter du HTML sans tester en hébreu peut casser l'alignement.
 - **`section` est une liste JSON** sur `StudentProfile` et `Question`. Utiliser `question.section_list()` pour la lire de façon cohérente.
-- **Filtrage strict des sections** : une question n'est proposée que si toutes ses sections sont dans celles de l'étudiant. Pas d'alias, pas d'implicite.
+- **Filtrage strict des sections** : une question n'est proposée que si **toutes** ses sections sont dans celles de l'étudiant (`question.sections ⊆ student.sections`). Exemple : une question `["shulchan_aruch", "tur"]` est invisible pour un étudiant qui n'a que `shulchan_aruch`. Pas d'alias, pas d'implicite (sauf `shulchan_aruch` toujours injecté par `allowed_sections()`).
 - **Champs obligatoires des questions** : `parcours`, `sujet`/`subject`, `siman`, `seif` sont requis depuis l'import. Modifier leur validation dans `question_types.py` **doit** s'accompagner d'une mise à jour de ce README et de `sample_questions.json`.
 - **`VALID_PARCOURS`** dans `question_types.py` est la liste des parcours autorisés. Ajouter un parcours = ajouter ici + mettre à jour ce README.
 - **Pas de tests automatisés** : la couverture est nulle. Toute régression doit être vérifiée manuellement. Écrire des tests pytest avant d'ajouter une feature complexe.

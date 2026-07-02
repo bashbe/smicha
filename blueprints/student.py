@@ -38,8 +38,8 @@ def allowed_sections(sections) -> set[str]:
 
 
 def question_in_sections(q, allowed: set[str]) -> bool:
-    """Return True if any of the question's sections is in the allowed set."""
-    return bool(set(_to_section_list(q.section)) & allowed)
+    """Return True if ALL of the question's sections are in the allowed set."""
+    return set(_to_section_list(q.section)) <= allowed
 
 
 def get_profile() -> StudentProfile:
