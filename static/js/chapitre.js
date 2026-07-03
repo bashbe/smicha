@@ -352,6 +352,9 @@
       root.appendChild(el("div", "retry-hint", "חזרה על שאלה זו"));
     }
 
+    // enveloppe unifiée : question + réponses sur la même feuille
+    const cardUnified = el("div", "player-card-unified");
+
     // question card
     const card = el("div", "glass-card player-card" + (state.revealed ? "" : " glow-indigo"));
     if (nq.scenario) {
@@ -365,7 +368,7 @@
       refs.ratingBadge = el("div", "pill animate-pop-in rating-badge-pos " + state.feedback.ratingTone, state.feedback.ratingBadge);
       card.appendChild(refs.ratingBadge);
     }
-    root.appendChild(card);
+    cardUnified.appendChild(card);
 
     // answers
     const answers = el("div", (isTrueFalse ? "choice-grid" : "stack-sm") + " player-answers");
@@ -467,7 +470,8 @@
     if (state.feedback && state.feedback.isCorrect && state.feedback.pts > 0) {
       answers.appendChild(el("div", "animate-float-up extrabold accent points-float", "+" + state.feedback.pts));
     }
-    root.appendChild(answers);
+    cardUnified.appendChild(answers);
+    root.appendChild(cardUnified);
 
     // explanation panel
     if (state.revealed && state.feedback) {

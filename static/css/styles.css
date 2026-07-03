@@ -780,88 +780,77 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
   margin-right: var(--space-1);
 }
 
-/* ---- Flashcard physique — fond à carreaux, réunifie question + réponses ---- */
-.glass-card.player-card {
+/* ---- Flashcard unifiée — question + réponses sur la même feuille ---- */
+.player-card-unified {
+  position: relative;
+  margin-top: var(--space-2);
   background-color: var(--surface);
   background-image:
     linear-gradient(to right, rgba(194,113,12,0.07) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(194,113,12,0.07) 1px, transparent 1px);
   background-size: 20px 20px;
-  border: none;
-  border-bottom: 1px solid rgba(194,113,12,0.14);  /* séparateur question/réponses */
-  border-radius: var(--radius-card) var(--radius-card) 0 0;
-  box-shadow: none;  /* ombre portée sur le bloc unifié ci-dessous */
+  border-radius: var(--radius-card);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.11), 0 2px 6px rgba(0,0,0,0.06);
 }
-[data-theme="dark"] .glass-card.player-card {
+[data-theme="dark"] .player-card-unified {
   background-image:
     linear-gradient(to right, rgba(232,146,15,0.09) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(232,146,15,0.09) 1px, transparent 1px);
-  border-bottom-color: rgba(232,146,15,0.18);
-}
-
-/* Bloc réponses : continuation visuelle de la flashcard */
-.glass-card.player-card + .player-answers {
-  margin-top: 0;
-  background-color: var(--surface);
-  background-image:
-    linear-gradient(to right, rgba(194,113,12,0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(194,113,12,0.05) 1px, transparent 1px);
-  background-size: 20px 20px;
-  border-radius: 0 0 var(--radius-card) var(--radius-card);
-  padding: var(--space-2);
-  box-shadow:
-    0 6px 24px rgba(0,0,0,0.11),
-    0 2px 6px rgba(0,0,0,0.06);
-}
-[data-theme="dark"] .glass-card.player-card + .player-answers {
-  background-image:
-    linear-gradient(to right, rgba(232,146,15,0.07) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(232,146,15,0.07) 1px, transparent 1px);
   box-shadow: 0 6px 28px rgba(0,0,0,0.38);
 }
 
-/* Boutons écrits sur la même feuille que la question */
-.glass-card.player-card + .player-answers .choice {
+/* Question : transparent, séparateur ambre vers les réponses */
+.glass-card.player-card {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(194,113,12,0.14);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  box-shadow: none;
+}
+[data-theme="dark"] .glass-card.player-card {
+  border-bottom-color: rgba(232,146,15,0.18);
+}
+
+/* Réponses : même feuille, juste du padding */
+.player-card-unified .player-answers {
+  margin-top: 0;
+  padding: var(--space-2);
+  border-radius: 0 0 var(--radius-card) var(--radius-card);
+}
+
+/* Boutons transparents : le fond de la carte unifiée transparaît */
+.player-card-unified .choice {
   background: transparent;
   border-color: rgba(194, 113, 12, 0.2);
   border-radius: var(--radius-sm);
 }
-.glass-card.player-card + .player-answers .choice:hover:not(:disabled) {
+.player-card-unified .choice:hover:not(:disabled) {
   background: rgba(194, 113, 12, 0.08);
   border-color: rgba(194, 113, 12, 0.35);
 }
-.glass-card.player-card + .player-answers .choice.is-correct {
-  background: var(--success-dim);
-}
-.glass-card.player-card + .player-answers .choice.is-wrong {
-  background: var(--danger-dim);
-}
-.glass-card.player-card + .player-answers .choice .key {
+.player-card-unified .choice.is-correct { background: var(--success-dim); }
+.player-card-unified .choice.is-wrong   { background: var(--danger-dim); }
+.player-card-unified .choice .key {
   background: rgba(194, 113, 12, 0.07);
   border-color: rgba(194, 113, 12, 0.2);
 }
 
-/* ---- Révision — pile de cartes visible avec profondeur marquée ---- */
-[data-revision="true"] .player-card {
-  position: relative;
+/* ---- Révision — pile de cartes : pseudo-éléments sur la carte unifiée ---- */
+[data-revision="true"] .player-card-unified {
   z-index: 1;
 }
-/* Les pseudo-éléments s'étendent vers le bas pour couvrir aussi les boutons réponses */
-[data-revision="true"] .player-card::before,
-[data-revision="true"] .player-card::after {
+[data-revision="true"] .player-card-unified::before,
+[data-revision="true"] .player-card-unified::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: calc(100% + 300px); /* déborde sous la zone question pour couvrir les réponses */
+  inset: 0;                     /* même taille que la carte unifiée */
   border-radius: var(--radius-card);
   background-size: 20px 20px;
   z-index: -1;
 }
-/* Carte du fond — plus sombre, plus inclinée */
-[data-revision="true"] .player-card::before {
-  background-color: #EBE6DF;
+/* Carte du fond — color-mix dérive de --surface, s'adapte au dark mode */
+[data-revision="true"] .player-card-unified::before {
+  background-color: color-mix(in srgb, var(--surface), var(--border) 40%);
   background-image:
     linear-gradient(to right, rgba(194,113,12,0.05) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(194,113,12,0.05) 1px, transparent 1px);
@@ -869,24 +858,13 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
   transform: rotate(-3.5deg) translateY(10px) translateX(-2px);
 }
 /* Carte intermédiaire */
-[data-revision="true"] .player-card::after {
-  background-color: #F5F1EC;
+[data-revision="true"] .player-card-unified::after {
+  background-color: color-mix(in srgb, var(--surface), var(--border) 18%);
   background-image:
     linear-gradient(to right, rgba(194,113,12,0.04) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(194,113,12,0.04) 1px, transparent 1px);
   box-shadow: 0 3px 10px rgba(0,0,0,0.10);
   transform: rotate(-1.8deg) translateY(5px) translateX(-1px);
-}
-[data-theme="dark"] [data-revision="true"] .player-card::before {
-  background-color: #1E1A14;
-}
-[data-theme="dark"] [data-revision="true"] .player-card::after {
-  background-color: #23201A;
-}
-/* Les boutons réponses s'affichent au-dessus des pseudo-éléments */
-[data-revision="true"] .player-card + .player-answers {
-  position: relative;
-  z-index: 2;
 }
 
 /* ---- TOC Parcours — table des matières accordéon ---- */
