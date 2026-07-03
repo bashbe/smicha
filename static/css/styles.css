@@ -921,7 +921,7 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 }
 .toc-marker-done { color: var(--success); }
 
-/* Nom du sujet sous le marqueur, centré */
+/* Sujet du siman sous le marqueur, centré */
 .toc-chapter-subject {
   text-align: center;
   font-size: var(--text-sm);
@@ -931,23 +931,35 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 }
 .toc-chapter-check { color: var(--success); }
 
-/* Seifim : puces compactes en flex-wrap */
+/* Sujet du parcours : titre de groupe au-dessus des simanim */
+.toc-group-subject {
+  text-align: center;
+  font-family: 'Secular One', sans-serif;
+  font-size: var(--text-lg);
+  color: var(--accent);
+  padding: var(--space-2) 0 var(--space-1);
+}
+
+/* Seifim : petites cartes avec sujet propre à chaque seif */
 .seif-chips {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 6px;
   padding: var(--space-1) 0 var(--space-2);
 }
 .seif-chip {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 4px;
-  padding: 4px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 2px;
+  padding: 6px 8px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-btn);
   font-size: var(--text-sm);
   color: var(--fg);
-  min-height: 32px;
+  min-height: 64px;
   transition: background 0.12s, border-color 0.12s;
 }
 .seif-chip:hover {
@@ -960,8 +972,14 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
   font-size: var(--text-base);
 }
 .seif-chip-done .seif-chip-num { color: var(--success); }
+.seif-chip-topic {
+  font-size: 0.7rem;
+  color: var(--muted);
+  line-height: 1.25;
+  font-family: 'Noto Sans Hebrew', sans-serif;
+}
 .seif-chip-count {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--muted);
 }
 

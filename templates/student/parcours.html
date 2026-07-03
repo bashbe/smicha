@@ -25,6 +25,9 @@
     </div>
   {% else %}
     {% for g in groups %}
+    <!-- Zone 1 : sujet du פרשה/parcours, une fois par groupe -->
+    <div class="toc-group-subject">{{ g.subject }}</div>
+
     {% for s in g.simanim %}
     <details class="siman-item" {{ 'open' if loop.first and loop.index0 == 0 }}>
       <summary>
@@ -34,19 +37,21 @@
           <span class="toc-marker-num {{ 'toc-marker-done' if s.completed }}">{{ s.siman | to_hebrew }}</span>
           <span class="toc-marker-rule"></span>
         </div>
-        <!-- Nom du sujet centré, muted -->
+        <!-- Zone 2 : sujet du siman uniquement, centré sous le numéro -->
         <div class="toc-chapter-subject">
-          {{ g.subject }}{% if s.completed %}<span class="toc-chapter-check"> ✓</span>{% endif %}
+          {{ s.topic or g.subject }}{% if s.completed %}<span class="toc-chapter-check"> ✓</span>{% endif %}
         </div>
       </summary>
 
-      <!-- Seifim : puces compactes en flex-wrap -->
+      <!-- Seifim : cartes avec sujet propre à chaque seif -->
       <div class="seif-chips">
         {% if s.seifim %}
           {% for sf in s.seifim %}
           <a href="{{ url_for('student.chapitre_seif', subject=g.subject, siman=s.siman, seif=sf.seif) }}"
              class="seif-chip {{ 'seif-chip-done' if sf.completed }}">
             <span class="seif-chip-num">{{ sf.seif | to_hebrew }}</span>
+            <!-- Zone 3 : sujet du seif, dans la bulle -->
+            {% if sf.topic %}<span class="seif-chip-topic">{{ sf.topic }}</span>{% endif %}
             <span class="seif-chip-count">{% if sf.completed %}✓{% else %}{{ sf.count }}{% endif %}</span>
           </a>
           {% endfor %}
