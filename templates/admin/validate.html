@@ -16,8 +16,13 @@
   </form>
 </div>
 
-<div class="grid" style="grid-template-columns:320px 1fr;align-items:start;">
-  <aside class="card" style="padding:0;max-height:75vh;overflow-y:auto;">
+<div class="admin-tab-bar" data-has-selection="{{ 'true' if selected else 'false' }}">
+  <button class="tab-btn active" data-target="list">📋 רשימה</button>
+  <button class="tab-btn {{ 'active' if selected else '' }}" data-target="editor">✏️ עריכה</button>
+</div>
+
+<div class="grid admin-two-col" style="align-items:start;">
+  <aside class="card" data-panel="list" style="padding:0;max-height:75vh;overflow-y:auto;">
     {% if not questions %}
       <p class="center-text text-sm muted" style="padding:1.5rem;">אין שאלות בתור</p>
     {% else %}
@@ -36,7 +41,7 @@
     {% endif %}
   </aside>
 
-  <section class="card">
+  <section class="card" data-panel="editor">
     {% if not selected %}
       <p class="center-text muted">בחר שאלה</p>
     {% else %}
@@ -207,4 +212,38 @@
     {% endif %}
   </section>
 </div>
+<script>
+(function(){
+  var tabBar = document.querySelector('.admin-tab-bar');
+  if (!tabBar) return;
+  var listPanel = document.querySelector('[data-panel="list"]');
+  var editorPanel = document.querySelector('[data-panel="editor"]');
+  var isMobile = window.innerWidth <= 768;
+  function showPanel(name) {
+    if (!isMobile) return;
+    var isEditor = name === 'editor';
+    listPanel.classList.toggle('panel-hidden', isEditor);
+    editorPanel.classList.toggle('panel-hidden', !isEditor);
+    tabBar.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.target === name); });
+  }
+  var hasSelection = tabBar.dataset.hasSelection === 'true';
+  if (isMobile) {
+    if (hasSelection) {
+      listPanel.classList.add('panel-hidden');
+      tabBar.querySelector('[data-target="list"]').classList.remove('active');
+      tabBar.querySelector('[data-target="editor"]').classList.add('active');
+    } else {
+      editorPanel.classList.add('panel-hidden');
+      tabBar.querySelector('[data-target="list"]').classList.add('active');
+      tabBar.querySelector('[data-target="editor"]').classList.remove('active');
+    }
+  }
+  tabBar.querySelectorAll('.tab-btn').forEach(function(b){
+    b.addEventListener('click', function(){ showPanel(b.dataset.target); });
+  });
+  listPanel.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click', function(){ if (isMobile) showPanel('editor'); });
+  });
+})();
+</script>
 {% endblock %}

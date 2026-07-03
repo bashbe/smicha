@@ -757,6 +757,9 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
   border-top: 1px solid var(--border);
 }
 
+/* Admin two-column layout — collapses to 1 col on mobile */
+.admin-two-col { grid-template-columns: 300px 1fr; }
+
 /* Admin tab switcher — hidden on desktop, shown on mobile */
 .admin-tab-bar { display: none; }
 .admin-tab-bar .tab-btn {

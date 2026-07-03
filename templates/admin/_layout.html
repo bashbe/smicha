@@ -5,7 +5,7 @@
     <div class="container-wide row between" style="padding-top:0.75rem;padding-bottom:0.75rem;">
       <div class="row gap-4">
         <a href="{{ url_for('admin.dashboard') }}" class="row gap-1 bold"><span class="primary">🛡️</span> ניהול סמיכה</a>
-        <nav class="row gap-1">
+        <nav class="row gap-1 admin-nav-items">
           {% set items = [('admin.dashboard','לוח בקרה'),('admin.questions','שאלות'),('admin.import_questions','ייבוא שאלות'),('admin.validate','אימות שאלות'),('admin.users','משתמשים')] %}
           {% for ep, label in items %}
           <a href="{{ url_for(ep) }}" class="btn {{ 'btn-primary' if request.endpoint == ep else '' }}" style="{{ '' if request.endpoint == ep else 'background:none;color:var(--muted-foreground);' }}">{{ label }}</a>
@@ -13,11 +13,34 @@
         </nav>
       </div>
       <div class="row gap-2">
-        <span class="text-xs muted">{{ current_user.email if current_user }}</span>
+        <button id="hamburger-btn" class="admin-hamburger" aria-label="תפריט">☰</button>
+        <span class="text-xs muted admin-email">{{ current_user.email if current_user }}</span>
         <a href="{{ url_for('auth.logout') }}" class="btn" style="background:none;color:var(--muted-foreground);">🚪 התנתק</a>
       </div>
     </div>
   </header>
+  <div id="nav-drawer">
+    <div class="drawer-panel">
+      <div style="padding:1rem;border-bottom:1px solid var(--border);font-weight:600;">תפריט ניהול</div>
+      <nav style="display:flex;flex-direction:column;padding:0.5rem 0;">
+        {% set items = [('admin.dashboard','🏠 לוח בקרה'),('admin.questions','📋 שאלות'),('admin.import_questions','⬆️ ייבוא שאלות'),('admin.validate','✅ אימות שאלות'),('admin.users','👥 משתמשים')] %}
+        {% for ep, label in items %}
+        <a href="{{ url_for(ep) }}" style="padding:0.75rem 1rem;color:var(--foreground);text-decoration:none;{{ 'font-weight:600;background:var(--accent-dim);' if request.endpoint == ep else '' }}">{{ label }}</a>
+        {% endfor %}
+      </nav>
+    </div>
+  </div>
+  <script>
+    (function(){
+      var drawer = document.getElementById('nav-drawer');
+      var btn = document.getElementById('hamburger-btn');
+      if (!btn || !drawer) return;
+      btn.onclick = function(){ drawer.classList.toggle('open'); };
+      drawer.addEventListener('click', function(e){ if (e.target === drawer) drawer.classList.remove('open'); });
+      document.addEventListener('keydown', function(e){ if (e.key === 'Escape') drawer.classList.remove('open'); });
+      drawer.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', function(){ drawer.classList.remove('open'); }); });
+    })();
+  </script>
   <main class="container-wide">
     {% include "_flash.html" %}
     {% block content %}{% endblock %}
