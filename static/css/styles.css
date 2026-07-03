@@ -780,6 +780,144 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
   margin-right: var(--space-1);
 }
 
+/* ---- Flashcard physique — fond à carreaux + ombre portée ---- */
+.glass-card.player-card {
+  background-color: var(--surface);
+  background-image:
+    linear-gradient(to right, rgba(194,113,12,0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(194,113,12,0.07) 1px, transparent 1px);
+  background-size: 20px 20px;
+  border: none;
+  box-shadow:
+    0 4px 20px rgba(0,0,0,0.10),
+    0 1px 4px rgba(0,0,0,0.05);
+}
+[data-theme="dark"] .glass-card.player-card {
+  background-image:
+    linear-gradient(to right, rgba(232,146,15,0.09) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(232,146,15,0.09) 1px, transparent 1px);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+}
+
+/* ---- Révision — pile de cartes visible ---- */
+[data-revision="true"] .player-card {
+  position: relative;
+  z-index: 1;
+}
+[data-revision="true"] .player-card::before,
+[data-revision="true"] .player-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-card);
+  background-color: var(--surface);
+  background-image:
+    linear-gradient(to right, rgba(194,113,12,0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(194,113,12,0.04) 1px, transparent 1px);
+  background-size: 20px 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  z-index: -1;
+}
+[data-revision="true"] .player-card::before {
+  transform: rotate(-2.5deg) translateY(6px);
+}
+[data-revision="true"] .player-card::after {
+  transform: rotate(-1.2deg) translateY(3px);
+}
+
+/* ---- TOC Parcours — table des matières accordéon ---- */
+.toc-siman-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--space-2) 0;
+  gap: var(--space-2);
+  min-height: 56px;
+}
+.toc-siman-number {
+  font-family: 'Secular One', sans-serif;
+  font-size: 1.5rem;
+  color: var(--accent);
+  line-height: 1;
+  flex-shrink: 0;
+}
+.toc-siman-number-done { color: var(--success); }
+.toc-siman-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.toc-siman-subject {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.toc-siman-count {
+  font-size: var(--text-sm);
+  color: var(--fg);
+  font-weight: 600;
+}
+.toc-siman-toggle {
+  color: var(--muted);
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  align-self: center;
+  line-height: 1;
+  transition: transform 0.15s;
+}
+.siman-item[open] .toc-siman-toggle { transform: rotate(45deg); }
+
+.toc-seif-row {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem var(--space-2);
+  margin-bottom: 2px;
+  border-radius: var(--radius-btn);
+  color: var(--fg);
+  font-size: var(--text-base);
+  min-height: 44px;
+  transition: background 0.12s, color 0.12s;
+  gap: var(--space-1);
+}
+.toc-seif-row:hover {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+.toc-seif-num {
+  font-family: 'Secular One', sans-serif;
+  font-size: var(--text-base);
+  color: var(--fg);
+  flex-shrink: 0;
+  min-width: 2rem;
+  transition: color 0.12s;
+}
+.toc-seif-row:hover .toc-seif-num { color: var(--accent); }
+.toc-seif-done .toc-seif-num { color: var(--success); }
+.toc-leader {
+  flex: 1;
+  height: 1px;
+  border-bottom: 1px dotted var(--border);
+  align-self: center;
+  margin: 0 var(--space-1);
+  min-width: 1rem;
+}
+.toc-count {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  flex-shrink: 0;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---- Bottom nav labels toujours visibles sur mobile ---- */
+.bottom-nav a span { display: inline; font-size: 10px; }
+
 /* --- Cartes d'action "folio" avec signet ambre --- */
 .folio-action {
   display: flex;

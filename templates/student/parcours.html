@@ -1,24 +1,17 @@
 {% extends "student/_layout.html" %}
-{% from "_icons.html" import icon_book, icon_chevron_left, icon_check %}
+{% from "_icons.html" import icon_book, icon_check %}
 {% block title %}מסלול — סמיכה{% endblock %}
 {% block content %}
 <div class="animate-slide-up">
 
-  {% from "_icons.html" import icon_coin, icon_flame %}
-  <!-- Header : sujet à gauche, points+streak à droite -->
+  <!-- En-tête simple : titre du parcours -->
   <header style="padding-bottom:var(--space-2);border-bottom:1px solid var(--border);margin-bottom:var(--space-2);">
-    <div class="row between parcours-header-row">
-      <div style="font-weight:700;font-size:var(--text-base);">{% for g in groups %}{{ g.subject }}{% if not loop.last %} · {% endif %}{% endfor %}</div>
-      <div class="row gap-3">
-        <div class="row gap-1" style="font-size:var(--text-sm);color: { { 'var(--accent)' if profile.streak_days else 'var(--muted)' }};">
-          {{ icon_flame(16) }}
-          <span style="font-weight:600;">{{ profile.streak_days or 0 }}</span>
-        </div>
-        <div class="row gap-1" style="font-size:var(--text-sm);color:var(--fg);">
-          {{ icon_coin(16) }}
-          <span style="font-weight:700;">{{ "{:,}".format(profile.total_points or 0) }}</span>
-        </div>
-      </div>
+    <div style="font-family:'Secular One',sans-serif;font-size:var(--text-xl);">
+      {% for g in groups %}{{ g.subject }}{% if not loop.last %} · {% endif %}{% endfor %}
+    </div>
+    <div style="font-size:var(--text-sm);color:var(--muted);margin-top:2px;">
+      {% set total_q = groups | sum(attribute='total') %}
+      {{ total_q }} שאלות
     </div>
   </header>
 
@@ -32,37 +25,51 @@
     </div>
   {% else %}
     {% for g in groups %}
-    <!-- Rappel contextuel discret : un seul sujet étudié à la fois -->
-
     {% for s in g.simanim %}
-    <details class="siman-item" {{ 'open' if loop.first }}>
+    <details class="siman-item" {{ 'open' if loop.first and loop.index0 == 0 }}>
       <summary>
-        <div class="siman-line">
-          <span class="siman-name">
-            סימן {{ s.siman | to_hebrew }}
-            {% if s.completed %}<span class="success" style="font-size:var(--text-sm);"> ✓</span>{% endif %}
+        <div class="toc-siman-row">
+          <!-- Droite (RTL start) : numéro du siman en grand ambre -->
+          <span class="toc-siman-number {{ 'toc-siman-number-done' if s.completed }}">
+            {{ s.siman | to_hebrew }}
           </span>
-          <div class="progress">
-            <span class="{{ 'is-success' if s.completed }}" style="width: {{ s.pct }}%;"></span>
+
+          <!-- Milieu : sujet + nb de cartes -->
+          <div class="toc-siman-info">
+            <span class="toc-siman-subject">{{ g.subject }}</span>
+            <span class="toc-siman-count">
+              {{ s.count }} שאלות
+              {% if s.completed %}<span class="success" style="font-size:var(--text-sm);margin-right:4px;">✓</span>{% endif %}
+            </span>
           </div>
-          <span class="siman-chevron">{{ icon_chevron_left(18) }}</span>
+
+          <!-- Gauche (RTL end) : toggle +/- -->
+          <span class="toc-siman-toggle">+</span>
         </div>
       </summary>
+
+      <!-- Lignes seifim : style table des matières -->
       <div class="seif-rows">
         {% if s.seifim %}
-          {# Une ligne par seif. Quand le regroupement par sujet sera disponible,
-             le format devient « סעיף X - Y — נושא ». #}
           {% for sf in s.seifim %}
           <a href="{{ url_for('student.chapitre_seif', subject=g.subject, siman=s.siman, seif=sf.seif) }}"
-             class="seif-row">
-            <span>סעיף {{ sf.seif | to_hebrew }}</span>
-            {% if sf.completed %}
-              <span class="seif-check">{{ icon_check(16) }}</span>
-            {% endif %}
+             class="toc-seif-row {{ 'toc-seif-done' if sf.completed }}">
+            <!-- Numéro du seif à droite -->
+            <span class="toc-seif-num">{{ sf.seif | to_hebrew }}</span>
+            <!-- Leader dots -->
+            <span class="toc-leader"></span>
+            <!-- Nb de cartes à gauche -->
+            <span class="toc-count">
+              {% if sf.completed %}
+                {{ icon_check(14) }}
+              {% else %}
+                {{ sf.count }}
+              {% endif %}
+            </span>
           </a>
           {% endfor %}
         {% else %}
-          <p style="font-size:var(--text-sm);color:var(--muted);">אין סעיפים</p>
+          <p style="font-size:var(--text-sm);color:var(--muted);padding:var(--space-1) var(--space-2);">אין סעיפים</p>
         {% endif %}
       </div>
     </details>
