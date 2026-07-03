@@ -8,6 +8,9 @@ from flask import Blueprint, Response, flash, redirect, render_template, request
 
 from auth_helpers import current_user, login_user, logout_user, staff_required
 from blueprints.auth import create_account
+from chapter_topics import save_topics
+from chapter_topics import seif_topic as get_seif_topic
+from chapter_topics import siman_topic as get_siman_topic
 from models import FsrsCard, Question, QuestionEdit, StudentProfile, User, UserAnswer, db
 from question_types import (
     QUESTION_TYPES,
@@ -491,6 +494,55 @@ def edit_question(qid):
     )
     db.session.commit()
     return redirect(url_for("admin.questions", **redirect_params))
+
+
+@bp.route("/topics", methods=["GET", "POST"])
+@staff_required
+def topics():
+    if request.method == "POST":
+        siman_rows = list(zip(
+            request.form.getlist("siman_subject"),
+            request.form.getlist("siman_num"),
+            request.form.getlist("siman_topic"),
+        ))
+        seif_rows = list(zip(
+            request.form.getlist("seif_subject"),
+            request.form.getlist("seif_siman"),
+            request.form.getlist("seif_num"),
+            request.form.getlist("seif_topic"),
+        ))
+        save_topics(siman_rows, seif_rows)
+        flash("הנושאים נשמרו", "success")
+        return redirect(url_for("admin.topics"))
+
+    rows = (
+        Question.query.with_entities(Question.subject, Question.siman, Question.seif)
+        .filter(Question.subject.isnot(None), Question.siman.isnot(None))
+        .distinct()
+        .all()
+    )
+    by_subject: dict[str, dict[int, set]] = {}
+    for subject, siman, seif in rows:
+        by_subject.setdefault(subject, {}).setdefault(siman, set())
+        if seif is not None:
+            by_subject[subject][siman].add(seif)
+
+    groups = []
+    for subject in sorted(by_subject.keys()):
+        simanim = []
+        for siman in sorted(by_subject[subject].keys()):
+            seifim = [
+                {"seif": seif, "topic": get_seif_topic(subject, siman, seif) or ""}
+                for seif in sorted(by_subject[subject][siman])
+            ]
+            simanim.append({
+                "siman": siman,
+                "topic": get_siman_topic(subject, siman) or "",
+                "seifim": seifim,
+            })
+        groups.append({"subject": subject, "simanim": simanim})
+
+    return render_template("admin/topics.html", groups=groups)
 
 
 @bp.route("/reset-db", methods=["POST"])
