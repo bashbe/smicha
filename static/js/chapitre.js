@@ -325,7 +325,12 @@
     backBtn.addEventListener("click", () => { window.location.href = cfg.parcours; });
     const header = el("div", "row between");
     header.appendChild(backBtn);
-    if (!isRevision) {
+    if (isRevision) {
+      const revLabel = el("span", "");
+      revLabel.textContent = "חזרה יומית";
+      revLabel.style.cssText = "font-family:'Secular One',sans-serif;font-size:var(--text-sm);color:var(--muted);";
+      header.appendChild(revLabel);
+    } else {
       header.appendChild(el("div", "pill pill-accent", icon("coin", 14), String(state.sessionPoints)));
     }
     root.appendChild(header);

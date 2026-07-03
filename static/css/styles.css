@@ -820,6 +820,27 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
   box-shadow: 0 6px 28px rgba(0,0,0,0.38);
 }
 
+/* Boutons écrits sur la même feuille que la question */
+.glass-card.player-card + .player-answers .choice {
+  background: transparent;
+  border-color: rgba(194, 113, 12, 0.2);
+  border-radius: var(--radius-sm);
+}
+.glass-card.player-card + .player-answers .choice:hover:not(:disabled) {
+  background: rgba(194, 113, 12, 0.08);
+  border-color: rgba(194, 113, 12, 0.35);
+}
+.glass-card.player-card + .player-answers .choice.is-correct {
+  background: var(--success-dim);
+}
+.glass-card.player-card + .player-answers .choice.is-wrong {
+  background: var(--danger-dim);
+}
+.glass-card.player-card + .player-answers .choice .key {
+  background: rgba(194, 113, 12, 0.07);
+  border-color: rgba(194, 113, 12, 0.2);
+}
+
 /* ---- Révision — pile de cartes visible avec profondeur marquée ---- */
 [data-revision="true"] .player-card {
   position: relative;
@@ -840,7 +861,7 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 }
 /* Carte du fond — plus sombre, plus inclinée */
 [data-revision="true"] .player-card::before {
-  background-color: #E8E2D9;
+  background-color: #EBE6DF;
   background-image:
     linear-gradient(to right, rgba(194,113,12,0.05) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(194,113,12,0.05) 1px, transparent 1px);
@@ -849,7 +870,7 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 }
 /* Carte intermédiaire */
 [data-revision="true"] .player-card::after {
-  background-color: #F0EAE1;
+  background-color: #F5F1EC;
   background-image:
     linear-gradient(to right, rgba(194,113,12,0.04) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(194,113,12,0.04) 1px, transparent 1px);
