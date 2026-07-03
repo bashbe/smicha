@@ -319,8 +319,9 @@
     refs.ratingBadge = null;
 
     // header
-    const backBtn = el("button", "btn btn-outline", "→");
-    backBtn.style.cssText = "height:2.5rem;width:2.5rem;border-radius:999px;padding:0;";
+    const backBtn = el("button", "btn btn-outline");
+    backBtn.style.cssText = "height:2.5rem;width:2.5rem;border-radius:999px;padding:0;display:flex;align-items:center;justify-content:center;";
+    backBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>';
     backBtn.addEventListener("click", () => { window.location.href = cfg.parcours; });
     const header = el("div", "row between");
     header.appendChild(backBtn);
