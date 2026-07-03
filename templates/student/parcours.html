@@ -31,14 +31,12 @@
     {% for s in g.simanim %}
     <details class="siman-item" {{ 'open' if loop.first and loop.index0 == 0 }}>
       <summary>
-        <!-- Marqueur de chapitre : ──── סימן פ"ז ──── + indicateur d'ouverture/fermeture -->
+        <!-- Marqueur de chapitre : ──── סימן פ"ז ──── + indicateur d'ouverture/fermeture à droite -->
         <div class="toc-chapter-line">
           <span class="toc-chapter-toggle">{{ icon_chevron_left(16) }}</span>
-          <span class="toc-chapter-center">
-            <span class="toc-marker-rule"></span>
-            <span class="toc-marker-num {{ 'toc-marker-done' if s.completed }}">סימן {{ s.siman | to_hebrew }}</span>
-            <span class="toc-marker-rule"></span>
-          </span>
+          <span class="toc-marker-rule"></span>
+          <span class="toc-marker-num {{ 'toc-marker-done' if s.completed }}">סימן {{ s.siman | to_hebrew }}</span>
+          <span class="toc-marker-rule"></span>
         </div>
         <!-- Zone 2 : sujet du siman uniquement, sur sa propre ligne -->
         <div class="toc-chapter-subject">
