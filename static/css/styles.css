@@ -920,10 +920,9 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
   min-width: 0;
 }
 .toc-marker-rule {
-  width: 14px;
+  flex: 1;
   height: 1px;
   background: var(--border);
-  flex-shrink: 0;
 }
 .toc-marker-num {
   font-family: 'Secular One', sans-serif;
