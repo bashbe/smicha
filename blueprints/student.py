@@ -8,6 +8,7 @@ from flask import Blueprint, flash, jsonify, redirect, render_template, request,
 from sqlalchemy import distinct, func
 
 from auth_helpers import current_user, login_required
+from chapter_topics import seif_topic, siman_topic
 from models import FsrsCard, Progression, Question, StudentProfile, UserAnswer, db
 from question_types import normalize_db_question
 
@@ -219,13 +220,14 @@ def parcours():
                     "count": sc,
                     "answered": correct_seif_map.get(f"{subject}|{siman}|{seif}", 0),
                     "completed": correct_seif_map.get(f"{subject}|{siman}|{seif}", 0) >= sc and sc > 0,
+                    "topic": seif_topic(subject, siman, seif),
                 }
                 for seif, sc in sorted((k, v) for k, v in seif_counts.items() if k is not None)
             ]
             simanim.append({
                 "siman": siman, "count": count, "answered": correct,
                 "locked": locked, "pct": pct, "completed": completed,
-                "seifim": seifim,
+                "seifim": seifim, "topic": siman_topic(subject, siman),
             })
         groups.append({"subject": subject, "simanim": simanim, "total": sum(s["count"] for s in simanim)})
 
