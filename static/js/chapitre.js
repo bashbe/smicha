@@ -319,12 +319,18 @@
     refs.ratingBadge = null;
 
     // header
-    const backBtn = el("button", "btn btn-outline", "→");
-    backBtn.style.cssText = "height:2.5rem;width:2.5rem;border-radius:999px;padding:0;";
+    const backBtn = el("button", "btn btn-outline");
+    backBtn.style.cssText = "height:2.5rem;width:2.5rem;border-radius:999px;padding:0;display:flex;align-items:center;justify-content:center;";
+    backBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>';
     backBtn.addEventListener("click", () => { window.location.href = cfg.parcours; });
     const header = el("div", "row between");
     header.appendChild(backBtn);
-    if (!isRevision) {
+    if (isRevision) {
+      const revLabel = el("span", "");
+      revLabel.textContent = "חזרה יומית";
+      revLabel.style.cssText = "font-family:'Secular One',sans-serif;font-size:var(--text-sm);color:var(--muted);";
+      header.appendChild(revLabel);
+    } else {
       header.appendChild(el("div", "pill pill-accent", icon("coin", 14), String(state.sessionPoints)));
     }
     root.appendChild(header);
@@ -346,6 +352,9 @@
       root.appendChild(el("div", "retry-hint", "חזרה על שאלה זו"));
     }
 
+    // enveloppe unifiée : question + réponses sur la même feuille
+    const cardUnified = el("div", "player-card-unified");
+
     // question card
     const card = el("div", "glass-card player-card" + (state.revealed ? "" : " glow-indigo"));
     if (nq.scenario) {
@@ -359,7 +368,7 @@
       refs.ratingBadge = el("div", "pill animate-pop-in rating-badge-pos " + state.feedback.ratingTone, state.feedback.ratingBadge);
       card.appendChild(refs.ratingBadge);
     }
-    root.appendChild(card);
+    cardUnified.appendChild(card);
 
     // answers
     const answers = el("div", (isTrueFalse ? "choice-grid" : "stack-sm") + " player-answers");
@@ -461,7 +470,8 @@
     if (state.feedback && state.feedback.isCorrect && state.feedback.pts > 0) {
       answers.appendChild(el("div", "animate-float-up extrabold accent points-float", "+" + state.feedback.pts));
     }
-    root.appendChild(answers);
+    cardUnified.appendChild(answers);
+    root.appendChild(cardUnified);
 
     // explanation panel
     if (state.revealed && state.feedback) {

@@ -1,25 +1,25 @@
 /* ============================================================
-   SMIHA — Design System v2
-   Direction : « Card-First » — sobre, fonctionnel, sans décor.
+   SMIHA — Design System v2 + Folio direction (branch design/student-folio)
+   Direction : « Daf » — encre sur vélin, accent ambre, sobre et savant.
    Light par défaut, dark via [data-theme="dark"] sur <html>.
    Typo : Secular One (display) + Noto Sans Hebrew (corps)
-   Grille 8px · radius 12/8/9999 · un seul accent bleu.
+   Grille 8px · radius 12/8/9999 · un seul accent ambre.
    ============================================================ */
 
 :root {
   /* --- Tokens canoniques --- */
-  --bg:      #FAFAF9;
-  --surface: #FFFFFF;
-  --fg:      #111111;
-  --muted:   #737373;   /* #888 de la spec assombri pour contraste AA */
-  --accent:  #2563EB;
-  --border:  #E5E5E5;
-  --success: #16A34A;
-  --danger:  #DC2626;
+  --bg:      #F8F5F0;   /* Vélin — blanc légèrement chaud, pas du cream Duolingo */
+  --surface: #FDFCFA;   /* Surface carte — plus clair */
+  --fg:      #1C1712;   /* Encre — brun-noir chaud */
+  --muted:   #7C6E5E;   /* Gris chaud, renvois bibliographiques */
+  --accent:  #C2710C;   /* Ambre — encre safranée des manuscrits halakhiques */
+  --border:  #DDD6CC;   /* Parchemin — bordure tiède */
+  --success: #2D6A4F;   /* Forêt — vert profond, sérieux */
+  --danger:  #9B2226;   /* Brique — rouge sombre, erreur */
 
-  --accent-dim:  rgba(37, 99, 235, 0.10);
-  --success-dim: rgba(22, 163, 74, 0.10);
-  --danger-dim:  rgba(220, 38, 38, 0.10);
+  --accent-dim:  rgba(194, 113, 12, 0.10);
+  --success-dim: rgba(45, 106, 79, 0.10);
+  --danger-dim:  rgba(155, 34, 38, 0.10);
 
   /* --- Alias legacy (templates + chapitre.js en dépendent) --- */
   --background:  var(--bg);
@@ -72,18 +72,18 @@
 }
 
 [data-theme="dark"] {
-  --bg:      #0F0F0F;
-  --surface: #1A1A1A;
-  --fg:      #EFEFEF;
-  --muted:   #8C8C8C;   /* #555 de la spec éclairci pour contraste AA */
-  --accent:  #3B82F6;
-  --border:  #2A2A2A;
-  --success: #22C55E;
-  --danger:  #EF4444;
+  --bg:      #100E0B;   /* Encre nuit */
+  --surface: #1C1915;   /* Surface sombre chaude */
+  --fg:      #F0EBE3;   /* Parchemin clair */
+  --muted:   #9C8E7D;   /* Gris chaud */
+  --accent:  #E8920F;   /* Ambre plus vif sur fond sombre */
+  --border:  #2E2822;   /* Frontière nocturne */
+  --success: #3D9970;
+  --danger:  #D95F5F;
 
-  --accent-dim:  rgba(59, 130, 246, 0.14);
-  --success-dim: rgba(34, 197, 94, 0.12);
-  --danger-dim:  rgba(239, 68, 68, 0.12);
+  --accent-dim:  rgba(232, 146, 15, 0.14);
+  --success-dim: rgba(61, 153, 112, 0.12);
+  --danger-dim:  rgba(217, 95, 95, 0.12);
   --primary-foreground: #FFFFFF;
 }
 
@@ -220,8 +220,8 @@ button { font-family: inherit; cursor: pointer; }
   color: #FFFFFF;
   border-color: var(--accent);
 }
-.btn-primary:hover:not(:disabled) { background: #1D4ED8; border-color: #1D4ED8; }
-[data-theme="dark"] .btn-primary:hover:not(:disabled) { background: #2563EB; border-color: #2563EB; }
+.btn-primary:hover:not(:disabled) { background: #9A5A08; border-color: #9A5A08; }
+[data-theme="dark"] .btn-primary:hover:not(:disabled) { background: #F5A030; border-color: #F5A030; }
 
 .btn-accent      { background: var(--accent); color: #FFFFFF; }
 .btn-success     { background: var(--success); color: #FFFFFF; }
@@ -479,7 +479,7 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 /* ---- Actions (home) ---- */
 .action-card { display: block; padding: var(--space-2); border-radius: var(--radius-card); }
 .action-card-primary { background: var(--accent); color: #FFFFFF; }
-.action-card-primary:hover { background: #1D4ED8; }
+.action-card-primary:hover { background: #9A5A08; }
 .action-card-primary .action-label { color: #FFFFFF; font-weight: 700; }
 .action-card-primary .action-sub   { color: rgba(255,255,255,0.75); font-size: var(--text-sm); }
 .action-card-revision {
@@ -503,7 +503,7 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 .action-btn .action-label { font-size: var(--text-base); font-weight: 700; }
 .action-btn .action-sub   { font-size: var(--text-sm); }
 .action-btn-primary { background: var(--accent); color: #FFFFFF; }
-.action-btn-primary:hover { background: #1D4ED8; }
+.action-btn-primary:hover { background: #9A5A08; }
 .action-btn-primary .action-sub { color: rgba(255,255,255,0.75); }
 .action-btn-ghost { background: transparent; border-color: var(--border); color: var(--fg); }
 .action-btn-ghost:hover { border-color: var(--muted); }
@@ -692,6 +692,327 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 .emoji-lg  { font-size: 1.75rem; }
 .emoji-xl  { font-size: 2rem; }
 .emoji-xxl { font-size: 3.5rem; }
+
+/* ============================================================
+   FOLIO DIRECTION — Composants home/étudiant "Daf"
+   ============================================================ */
+
+/* --- En-tête home minimaliste --- */
+.home-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+.home-greeting {
+  font-size: var(--text-base);
+  color: var(--muted);
+}
+.home-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.home-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  font-weight: 600;
+}
+.home-stat-active { color: var(--accent); }
+
+/* --- Grand compteur folio --- */
+.home-folio {
+  text-align: center;
+  padding: var(--space-4) 0 var(--space-3);
+}
+.folio-big-number {
+  font-family: 'Secular One', sans-serif;
+  font-size: 6rem;
+  line-height: 1;
+  color: var(--fg);
+  letter-spacing: -0.03em;
+}
+.folio-big-number-empty { color: var(--muted); }
+.folio-sublabel {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.folio-progress {
+  height: 2px;
+  background: var(--border);
+  border-radius: var(--radius-pill);
+  margin: var(--space-2) auto 0;
+  max-width: 8rem;
+  overflow: hidden;
+}
+.folio-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--radius-pill);
+  transition: width 0.6s ease;
+}
+
+/* --- Bande d'activité hebdomadaire --- */
+.week-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: var(--space-1) 0;
+}
+.week-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: var(--border);
+}
+.week-dot-active { background: var(--accent); }
+.week-label {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin-right: var(--space-1);
+}
+
+/* ---- Flashcard unifiée — question + réponses sur la même feuille ---- */
+.player-card-unified {
+  position: relative;
+  margin-top: var(--space-2);
+  background-color: var(--surface);
+  background-image:
+    linear-gradient(to right, rgba(194,113,12,0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(194,113,12,0.07) 1px, transparent 1px);
+  background-size: 20px 20px;
+  border-radius: var(--radius-card);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.11), 0 2px 6px rgba(0,0,0,0.06);
+}
+[data-theme="dark"] .player-card-unified {
+  background-image:
+    linear-gradient(to right, rgba(232,146,15,0.09) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(232,146,15,0.09) 1px, transparent 1px);
+  box-shadow: 0 6px 28px rgba(0,0,0,0.38);
+}
+
+/* Question : transparent, pas de séparateur */
+.glass-card.player-card {
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  box-shadow: none;
+}
+
+/* Réponses : même feuille, juste du padding */
+.player-card-unified .player-answers {
+  margin-top: 0;
+  padding: var(--space-2);
+  border-radius: 0 0 var(--radius-card) var(--radius-card);
+}
+
+/* Boutons transparents : le fond de la carte unifiée transparaît */
+.player-card-unified .choice {
+  background: transparent;
+  border-color: rgba(194, 113, 12, 0.2);
+  border-radius: var(--radius-sm);
+}
+.player-card-unified .choice:hover:not(:disabled) {
+  background: rgba(194, 113, 12, 0.08);
+  border-color: rgba(194, 113, 12, 0.35);
+}
+.player-card-unified .choice.is-correct { background: var(--success-dim); }
+.player-card-unified .choice.is-wrong   { background: var(--danger-dim); }
+.player-card-unified .choice .key {
+  background: rgba(194, 113, 12, 0.07);
+  border-color: rgba(194, 113, 12, 0.2);
+}
+
+/* ---- Révision — pile de cartes : pseudo-éléments sur la carte unifiée ---- */
+[data-revision="true"] .player-card-unified {
+  z-index: 1;
+}
+[data-revision="true"] .player-card-unified::before,
+[data-revision="true"] .player-card-unified::after {
+  content: '';
+  position: absolute;
+  inset: 0;                     /* même taille que la carte unifiée */
+  border-radius: var(--radius-card);
+  background-size: 20px 20px;
+  z-index: -1;
+}
+/* Carte du fond — color-mix dérive de --surface, s'adapte au dark mode */
+[data-revision="true"] .player-card-unified::before {
+  background-color: color-mix(in srgb, var(--surface), var(--border) 40%);
+  background-image:
+    linear-gradient(to right, rgba(194,113,12,0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(194,113,12,0.05) 1px, transparent 1px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.14);
+  transform: rotate(-3.5deg) translateY(10px) translateX(-2px);
+}
+/* Carte intermédiaire */
+[data-revision="true"] .player-card-unified::after {
+  background-color: color-mix(in srgb, var(--surface), var(--border) 18%);
+  background-image:
+    linear-gradient(to right, rgba(194,113,12,0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(194,113,12,0.04) 1px, transparent 1px);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.10);
+  transform: rotate(-1.8deg) translateY(5px) translateX(-1px);
+}
+
+/* ---- TOC Parcours — table des matières accordéon ---- */
+.toc-siman-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--space-2) 0;
+  gap: var(--space-2);
+  min-height: 56px;
+}
+.toc-siman-number {
+  font-family: 'Secular One', sans-serif;
+  font-size: 1.5rem;
+  color: var(--accent);
+  line-height: 1;
+  flex-shrink: 0;
+}
+.toc-siman-number-done { color: var(--success); }
+.toc-siman-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.toc-siman-subject {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.toc-siman-count {
+  font-size: var(--text-sm);
+  color: var(--fg);
+  font-weight: 600;
+}
+.toc-siman-toggle {
+  color: var(--muted);
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  align-self: center;
+  line-height: 1;
+  transition: transform 0.15s;
+}
+.siman-item[open] .toc-siman-toggle { transform: rotate(45deg); }
+
+.toc-seif-row {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem var(--space-2);
+  margin-bottom: 2px;
+  border-radius: var(--radius-btn);
+  color: var(--fg);
+  font-size: var(--text-base);
+  min-height: 44px;
+  transition: background 0.12s, color 0.12s;
+  gap: var(--space-1);
+}
+.toc-seif-row:hover {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+.toc-seif-num {
+  font-family: 'Secular One', sans-serif;
+  font-size: var(--text-base);
+  color: var(--fg);
+  flex-shrink: 0;
+  min-width: 2rem;
+  transition: color 0.12s;
+}
+.toc-seif-row:hover .toc-seif-num { color: var(--accent); }
+.toc-seif-done .toc-seif-num { color: var(--success); }
+.toc-leader {
+  flex: 1;
+  height: 1px;
+  border-bottom: 1px dotted var(--border);
+  align-self: center;
+  margin: 0 var(--space-1);
+  min-width: 1rem;
+}
+.toc-count {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  flex-shrink: 0;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---- Bottom nav labels toujours visibles sur mobile ---- */
+.bottom-nav a span { display: inline; font-size: 10px; }
+
+/* --- Cartes d'action "folio" avec signet ambre --- */
+.folio-action {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border);
+  border-right: 3px solid var(--border);   /* RTL : bord de départ */
+  background: var(--surface);
+  color: var(--fg);
+  transition: background 0.15s, border-color 0.15s;
+  min-height: 72px;
+}
+.folio-action-primary { border-right-color: var(--accent); }
+.folio-action:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  border-right-color: var(--accent);
+}
+.folio-action-body { flex: 1; }
+.folio-action-title {
+  font-weight: 700;
+  font-size: var(--text-base);
+}
+.folio-action-sub {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin-top: 2px;
+}
+.folio-action-arrow {
+  color: var(--muted);
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+/* --- Stat affichée en grand (profil) --- */
+.profile-display-stat {
+  text-align: center;
+  padding: var(--space-3) 0 var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+.profile-display-number {
+  font-family: 'Secular One', sans-serif;
+  font-size: 4rem;
+  line-height: 1;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+.profile-display-label {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin-top: var(--space-1);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
 
 /* ============================================================
    MOBILE — Admin responsive
