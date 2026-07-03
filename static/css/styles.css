@@ -896,29 +896,20 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 [data-theme="dark"] .toc-title-block { border-color: var(--accent); }
 [data-theme="dark"] .toc-title-inner { border-color: var(--accent); }
 
-/* Marqueur de chapitre : indicateur d'ouverture/fermeture + numéro/sujet du siman centrés */
+/* Marqueur de chapitre : ──── סימן פ"ט ──── avec indicateur d'ouverture/fermeture à droite */
 .toc-chapter-line {
-  display: grid;
-  grid-template-columns: 20px 1fr 20px;
+  display: flex;
   align-items: center;
   gap: var(--space-1);
   padding-top: var(--space-2);
 }
 .toc-chapter-toggle {
-  grid-column: 1;
+  flex-shrink: 0;
   display: flex;
   color: var(--muted);
   transition: transform 0.15s;
 }
 .siman-item[open] .toc-chapter-toggle { transform: rotate(-90deg); }
-.toc-chapter-center {
-  grid-column: 2;
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: var(--space-1);
-  min-width: 0;
-}
 .toc-marker-rule {
   flex: 1;
   height: 1px;
