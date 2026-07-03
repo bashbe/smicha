@@ -935,14 +935,12 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 }
 .toc-marker-done { color: var(--success); }
 
-/* Sujet du siman, sur la même ligne que le numéro */
-.toc-chapter-subject-inline {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* Sujet du siman, sur sa propre ligne sous le marqueur */
+.toc-chapter-subject {
+  text-align: center;
   font-size: var(--text-sm);
   color: var(--muted);
+  padding: 4px 0 var(--space-1);
   font-family: 'Noto Sans Hebrew', sans-serif;
 }
 .toc-chapter-check { color: var(--success); }
