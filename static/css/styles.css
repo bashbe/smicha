@@ -899,18 +899,28 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 [data-theme="dark"] .toc-title-block { border-color: var(--accent); }
 [data-theme="dark"] .toc-title-inner { border-color: var(--accent); }
 
-/* Marqueur de chapitre : numéro, sujet du siman et compte sur une même ligne */
+/* Marqueur de chapitre : indicateur d'ouverture/fermeture + numéro/sujet du siman centrés */
 .toc-chapter-line {
-  display: flex;
+  display: grid;
+  grid-template-columns: 20px 1fr 20px;
   align-items: center;
   gap: var(--space-1);
   padding-top: var(--space-2);
 }
-.toc-marker-rule-short {
-  width: 14px;
-  height: 1px;
-  background: var(--border);
-  flex-shrink: 0;
+.toc-chapter-toggle {
+  grid-column: 1;
+  display: flex;
+  color: var(--muted);
+  transition: transform 0.15s;
+}
+.siman-item[open] .toc-chapter-toggle { transform: rotate(-90deg); }
+.toc-chapter-center {
+  grid-column: 2;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--space-1);
+  min-width: 0;
 }
 .toc-marker-num {
   font-family: 'Secular One', sans-serif;
@@ -918,37 +928,21 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
   color: var(--accent);
   line-height: 1;
   white-space: nowrap;
-  padding: 0 2px;
   flex-shrink: 0;
 }
 .toc-marker-done { color: var(--success); }
 
 /* Sujet du siman, sur la même ligne que le numéro */
 .toc-chapter-subject-inline {
-  flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-align: right;
   font-size: var(--text-sm);
   color: var(--muted);
   font-family: 'Noto Sans Hebrew', sans-serif;
 }
 .toc-chapter-check { color: var(--success); }
-
-/* Compte de questions du siman, sur la même ligne */
-.toc-chapter-count {
-  flex-shrink: 0;
-  font-size: 0.75rem;
-  color: var(--muted);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  padding: 2px 8px;
-  min-width: 1.5rem;
-  text-align: center;
-}
 
 /* Sujet du parcours : titre de groupe au-dessus des simanim */
 .toc-group-subject {
