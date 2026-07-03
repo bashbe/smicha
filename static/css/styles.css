@@ -535,8 +535,11 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
   color: var(--muted);
   padding-bottom: var(--space-1);
 }
-.siman-item summary { list-style: none; }
+/* display:block sort le summary du mode list-item : supprime le triangle natif
+   (que certains navigateurs affichent en plus de notre chevron, à l'inline-start) */
+.siman-item summary { display: block; list-style: none; }
 .siman-item summary::-webkit-details-marker { display: none; }
+.siman-item summary::marker { content: ""; }
 .siman-line {
   display: flex; align-items: center; gap: var(--space-2);
   padding: var(--space-2) 0;
