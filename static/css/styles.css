@@ -899,17 +899,18 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 [data-theme="dark"] .toc-title-block { border-color: var(--accent); }
 [data-theme="dark"] .toc-title-inner { border-color: var(--accent); }
 
-/* Marqueur de chapitre : ────── פ״ט ────── */
-.toc-chapter-marker {
+/* Marqueur de chapitre : numéro, sujet du siman et compte sur une même ligne */
+.toc-chapter-line {
   display: flex;
   align-items: center;
   gap: var(--space-1);
   padding-top: var(--space-2);
 }
-.toc-marker-rule {
-  flex: 1;
+.toc-marker-rule-short {
+  width: 14px;
   height: 1px;
   background: var(--border);
+  flex-shrink: 0;
 }
 .toc-marker-num {
   font-family: 'Secular One', sans-serif;
@@ -918,18 +919,36 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
   line-height: 1;
   white-space: nowrap;
   padding: 0 2px;
+  flex-shrink: 0;
 }
 .toc-marker-done { color: var(--success); }
 
-/* Sujet du siman sous le marqueur, centré */
-.toc-chapter-subject {
-  text-align: center;
+/* Sujet du siman, sur la même ligne que le numéro */
+.toc-chapter-subject-inline {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
   font-size: var(--text-sm);
   color: var(--muted);
-  padding: 4px 0 var(--space-1);
   font-family: 'Noto Sans Hebrew', sans-serif;
 }
 .toc-chapter-check { color: var(--success); }
+
+/* Compte de questions du siman, sur la même ligne */
+.toc-chapter-count {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
+  min-width: 1.5rem;
+  text-align: center;
+}
 
 /* Sujet du parcours : titre de groupe au-dessus des simanim */
 .toc-group-subject {
@@ -940,10 +959,10 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
   padding: var(--space-2) 0 var(--space-1);
 }
 
-/* Seifim : petites cartes avec sujet propre à chaque seif */
+/* Seifim : pilules flexbox avec sujet propre à chaque seif */
 .seif-chips {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   padding: var(--space-1) 0 var(--space-2);
 }
@@ -954,12 +973,14 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
   justify-content: center;
   text-align: center;
   gap: 2px;
-  padding: 6px 8px;
+  padding: 6px 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-btn);
   font-size: var(--text-sm);
   color: var(--fg);
   min-height: 64px;
+  min-width: 92px;
+  flex: 0 1 auto;
   transition: background 0.12s, border-color 0.12s;
 }
 .seif-chip:hover {
