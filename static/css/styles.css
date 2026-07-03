@@ -799,16 +799,12 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
   box-shadow: 0 6px 28px rgba(0,0,0,0.38);
 }
 
-/* Question : transparent, séparateur ambre vers les réponses */
+/* Question : transparent, pas de séparateur */
 .glass-card.player-card {
   background: transparent;
   border: none;
-  border-bottom: 1px solid rgba(194,113,12,0.14);
   border-radius: var(--radius-card) var(--radius-card) 0 0;
   box-shadow: none;
-}
-[data-theme="dark"] .glass-card.player-card {
-  border-bottom-color: rgba(232,146,15,0.18);
 }
 
 /* Réponses : même feuille, juste du padding */
