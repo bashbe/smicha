@@ -1,25 +1,25 @@
 /* ============================================================
-   SMIHA — Design System v2
-   Direction : « Card-First » — sobre, fonctionnel, sans décor.
+   SMIHA — Design System v2 + Folio direction (branch design/student-folio)
+   Direction : « Daf » — encre sur vélin, accent ambre, sobre et savant.
    Light par défaut, dark via [data-theme="dark"] sur <html>.
    Typo : Secular One (display) + Noto Sans Hebrew (corps)
-   Grille 8px · radius 12/8/9999 · un seul accent bleu.
+   Grille 8px · radius 12/8/9999 · un seul accent ambre.
    ============================================================ */
 
 :root {
   /* --- Tokens canoniques --- */
-  --bg:      #FAFAF9;
-  --surface: #FFFFFF;
-  --fg:      #111111;
-  --muted:   #737373;   /* #888 de la spec assombri pour contraste AA */
-  --accent:  #2563EB;
-  --border:  #E5E5E5;
-  --success: #16A34A;
-  --danger:  #DC2626;
+  --bg:      #F8F5F0;   /* Vélin — blanc légèrement chaud, pas du cream Duolingo */
+  --surface: #FDFCFA;   /* Surface carte — plus clair */
+  --fg:      #1C1712;   /* Encre — brun-noir chaud */
+  --muted:   #7C6E5E;   /* Gris chaud, renvois bibliographiques */
+  --accent:  #C2710C;   /* Ambre — encre safranée des manuscrits halakhiques */
+  --border:  #DDD6CC;   /* Parchemin — bordure tiède */
+  --success: #2D6A4F;   /* Forêt — vert profond, sérieux */
+  --danger:  #9B2226;   /* Brique — rouge sombre, erreur */
 
-  --accent-dim:  rgba(37, 99, 235, 0.10);
-  --success-dim: rgba(22, 163, 74, 0.10);
-  --danger-dim:  rgba(220, 38, 38, 0.10);
+  --accent-dim:  rgba(194, 113, 12, 0.10);
+  --success-dim: rgba(45, 106, 79, 0.10);
+  --danger-dim:  rgba(155, 34, 38, 0.10);
 
   /* --- Alias legacy (templates + chapitre.js en dépendent) --- */
   --background:  var(--bg);
@@ -72,18 +72,18 @@
 }
 
 [data-theme="dark"] {
-  --bg:      #0F0F0F;
-  --surface: #1A1A1A;
-  --fg:      #EFEFEF;
-  --muted:   #8C8C8C;   /* #555 de la spec éclairci pour contraste AA */
-  --accent:  #3B82F6;
-  --border:  #2A2A2A;
-  --success: #22C55E;
-  --danger:  #EF4444;
+  --bg:      #100E0B;   /* Encre nuit */
+  --surface: #1C1915;   /* Surface sombre chaude */
+  --fg:      #F0EBE3;   /* Parchemin clair */
+  --muted:   #9C8E7D;   /* Gris chaud */
+  --accent:  #E8920F;   /* Ambre plus vif sur fond sombre */
+  --border:  #2E2822;   /* Frontière nocturne */
+  --success: #3D9970;
+  --danger:  #D95F5F;
 
-  --accent-dim:  rgba(59, 130, 246, 0.14);
-  --success-dim: rgba(34, 197, 94, 0.12);
-  --danger-dim:  rgba(239, 68, 68, 0.12);
+  --accent-dim:  rgba(232, 146, 15, 0.14);
+  --success-dim: rgba(61, 153, 112, 0.12);
+  --danger-dim:  rgba(217, 95, 95, 0.12);
   --primary-foreground: #FFFFFF;
 }
 
@@ -220,8 +220,8 @@ button { font-family: inherit; cursor: pointer; }
   color: #FFFFFF;
   border-color: var(--accent);
 }
-.btn-primary:hover:not(:disabled) { background: #1D4ED8; border-color: #1D4ED8; }
-[data-theme="dark"] .btn-primary:hover:not(:disabled) { background: #2563EB; border-color: #2563EB; }
+.btn-primary:hover:not(:disabled) { background: #9A5A08; border-color: #9A5A08; }
+[data-theme="dark"] .btn-primary:hover:not(:disabled) { background: #F5A030; border-color: #F5A030; }
 
 .btn-accent      { background: var(--accent); color: #FFFFFF; }
 .btn-success     { background: var(--success); color: #FFFFFF; }
@@ -479,7 +479,7 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 /* ---- Actions (home) ---- */
 .action-card { display: block; padding: var(--space-2); border-radius: var(--radius-card); }
 .action-card-primary { background: var(--accent); color: #FFFFFF; }
-.action-card-primary:hover { background: #1D4ED8; }
+.action-card-primary:hover { background: #9A5A08; }
 .action-card-primary .action-label { color: #FFFFFF; font-weight: 700; }
 .action-card-primary .action-sub   { color: rgba(255,255,255,0.75); font-size: var(--text-sm); }
 .action-card-revision {
@@ -503,7 +503,7 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 .action-btn .action-label { font-size: var(--text-base); font-weight: 700; }
 .action-btn .action-sub   { font-size: var(--text-sm); }
 .action-btn-primary { background: var(--accent); color: #FFFFFF; }
-.action-btn-primary:hover { background: #1D4ED8; }
+.action-btn-primary:hover { background: #9A5A08; }
 .action-btn-primary .action-sub { color: rgba(255,255,255,0.75); }
 .action-btn-ghost { background: transparent; border-color: var(--border); color: var(--fg); }
 .action-btn-ghost:hover { border-color: var(--muted); }
@@ -692,6 +692,151 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 .emoji-lg  { font-size: 1.75rem; }
 .emoji-xl  { font-size: 2rem; }
 .emoji-xxl { font-size: 3.5rem; }
+
+/* ============================================================
+   FOLIO DIRECTION — Composants home/étudiant "Daf"
+   ============================================================ */
+
+/* --- En-tête home minimaliste --- */
+.home-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+.home-greeting {
+  font-size: var(--text-base);
+  color: var(--muted);
+}
+.home-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.home-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  font-weight: 600;
+}
+.home-stat-active { color: var(--accent); }
+
+/* --- Grand compteur folio --- */
+.home-folio {
+  text-align: center;
+  padding: var(--space-4) 0 var(--space-3);
+}
+.folio-big-number {
+  font-family: 'Secular One', sans-serif;
+  font-size: 6rem;
+  line-height: 1;
+  color: var(--fg);
+  letter-spacing: -0.03em;
+}
+.folio-big-number-empty { color: var(--muted); }
+.folio-sublabel {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.folio-progress {
+  height: 2px;
+  background: var(--border);
+  border-radius: var(--radius-pill);
+  margin: var(--space-2) auto 0;
+  max-width: 8rem;
+  overflow: hidden;
+}
+.folio-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--radius-pill);
+  transition: width 0.6s ease;
+}
+
+/* --- Bande d'activité hebdomadaire --- */
+.week-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: var(--space-1) 0;
+}
+.week-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: var(--border);
+}
+.week-dot-active { background: var(--accent); }
+.week-label {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin-right: var(--space-1);
+}
+
+/* --- Cartes d'action "folio" avec signet ambre --- */
+.folio-action {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border);
+  border-right: 3px solid var(--border);   /* RTL : bord de départ */
+  background: var(--surface);
+  color: var(--fg);
+  transition: background 0.15s, border-color 0.15s;
+  min-height: 72px;
+}
+.folio-action-primary { border-right-color: var(--accent); }
+.folio-action:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  border-right-color: var(--accent);
+}
+.folio-action-body { flex: 1; }
+.folio-action-title {
+  font-weight: 700;
+  font-size: var(--text-base);
+}
+.folio-action-sub {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin-top: 2px;
+}
+.folio-action-arrow {
+  color: var(--muted);
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+/* --- Stat affichée en grand (profil) --- */
+.profile-display-stat {
+  text-align: center;
+  padding: var(--space-3) 0 var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+.profile-display-number {
+  font-family: 'Secular One', sans-serif;
+  font-size: 4rem;
+  line-height: 1;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+.profile-display-label {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin-top: var(--space-1);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
 
 /* ============================================================
    MOBILE — Admin responsive

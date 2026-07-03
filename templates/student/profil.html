@@ -5,12 +5,18 @@
 {% set first_name = (profile.full_name or "תלמיד").split(" ")[0] %}
 <div class="stack animate-slide-up">
 
+  <!-- Nom + titre discrets -->
   <div class="stack-sm center-text profile-header">
-    <div class="avatar-lg">{{ first_name[0] }}</div>
     <div>
       <div style="font-family:'Secular One',sans-serif;font-size:var(--text-xl);">{{ first_name }}</div>
       <div style="font-size:var(--text-sm);color:var(--muted);">תלמיד סמיכה</div>
     </div>
+  </div>
+
+  <!-- Stat principale en grand : l'exactitude -->
+  <div class="profile-display-stat">
+    <div class="profile-display-number">{{ accuracy }}%</div>
+    <div class="profile-display-label">דיוק כללי</div>
   </div>
 
   <!-- Stats empilées, typographiques -->
