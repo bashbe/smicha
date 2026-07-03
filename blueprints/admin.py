@@ -359,6 +359,140 @@ def export_rejected():
     )
 
 
+@bp.route("/questions")
+@staff_required
+def questions():
+    from sqlalchemy import or_
+
+    status = request.args.get("status", "")
+    qtype = request.args.get("type", "")
+    parcours_filter = request.args.get("parcours", "")
+    search = request.args.get("q", "").strip()
+    selected_id = request.args.get("id", "")
+
+    query = Question.query
+    if status:
+        query = query.filter_by(status=status)
+    if qtype:
+        query = query.filter_by(question_type=qtype)
+    if parcours_filter:
+        query = query.filter_by(parcours=parcours_filter)
+    if search:
+        query = query.filter(
+            or_(
+                Question.subject.ilike(f"%{search}%"),
+                Question.text.ilike(f"%{search}%"),
+            )
+        )
+    all_questions = query.order_by(Question.created_at.desc()).all()
+
+    selected = None
+    if all_questions:
+        selected = next((q for q in all_questions if q.id == selected_id), all_questions[0])
+
+    filters = {"status": status, "type": qtype, "parcours": parcours_filter, "q": search}
+    return render_template(
+        "admin/questions.html",
+        questions=all_questions,
+        selected=selected,
+        filters=filters,
+        question_types=QUESTION_TYPES,
+        type_label=TYPE_LABEL,
+    )
+
+
+@bp.route("/questions/<qid>/edit", methods=["POST"])
+@staff_required
+def edit_question(qid):
+    user = current_user()
+    q = Question.query.get_or_404(qid)
+    action = request.form.get("action", "save")
+    note = (request.form.get("note") or "").strip()
+    previous = q.as_dict()
+
+    redirect_params = {
+        "status": request.form.get("filter_status", ""),
+        "type": request.form.get("filter_type", ""),
+        "parcours": request.form.get("filter_parcours", ""),
+        "q": request.form.get("filter_q", ""),
+        "id": qid,
+    }
+
+    if action == "reject":
+        if not note:
+            flash("הערה דרושה לדחייה", "error")
+            return redirect(url_for("admin.questions", **redirect_params))
+        q.status = "rejected"
+        q.validated_by = user.id
+        q.validator_note = note
+        db.session.add(
+            QuestionEdit(
+                question_id=q.id, editor_id=user.id, action="rejected",
+                note=note, previous_content=previous,
+            )
+        )
+        db.session.commit()
+        flash("נדחתה", "success")
+        return redirect(url_for("admin.questions", **redirect_params))
+
+    question_type = request.form.get("question_type") or q.question_type
+    payload = _payload_from_form(request.form, question_type)
+    draft = {
+        "payload": payload,
+        "question_type": question_type,
+        "difficulty": payload["difficulty_level"],
+        "section": payload["exam_section"],
+        "explanation": payload["explanation"],
+        "tags": payload["tags"],
+        "subject": (request.form.get("subject") or "").strip() or None,
+        "siman": request.form.get("siman"),
+        "seif": request.form.get("seif"),
+        "parcours": (request.form.get("parcours") or "").strip() or q.parcours,
+        "hint": request.form.get("hint"),
+        "source_ref": (request.form.get("source_ref") or "").strip() or None,
+    }
+    synced = sync_question_row_from_payload(draft)
+    if synced["error"]:
+        flash(synced["error"], "error")
+        return redirect(url_for("admin.questions", **redirect_params))
+
+    row = synced["row"]
+    q.text = row["text"]
+    q.question_type = row["question_type"]
+    q.payload = row["payload"]
+    q.choices = row["choices"]
+    q.correct_answer = row["correct_answer"]
+    q.explanation = row.get("explanation")
+    q.hint = draft["hint"] or None
+    q.subject = row.get("subject")
+    q.siman = row.get("siman")
+    q.seif = row.get("seif")
+    q.parcours = row.get("parcours")
+    q.difficulty = int(row.get("difficulty") or 2)
+    q.section = row.get("section") or ["shulchan_aruch"]
+    q.tags = row.get("tags") or []
+    q.source_ref = draft["source_ref"]
+    q.validator_note = note or None
+
+    if action == "approve":
+        q.status = "approved"
+        q.validated_by = user.id
+        audit_action = "approved"
+        flash("השאלה אושרה", "success")
+    else:
+        audit_action = "edited"
+        flash("נשמר", "success")
+
+    db.session.add(
+        QuestionEdit(
+            question_id=q.id, editor_id=user.id, action=audit_action,
+            previous_content=previous, new_content=q.as_dict(), note=note or None,
+        )
+    )
+    db.session.commit()
+    return redirect(url_for("admin.questions", **redirect_params))
+
+
 @bp.route("/reset-db", methods=["POST"])
 @staff_required
 def reset_db():

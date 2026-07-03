@@ -6,7 +6,7 @@
       <div class="row gap-4">
         <a href="{{ url_for('admin.dashboard') }}" class="row gap-1 bold"><span class="primary">🛡️</span> ניהול סמיכה</a>
         <nav class="row gap-1">
-          {% set items = [('admin.dashboard','לוח בקרה'),('admin.import_questions','ייבוא שאלות'),('admin.validate','אימות שאלות'),('admin.users','משתמשים')] %}
+          {% set items = [('admin.dashboard','לוח בקרה'),('admin.questions','שאלות'),('admin.import_questions','ייבוא שאלות'),('admin.validate','אימות שאלות'),('admin.users','משתמשים')] %}
           {% for ep, label in items %}
           <a href="{{ url_for(ep) }}" class="btn {{ 'btn-primary' if request.endpoint == ep else '' }}" style="{{ '' if request.endpoint == ep else 'background:none;color:var(--muted-foreground);' }}">{{ label }}</a>
           {% endfor %}

@@ -34,6 +34,7 @@
     <div class="card">
       <h2 class="text-lg semibold" style="margin-bottom:0.75rem;">פעולות מהירות</h2>
       <div class="stack-sm">
+        <a href="{{ url_for('admin.questions') }}" class="btn btn-outline">📋 כל השאלות</a>
         <a href="{{ url_for('admin.import_questions') }}" class="btn btn-primary">⬆️ ייבוא שאלות חדשות</a>
         <a href="{{ url_for('admin.validate') }}" class="btn btn-outline">✅ אימות שאלות ממתינות ({{ counts.pending }})</a>
         <a href="{{ url_for('admin.export_rejected') }}" class="btn btn-outline">⬇️ ייצוא שאלות שנדחו ({{ counts.rejected }}) JSON</a>
