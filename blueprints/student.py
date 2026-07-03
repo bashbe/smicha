@@ -75,7 +75,7 @@ def onboarding():
         exam = request.form.get("exam_date") or None
         sp.exam_date = datetime.strptime(exam, "%Y-%m-%d").date() if exam else None
         stability = request.form.get("target_stability")
-        sp.target_stability = float(stability) if stability else 0.9
+        sp.target_stability = float(stability) if stability else 0.95
         sp.section = request.form.getlist("section")
         sp.onboarded = True
         db.session.commit()
@@ -321,7 +321,7 @@ def revision():
             FsrsCard.due_date <= today,
             Question.status == "approved",
             )
-        .order_by(FsrsCard.due_date.asc())
+        .order_by(FsrsCard.stability.asc())
         .all()
     )
 

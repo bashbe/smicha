@@ -20,14 +20,16 @@
   <!-- Target stability -->
   <div class="stack-sm">
     <div class="bold text-sm">רמת השליטה הרצויה</div>
-    {% set cur_stab = (profile.target_stability * 100) | round | int %}
-    {% for v, t, d, pct in [(0.80,'רמה בסיסית','אני רוצה להכיר את החומר','80%'),
-                             (0.90,'רמה טובה','אני רוצה לשלוט היטב','90%'),
-                             (0.99,'רמה מושלמת','אני רוצה לדעת הכל על בוריו','99%')] %}
-    {% set is_selected = (cur_stab == (v * 100) | round | int) %}
+    {% set valid = [0.92, 0.95, 0.96] %}
+    {% set eff_stab = profile.target_stability if profile.target_stability in valid else 0.95 %}
+    {% for v, t, d in [
+        (0.92, 'לימוד יעיל',   'מתקדם בקצב נוח, חזרות מרווחות'),
+        (0.95, 'למידה מאוזנת', 'שיטה מומלצת לרוב התלמידים'),
+        (0.96, 'ביסוס מעמיק',  'חזרות תכופות יותר, שליטה מוצקת')
+    ] %}
+    {% set is_selected = (eff_stab == v) %}
     <label class="card opt-card opt-stability" style="{{ 'border-color:var(--accent);' if is_selected }}">
       <input type="radio" name="target_stability" value="{{ v }}" class="hidden" {{ 'checked' if is_selected }} />
-      <div class="text-xl opt-pct {{ '' if is_selected else 'muted' }}" style="font-family:'Secular One',sans-serif;">{{ pct }}</div>
       <div class="flex-1"><div class="bold">{{ t }}</div><div class="text-sm muted">{{ d }}</div></div>
     </label>
     {% endfor %}
@@ -72,11 +74,8 @@
   document.querySelectorAll(".opt-stability input").forEach((r) => r.addEventListener("change", () => {
     document.querySelectorAll(".opt-stability").forEach((l) => {
       l.style.borderColor = "var(--border)";
-      l.querySelector(".opt-pct").classList.add("muted");
     });
-    const lab = r.closest(".opt-stability");
-    lab.style.borderColor = "var(--primary)";
-    lab.querySelector(".opt-pct").classList.remove("muted");
+    r.closest(".opt-stability").style.borderColor = "var(--primary)";
   }));
 
   document.querySelectorAll(".opt-section input").forEach((c) => c.addEventListener("change", () => {

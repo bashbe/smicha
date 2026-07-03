@@ -73,7 +73,7 @@ def answer():
     else:
         card = FsrsCard(user_id=user.id, question_id=q.id)
         base = FsrsCardState(
-            target_stability=sp.target_stability or 0.9,
+            target_stability=sp.target_stability or 0.95,
             due_date=date.today().isoformat(),
         )
         db.session.add(card)

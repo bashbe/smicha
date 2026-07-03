@@ -71,17 +71,17 @@
       <h2>רמת השליטה הרצויה</h2>
       <p style="font-size:var(--text-sm);color:var(--muted);margin-top:var(--space-1);">כמה טוב אתה רוצה לדעת את החומר?</p>
     </div>
-    {% for v, t, d, pct in [(0.80,'רמה בסיסית','מכיר את החומר','80%'),(0.90,'רמה טובה','שולט היטב','90%'),(0.99,'רמה מושלמת','דע הכל על בוריו','99%')] %}
-    <label class="card opt-card opt-stability">
-      <input type="radio" name="target_stability" value="{{ v }}" class="hidden" />
-      <div style="font-family:'Secular One',sans-serif;font-size:var(--text-xl);color:var(--muted);" class="opt-pct">{{ pct }}</div>
+    {% for v, t, d in [(0.92,'לימוד יעיל','מתקדם בקצב נוח, חזרות מרווחות'),(0.95,'למידה מאוזנת','שיטה מומלצת לרוב התלמידים'),(0.96,'ביסוס מעמיק','חזרות תכופות יותר, שליטה מוצקת')] %}
+    {% set is_default = (v == 0.95) %}
+    <label class="card opt-card opt-stability" style="{{ 'border-color:var(--brand);' if is_default }}">
+      <input type="radio" name="target_stability" value="{{ v }}" class="hidden" {{ 'checked' if is_default }} />
       <div class="flex-1">
         <div style="font-weight:700;">{{ t }}</div>
         <div style="font-size:var(--text-sm);color:var(--muted);">{{ d }}</div>
       </div>
     </label>
     {% endfor %}
-    <button type="button" class="btn btn-primary btn-block btn-lg" data-next="4" disabled id="next3">המשך</button>
+    <button type="button" class="btn btn-primary btn-block btn-lg" data-next="4" id="next3">המשך</button>
   </div>
 
   <!-- step 4: sections / sources -->
@@ -175,11 +175,8 @@
     r.addEventListener("change", () => {
       document.querySelectorAll(".opt-stability").forEach((l) => {
         l.style.borderColor = "var(--border)";
-        l.querySelector(".opt-pct").style.color = "var(--muted-fg)";
       });
-      const lab = r.closest(".opt-stability");
-      lab.style.borderColor = "var(--brand)";
-      lab.querySelector(".opt-pct").style.color = "var(--brand)";
+      r.closest(".opt-stability").style.borderColor = "var(--brand)";
       document.getElementById("next3").disabled = false;
     })
   );

@@ -511,14 +511,25 @@ Réponse JSON :
 Port complet de l'algorithme publié FSRS-4.5 (18 poids, paramètres par défaut).
 
 - **Rating automatique** (pas de choix utilisateur) : déduit du `response_time_ms` et de la difficulté
-  - Difficulté 1 (facile) : rapide < 8 s, moyen < 20 s
+  - Difficulté 1 (facile) : rapide < 5 s, moyen < 15 s
   - Difficulté 2 (moyen) : rapide < 10 s, moyen < 25 s
-  - Difficulté 3 (difficile) : rapide < 15 s, moyen < 35 s
+  - Difficulté 3 (difficile) : rapide < 18 s, moyen < 40 s
   - Rating 1 = mauvais, 2 = lent, 3 = moyen, 4 = rapide
 - **Rétentabilité** : `R(t, S) = (1 + FACTOR × t / S)^DECAY`
-- **Pression exam** : intervalles compressés de 50 % si < 7 jours, 80 % si < 30 jours
-- `target_stability` est configurable par étudiant (défaut 0.90)
-- Intervalle max : 365 jours
+- **Intervalle optimal** : `interval = S / FACTOR × (target^(1/DECAY) - 1)`
+  - À `target = 0.95` (défaut) : `interval ≈ S × 0.46`
+  - À `target = 0.92` : `interval ≈ S × 0.77`
+  - À `target = 0.96` : `interval ≈ S × 0.36`
+- **Pression examen** : compression continue quand l'examen est à moins de 90 jours
+  - Facteur : `max(0.30, days_left / 90)` — linéaire, sans saut abrupt
+  - Plafond absolu : l'intervalle ne peut jamais dépasser `days_left` (aucune révision après l'examen)
+  - Exemple : exam dans 30 j, intervalle naturel 125 j → `125 × 0.33 = 42 j`, plafonné à `30 j`
+- **Tri des révisions** : cartes présentées par stabilité croissante (moins bien mémorisée en premier)
+- **`target_stability`** configurable par étudiant — 3 niveaux proposés à l'onboarding :
+  - `0.92` — לימוד יעיל : intervalles plus longs, progression rapide
+  - `0.95` — למידה מאוזנת : valeur par défaut recommandée
+  - `0.96` — ביסוס מעמיק : révisions plus fréquentes, consolidation approfondie
+- **Intervalle max** : 365 jours
 
 ### Système de points (`points.py`)
 

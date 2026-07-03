@@ -67,7 +67,7 @@ class StudentProfile(db.Model):
     id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     full_name = db.Column(db.String(255))
     preparation_goal = db.Column(db.String(32))  # discovery | serious | intensive
-    target_stability = db.Column(db.Float, default=0.90)
+    target_stability = db.Column(db.Float, default=0.95)
     exam_date = db.Column(db.Date)
     section = db.Column(db.JSON, default=list)  # list of section strings
     total_points = db.Column(db.Integer, default=0, nullable=False)
@@ -196,6 +196,6 @@ class FsrsCard(db.Model):
     state = db.Column(db.String(16), default="new", nullable=False)
     last_review = db.Column(db.DateTime)
     avg_response_time_ms = db.Column(db.Integer, default=0, nullable=False)
-    target_stability = db.Column(db.Float, default=0.9, nullable=False)
+    target_stability = db.Column(db.Float, default=0.95, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

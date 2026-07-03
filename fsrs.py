@@ -211,7 +211,7 @@ def schedule_next(card: FsrsCardState, rating: int, exam_date: str | None) -> Fs
         if state == "learning":
             scheduled_days = min(scheduled_days, 1)
 
-    # Exam-date pressure — compress intervals when exam is near
+    # Exam-date pressure — smooth linear compression + hard cap when exam is near
     if exam_date and scheduled_days > 0:
         today = datetime.now()
         try:
@@ -219,10 +219,13 @@ def schedule_next(card: FsrsCardState, rating: int, exam_date: str | None) -> Fs
         except ValueError:
             exam = datetime.strptime(str(exam_date)[:10], "%Y-%m-%d")
         days_left = math.ceil((exam - today).total_seconds() / 86400)
-        if 0 < days_left <= 7:
-            scheduled_days = max(1, round(scheduled_days * 0.5))
-        elif 0 < days_left <= 30:
-            scheduled_days = max(1, round(scheduled_days * 0.8))
+        if days_left > 0:
+            # Linear pressure: no compression at 90+ days, 30% floor at 0 days
+            if days_left < 90:
+                pressure = max(0.3, days_left / 90)
+                scheduled_days = max(1, round(scheduled_days * pressure))
+            # Hard cap: never schedule a review after the exam date
+            scheduled_days = min(scheduled_days, days_left)
 
     return replace(
         card,
