@@ -825,11 +825,15 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
   position: relative;
   z-index: 1;
 }
+/* Les pseudo-éléments s'étendent vers le bas pour couvrir aussi les boutons réponses */
 [data-revision="true"] .player-card::before,
 [data-revision="true"] .player-card::after {
   content: '';
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(100% + 300px); /* déborde sous la zone question pour couvrir les réponses */
   border-radius: var(--radius-card);
   background-size: 20px 20px;
   z-index: -1;
@@ -857,6 +861,11 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 }
 [data-theme="dark"] [data-revision="true"] .player-card::after {
   background-color: #23201A;
+}
+/* Les boutons réponses s'affichent au-dessus des pseudo-éléments */
+[data-revision="true"] .player-card + .player-answers {
+  position: relative;
+  z-index: 2;
 }
 
 /* ---- TOC Parcours — table des matières accordéon ---- */
