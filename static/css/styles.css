@@ -780,7 +780,7 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
   margin-right: var(--space-1);
 }
 
-/* ---- Flashcard physique — fond à carreaux + ombre portée ---- */
+/* ---- Flashcard physique — fond à carreaux, réunifie question + réponses ---- */
 .glass-card.player-card {
   background-color: var(--surface);
   background-image:
@@ -788,18 +788,39 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
     linear-gradient(to bottom, rgba(194,113,12,0.07) 1px, transparent 1px);
   background-size: 20px 20px;
   border: none;
-  box-shadow:
-    0 4px 20px rgba(0,0,0,0.10),
-    0 1px 4px rgba(0,0,0,0.05);
+  border-bottom: 1px solid rgba(194,113,12,0.14);  /* séparateur question/réponses */
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  box-shadow: none;  /* ombre portée sur le bloc unifié ci-dessous */
 }
 [data-theme="dark"] .glass-card.player-card {
   background-image:
     linear-gradient(to right, rgba(232,146,15,0.09) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(232,146,15,0.09) 1px, transparent 1px);
-  box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+  border-bottom-color: rgba(232,146,15,0.18);
 }
 
-/* ---- Révision — pile de cartes visible ---- */
+/* Bloc réponses : continuation visuelle de la flashcard */
+.glass-card.player-card + .player-answers {
+  margin-top: 0;
+  background-color: var(--surface);
+  background-image:
+    linear-gradient(to right, rgba(194,113,12,0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(194,113,12,0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+  border-radius: 0 0 var(--radius-card) var(--radius-card);
+  padding: var(--space-2);
+  box-shadow:
+    0 6px 24px rgba(0,0,0,0.11),
+    0 2px 6px rgba(0,0,0,0.06);
+}
+[data-theme="dark"] .glass-card.player-card + .player-answers {
+  background-image:
+    linear-gradient(to right, rgba(232,146,15,0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(232,146,15,0.07) 1px, transparent 1px);
+  box-shadow: 0 6px 28px rgba(0,0,0,0.38);
+}
+
+/* ---- Révision — pile de cartes visible avec profondeur marquée ---- */
 [data-revision="true"] .player-card {
   position: relative;
   z-index: 1;
@@ -810,19 +831,32 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
   position: absolute;
   inset: 0;
   border-radius: var(--radius-card);
-  background-color: var(--surface);
+  background-size: 20px 20px;
+  z-index: -1;
+}
+/* Carte du fond — plus sombre, plus inclinée */
+[data-revision="true"] .player-card::before {
+  background-color: #E8E2D9;
+  background-image:
+    linear-gradient(to right, rgba(194,113,12,0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(194,113,12,0.05) 1px, transparent 1px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.14);
+  transform: rotate(-3.5deg) translateY(10px) translateX(-2px);
+}
+/* Carte intermédiaire */
+[data-revision="true"] .player-card::after {
+  background-color: #F0EAE1;
   background-image:
     linear-gradient(to right, rgba(194,113,12,0.04) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(194,113,12,0.04) 1px, transparent 1px);
-  background-size: 20px 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-  z-index: -1;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.10);
+  transform: rotate(-1.8deg) translateY(5px) translateX(-1px);
 }
-[data-revision="true"] .player-card::before {
-  transform: rotate(-2.5deg) translateY(6px);
+[data-theme="dark"] [data-revision="true"] .player-card::before {
+  background-color: #1E1A14;
 }
-[data-revision="true"] .player-card::after {
-  transform: rotate(-1.2deg) translateY(3px);
+[data-theme="dark"] [data-revision="true"] .player-card::after {
+  background-color: #23201A;
 }
 
 /* ---- TOC Parcours — table des matières accordéon ---- */
