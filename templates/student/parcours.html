@@ -4,10 +4,16 @@
 {% block content %}
 <div class="animate-slide-up">
 
-  <!-- En-tête : titre du parcours sans compteur -->
-  <header class="toc-page-header">
-    {% for g in groups %}{{ g.subject }}{% if not loop.last %} · {% endif %}{% endfor %}
-  </header>
+  <!-- Titre vintage : תוכן הענינים avec cadre double et coins losanges -->
+  <div class="toc-title-block">
+    <span class="toc-corner tl"></span>
+    <span class="toc-corner tr"></span>
+    <span class="toc-corner bl"></span>
+    <span class="toc-corner br"></span>
+    <div class="toc-title-inner">
+      <p class="toc-title-heb">תוכן הענינים</p>
+    </div>
+  </div>
 
   {% if not groups %}
     <div class="stack page-empty">
@@ -34,21 +40,18 @@
         </div>
       </summary>
 
-      <!-- Lignes seifim : style table des matières -->
-      <div class="seif-rows">
+      <!-- Seifim : puces compactes en flex-wrap -->
+      <div class="seif-chips">
         {% if s.seifim %}
           {% for sf in s.seifim %}
           <a href="{{ url_for('student.chapitre_seif', subject=g.subject, siman=s.siman, seif=sf.seif) }}"
-             class="toc-seif-row {{ 'toc-seif-done' if sf.completed }}">
-            <span class="toc-seif-num">{{ sf.seif | to_hebrew }}</span>
-            <span class="toc-leader"></span>
-            <span class="toc-count">
-              {% if sf.completed %}{{ icon_check(14) }}{% else %}{{ sf.count }}{% endif %}
-            </span>
+             class="seif-chip {{ 'seif-chip-done' if sf.completed }}">
+            <span class="seif-chip-num">{{ sf.seif | to_hebrew }}</span>
+            <span class="seif-chip-count">{% if sf.completed %}✓{% else %}{{ sf.count }}{% endif %}</span>
           </a>
           {% endfor %}
         {% else %}
-          <p style="font-size:var(--text-sm);color:var(--muted);padding:var(--space-1) 0;">אין סעיפים</p>
+          <p style="font-size:var(--text-sm);color:var(--muted);">אין סעיפים</p>
         {% endif %}
       </div>
     </details>

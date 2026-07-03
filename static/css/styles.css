@@ -863,17 +863,41 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
   transform: rotate(-1.8deg) translateY(5px) translateX(-1px);
 }
 
-/* ---- TOC Parcours — style livre imprimé ---- */
+/* ---- TOC Parcours — style livre hébreu imprimé ---- */
 
-/* En-tête de page */
-.toc-page-header {
-  font-family: 'Secular One', sans-serif;
-  font-size: var(--text-xl);
-  text-align: right;
-  padding-bottom: var(--space-2);
-  margin-bottom: var(--space-1);
-  border-bottom: 1px solid var(--border);
+/* Titre "תוכן הענינים" : double cadre vintage avec losanges aux coins */
+.toc-title-block {
+  position: relative;
+  border: 2px solid var(--accent);
+  padding: 4px;
+  margin-bottom: var(--space-3);
 }
+.toc-title-inner {
+  border: 1px solid var(--accent);
+  padding: var(--space-2) var(--space-3);
+  text-align: center;
+}
+.toc-title-heb {
+  font-family: 'Secular One', sans-serif;
+  font-size: var(--text-2xl);
+  color: var(--fg);
+  margin: 0;
+  line-height: 1.2;
+}
+/* Losanges aux 4 coins */
+.toc-corner {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  transform: rotate(45deg);
+}
+.toc-corner.tl { top: -4px; right: -4px; }
+.toc-corner.tr { top: -4px; left: -4px; }
+.toc-corner.bl { bottom: -4px; right: -4px; }
+.toc-corner.br { bottom: -4px; left: -4px; }
+[data-theme="dark"] .toc-title-block { border-color: var(--accent); }
+[data-theme="dark"] .toc-title-inner { border-color: var(--accent); }
 
 /* Marqueur de chapitre : ────── פ״ט ────── */
 .toc-chapter-marker {
@@ -907,43 +931,38 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 }
 .toc-chapter-check { color: var(--success); }
 
-/* Lignes seifim */
-.seif-rows { padding: 0 0 var(--space-2); }
-.toc-seif-row {
+/* Seifim : puces compactes en flex-wrap */
+.seif-chips {
   display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: var(--space-1) 0 var(--space-2);
+}
+.seif-chip {
+  display: inline-flex;
   align-items: baseline;
-  padding: 5px 0;
-  color: var(--fg);
-  font-size: var(--text-base);
-  min-height: 36px;
-  transition: color 0.12s;
-  gap: 0;
-}
-.toc-seif-row:hover { color: var(--accent); }
-.toc-seif-num {
-  font-family: 'Secular One', sans-serif;
-  font-size: var(--text-base);
-  color: var(--accent);
-  flex-shrink: 0;
-  min-width: 2.2rem;
-  transition: color 0.12s;
-}
-.toc-seif-done { color: var(--muted); }
-.toc-seif-done .toc-seif-num { color: var(--success); }
-.toc-leader {
-  flex: 1;
-  height: 0;
-  border-bottom: 1px dotted var(--border);
-  align-self: center;
-  margin: 0 var(--space-1);
-  min-width: 1rem;
-}
-.toc-count {
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
   font-size: var(--text-sm);
+  color: var(--fg);
+  min-height: 32px;
+  transition: background 0.12s, border-color 0.12s;
+}
+.seif-chip:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+}
+.seif-chip-num {
+  font-family: 'Secular One', sans-serif;
+  color: var(--accent);
+  font-size: var(--text-base);
+}
+.seif-chip-done .seif-chip-num { color: var(--success); }
+.seif-chip-count {
+  font-size: 0.75rem;
   color: var(--muted);
-  flex-shrink: 0;
-  font-weight: 600;
-  white-space: nowrap;
 }
 
 /* ---- Bottom nav labels toujours visibles sur mobile ---- */
