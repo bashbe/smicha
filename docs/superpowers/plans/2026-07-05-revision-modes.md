@@ -364,7 +364,7 @@ git commit -m "feat: split points formulas — normal study, daily revision (log
 - Consumes: `compute_points(is_correct, difficulty, speed, combo)`, `compute_daily_points(is_correct, days_since_last_review, combo)`, `compute_stability_points(is_correct, retrievability, combo)` (Task 2) ; `fsrs.retrievability(elapsed_days, stability)` (déjà existant) ; `StudentProfile.daily_completion_streak` / `last_daily_completion_date` (Task 1).
 - Produces: `POST /api/answer` accepte un champ JSON optionnel `mode` (`"study"` par défaut, ou `"revision_daily"` / `"revision_siman"` / `"revision_sujet"` / `"revision_random"`). La réponse JSON gagne un champ `"daily_bonus": int` (0 si aucun bonus attribué). Utilisé par Task 6 (`chapitre.js`).
 
-- [ ] **Step 1: Importer les nouvelles fonctions**
+- [x] **Step 1: Importer les nouvelles fonctions**
 
 Dans `blueprints/api.py`, remplacer :
 
@@ -405,7 +405,7 @@ par :
 from points import compute_daily_points, compute_points, compute_stability_points
 ```
 
-- [ ] **Step 2: Lire le champ `mode` et capturer le compte de cartes dues avant traitement**
+- [x] **Step 2: Lire le champ `mode` et capturer le compte de cartes dues avant traitement**
 
 Remplacer :
 
@@ -428,7 +428,7 @@ par :
     mode = data.get("mode", "study")
 ```
 
-- [ ] **Step 3: Calculer `breakdown` selon le mode (remplace l'appel unique à `compute_points`)**
+- [x] **Step 3: Calculer `breakdown` selon le mode (remplace l'appel unique à `compute_points`)**
 
 Remplacer :
 
@@ -473,7 +473,7 @@ par :
         breakdown = compute_points(is_correct, q.difficulty, bucket, new_combo)
 ```
 
-- [ ] **Step 4: Attribuer le bonus de complétion quotidienne après la mise à jour du profil**
+- [x] **Step 4: Attribuer le bonus de complétion quotidienne après la mise à jour du profil**
 
 Remplacer :
 
@@ -528,7 +528,7 @@ par :
     db.session.commit()
 ```
 
-- [ ] **Step 5: Renvoyer `daily_bonus` dans la réponse JSON**
+- [x] **Step 5: Renvoyer `daily_bonus` dans la réponse JSON**
 
 Remplacer :
 
@@ -569,12 +569,12 @@ par :
     )
 ```
 
-- [ ] **Step 6: Vérification manuelle (pas de client de test Flask dans ce projet)**
+- [x] **Step 6: Vérification manuelle (pas de client de test Flask dans ce projet)**
 
 Run: `python app.py`, se connecter avec `student@example.com` / `password123`, répondre à une question via `/app/chapitre/...` (mode "study" implicite — le payload envoyé par `chapitre.js` n'a pas encore de champ `mode`, donc `data.get("mode", "study")` doit tomber sur `"study"` et se comporter EXACTEMENT comme avant).
 Expected : la réponse rapporte des points identiques au comportement précédent (formule `compute_points` sans streak — donc légèrement inférieurs si le streak était ≥7 jours ; c'est le changement attendu de la Task 2, pas une régression).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add blueprints/api.py
