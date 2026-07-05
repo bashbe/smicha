@@ -10,6 +10,7 @@ from auth_helpers import current_user
 from fsrs import (
     FsrsCardState,
     rating_for,
+    retrievability,
     roll_avg,
     schedule_next,
     soften_first_contact,
@@ -26,7 +27,7 @@ from models import (
     UserSpeed,
     db,
 )
-from points import compute_points
+from points import compute_daily_points, compute_points, compute_stability_points
 from question_types import is_correct_answer, normalize_db_question
 
 bp = Blueprint("api", __name__, url_prefix="/api")
@@ -43,6 +44,7 @@ def answer():
     given_answer = data.get("given_answer", "")
     response_time_ms = int(data.get("response_time_ms", 0))
     combo = int(data.get("combo", 0))
+    mode = data.get("mode", "study")
 
     q = Question.query.get(question_id)
     if q is None:
@@ -79,7 +81,24 @@ def answer():
     auto_grade = calibration.auto_grade_from_latency(is_correct, z_eff, bucket)
     new_combo = combo + 1 if is_correct else 0
 
-    breakdown = compute_points(is_correct, q.difficulty, bucket, new_combo, sp.streak_days or 0)
+    # Nombre de cartes dues AVANT ce traitement (utilisé pour le bonus de
+    # complétion quotidienne — capturé avant l'upsert FSRS qui va déplacer
+    # due_date de cette carte).
+    due_before = 0
+    if mode == "revision_daily":
+        due_before = FsrsCard.query.filter(
+            FsrsCard.user_id == user.id, FsrsCard.due_date <= date.today()
+        ).count()
+
+    if mode == "revision_daily":
+        days_since = (date.today() - card.last_review.date()).days if (card and card.last_review) else 0
+        breakdown = compute_daily_points(is_correct, days_since, new_combo)
+    elif mode in ("revision_siman", "revision_sujet", "revision_random"):
+        elapsed_for_r = (date.today() - card.last_review.date()).days if (card and card.last_review) else 0
+        r = retrievability(elapsed_for_r, card.stability) if card else 0.0
+        breakdown = compute_stability_points(is_correct, r, new_combo)
+    else:
+        breakdown = compute_points(is_correct, q.difficulty, bucket, new_combo)
 
     # 1. record the answer (enriched with the calibration signals)
     db.session.add(
@@ -202,6 +221,27 @@ def answer():
     sp.streak_days = new_streak
     sp.last_activity_date = today
 
+    # 5. bonus de complétion quotidienne — uniquement pour le mode "Révision
+    # du jour", et seulement quand cette réponse fait tomber le nombre de
+    # cartes dues à 0 (autoflush : la requête ci-dessous voit déjà le
+    # card.due_date mis à jour en mémoire au step 2 du FSRS upsert).
+    daily_bonus = 0
+    if mode == "revision_daily" and due_before > 0 and sp.last_daily_completion_date != today:
+        due_after = FsrsCard.query.filter(
+            FsrsCard.user_id == user.id, FsrsCard.due_date <= today
+        ).count()
+        if due_after == 0:
+            yesterday = today - timedelta(days=1)
+            new_daily_streak = (
+                (sp.daily_completion_streak or 0) + 1
+                if sp.last_daily_completion_date == yesterday
+                else 1
+            )
+            daily_bonus = 150 + 20 * (new_daily_streak - 1)
+            sp.total_points += daily_bonus
+            sp.daily_completion_streak = new_daily_streak
+            sp.last_daily_completion_date = today
+
     db.session.commit()
 
     label = RATING_LABEL[rating]
@@ -218,5 +258,6 @@ def answer():
             "seif": q.seif,
             "rating_badge": f"{label['emoji']} {label['label']}",
             "rating_tone": label["tone"],
+            "daily_bonus": daily_bonus,
         }
     )
