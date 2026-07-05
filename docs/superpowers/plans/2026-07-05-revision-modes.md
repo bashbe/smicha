@@ -150,7 +150,7 @@ git commit -m "feat: add daily completion streak columns to StudentProfile"
   - `compute_stability_points(is_correct: bool, retrievability: float, combo: int) -> dict` — nouveau, formule basée sur `1 - retrievability` cappée à 8. Même forme de dict.
   - Utilisés par Task 3 (`blueprints/api.py`).
 
-- [ ] **Step 1: Écrire les tests (ils vont échouer — les fonctions n'existent pas encore avec cette signature)**
+- [x] **Step 1: Écrire les tests (ils vont échouer — les fonctions n'existent pas encore avec cette signature)**
 
 Créer `tests/test_points.py` :
 
@@ -242,12 +242,12 @@ if __name__ == "__main__":
     sys.exit(1 if _run() else 0)
 ```
 
-- [ ] **Step 2: Lancer les tests pour confirmer qu'ils échouent**
+- [x] **Step 2: Lancer les tests pour confirmer qu'ils échouent**
 
 Run: `python -m pytest tests/test_points.py -v`
 Expected: `ImportError: cannot import name 'compute_daily_points'` (ou `TypeError` sur l'appel `compute_points(True, 2, "fast", 0)` avec l'ancienne signature à 5 arguments) — les fonctions n'existent pas encore sous cette forme.
 
-- [ ] **Step 3: Réécrire `points.py`**
+- [x] **Step 3: Réécrire `points.py`**
 
 Remplacer tout le contenu de `points.py` par :
 
@@ -336,17 +336,17 @@ def combo_label(combo: int) -> str | None:
     return f"🔥 ×{combo}"
 ```
 
-- [ ] **Step 4: Lancer les tests pour confirmer qu'ils passent**
+- [x] **Step 4: Lancer les tests pour confirmer qu'ils passent**
 
 Run: `python -m pytest tests/test_points.py -v`
 Expected: 9 tests, tous `PASSED`.
 
-- [ ] **Step 5: Vérifier que les tests existants ne sont pas cassés**
+- [x] **Step 5: Vérifier que les tests existants ne sont pas cassés**
 
 Run: `python -m pytest tests/ -v`
 Expected: `tests/test_fsrs.py` et `tests/test_calibration.py` passent toujours (aucun ne touche `points.py`).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add points.py tests/test_points.py
