@@ -14,7 +14,7 @@ Smiha est un outil de préparation sérieuse à un examen rabbinique (Halakha, Y
 
 2. **La carte d'étude est le centre.** Tout l'écran d'étude sert la question : carte pleine largeur, typographie large (20px), zone de réponse en bas, navigation masquée. Les états de réponse sont sémantiques et immédiats — vert (`--success`) pour correct, rouge (`--danger`) pour incorrect, en bordure + fond à ~10 %.
 
-3. **Deux modes, un seul système.** Light par défaut, dark via `[data-theme="dark"]` sur `<html>`. Le basculement ne change que les tokens `:root` — aucun composant ne définit de couleur en dur. Un seul accent : le bleu `--accent`, réservé à l'action et à l'état actif. Les états sémantiques (succès/erreur) restent distincts de l'accent.
+3. **Deux modes, un seul système.** Light par défaut, dark via `[data-theme="dark"]` sur `<html>`. Le basculement ne change que les tokens `:root` — aucun composant ne définit de couleur en dur. L'accent principal `--accent` (ambre) reste réservé à l'action et à l'état actif. Un accent secondaire `--secondary-ink` (vert-bouteille) existe pour des usages ponctuels hors du parcours de questions — aujourd'hui la couverture « pinkas » de la landing page — et ne doit pas se substituer à `--accent` sur les actions ou les états. Les états sémantiques (succès/erreur) restent distincts des deux accents.
 
 4. **Typographie hébraïque comme identité.** Secular One pour les titres et chiffres-clés (compteurs, stats), Noto Sans Hebrew pour le corps. Trois tailles de corps seulement : 13 / 16 / 20 px. Le RTL est natif dans toute l'app, jamais un ajout après coup. Les grands chiffres typographiques (compteur de jours, stats profil) remplacent les cartes-widgets.
 

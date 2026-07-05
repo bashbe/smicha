@@ -7,3 +7,6 @@ venv/
 
 # Local git worktrees (superpowers:using-git-worktrees)
 .worktrees/
+
+# Brainstorming visual companion (superpowers:brainstorming)
+.superpowers/
