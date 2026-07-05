@@ -1,69 +1,54 @@
 {% extends "base.html" %}
-{% from "_icons.html" import icon_book, icon_repeat, icon_target %}
 {% block title %}סמיכה — הכנה לבחינת הסמיכה{% endblock %}
 
 {% block body %}
 <div class="landing">
 
-  <div class="landing-hero animate-slide-up">
-    <div class="landing-mark-frame">
-      <div class="landing-mark-frame-inner">
-        <span class="toc-corner tl"></span>
-        <span class="toc-corner tr"></span>
-        <span class="toc-corner bl"></span>
-        <span class="toc-corner br"></span>
-        <span class="landing-mark-letter">ס</span>
+  <div class="landing-hero-frame animate-slide-up">
+
+    <div class="landing-cover">
+      <div class="landing-tabs">
+        <span class="landing-tab landing-tab-1">א</span>
+        <span class="landing-tab landing-tab-2">ב</span>
+        <span class="landing-tab landing-tab-3">ג</span>
+        <span class="landing-tab landing-tab-4">ד</span>
       </div>
-    </div>
-
-    <h1 class="landing-title">סמיכה</h1>
-    <p class="landing-tagline">לימוד יורה דעה בקצב שלך, עם חזרה בדיוק כשצריך.</p>
-
-    <div class="landing-cta-wrap">
-      <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg btn-block">התחל ללמוד</a>
+      <div class="landing-mark">שולחן ערוך · יורה דעה</div>
+      <h1 class="landing-cover-title">סמיכה</h1>
+      <p class="landing-cover-tag">לימוד יורה דעה בקצב שלך, עם חזרה בדיוק כשצריך.</p>
+      <a href="{{ url_for('auth.login') }}" class="btn btn-primary landing-cover-cta">התחל ללמוד ←</a>
       <a href="{{ url_for('admin.login') }}" class="landing-admin-link">כניסת מנהל ←</a>
     </div>
-  </div>
 
-  <div class="landing-stats">
-    <div class="landing-stat">
-      <div class="landing-stat-num">{{ "{:,}".format(question_count) }}</div>
-      <div class="landing-stat-label">שאלות</div>
-    </div>
-    <div class="divider-v"></div>
-    <div class="landing-stat">
-      <div class="landing-stat-num">FSRS-6</div>
-      <div class="landing-stat-label">חזרה חכמה</div>
-    </div>
-    <div class="divider-v"></div>
-    <div class="landing-stat">
-      <div class="landing-stat-num">∞</div>
-      <div class="landing-stat-label">חזרות</div>
-    </div>
-  </div>
+    <div class="landing-fold-shadow"></div>
 
-  <div class="landing-features">
-    <div class="landing-feature">
-      <div class="icon-box icon-box-primary">{{ icon_book(20) }}</div>
-      <div>
-        <div class="landing-feature-title">מסלול מובנה</div>
-        <div class="landing-feature-sub">שולחן ערוך, סימן אחר סימן, סעיף אחר סעיף — לפי הסדר או בבחירה חופשית.</div>
+    <div class="landing-stack-wrap">
+      <div class="landing-stack-card">
+        <div class="landing-stack-eyebrow">איך זה עובד</div>
+        <div class="landing-stack-entry">
+          <span class="landing-stack-mark">א׳</span>
+          <div>
+            <div class="landing-stack-title">מסלול מובנה</div>
+            <div class="landing-stack-sub">שולחן ערוך, סימן אחר סימן, סעיף אחר סעיף — או בבחירה חופשית.</div>
+          </div>
+        </div>
+        <div class="landing-stack-entry">
+          <span class="landing-stack-mark">ב׳</span>
+          <div>
+            <div class="landing-stack-title">חזרה חכמה</div>
+            <div class="landing-stack-sub">האלגוריתם קובע בדיוק מתי לחזור על כל שאלה, לפני שהיא נשכחת.</div>
+          </div>
+        </div>
+        <div class="landing-stack-entry">
+          <span class="landing-stack-mark">ג׳</span>
+          <div>
+            <div class="landing-stack-title">בקצב שלך</div>
+            <div class="landing-stack-sub">קובעים תאריך בחינה, והמערכת מתאימה את הקצב.</div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="landing-feature">
-      <div class="icon-box icon-box-primary">{{ icon_repeat(20) }}</div>
-      <div>
-        <div class="landing-feature-title">חזרה חכמה</div>
-        <div class="landing-feature-sub">אלגוריתם FSRS-6 קובע בדיוק מתי כדאי לחזור על כל שאלה, לפני שהיא נשכחת.</div>
-      </div>
-    </div>
-    <div class="landing-feature">
-      <div class="icon-box icon-box-primary">{{ icon_target(20) }}</div>
-      <div>
-        <div class="landing-feature-title">בקצב שלך</div>
-        <div class="landing-feature-sub">קובעים תאריך בחינה, והמערכת מתאימה את קצב הלמידה בהתאם.</div>
-      </div>
-    </div>
+
   </div>
 
 </div>

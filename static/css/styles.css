@@ -16,6 +16,7 @@
   --border:  #DDD6CC;   /* Parchemin — bordure tiède */
   --success: #2D6A4F;   /* Forêt — vert profond, sérieux */
   --danger:  #9B2226;   /* Brique — rouge sombre, erreur */
+  --secondary-ink: #17342E; /* Vert-bouteille — reliure du pinkas (landing), usage ponctuel hors questions */
 
   --accent-dim:  rgba(194, 113, 12, 0.10);
   --success-dim: rgba(45, 106, 79, 0.10);
@@ -80,6 +81,7 @@
   --border:  #2E2822;   /* Frontière nocturne */
   --success: #3D9970;
   --danger:  #D95F5F;
+  --secondary-ink: #1E4038; /* légèrement éclairci pour rester lisible sur fond nuit */
 
   --accent-dim:  rgba(232, 146, 15, 0.14);
   --success-dim: rgba(61, 153, 112, 0.12);
@@ -1186,128 +1188,159 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 
 /* ============================================================
    LANDING — page d'accueil publique
+   Direction « Pinkas » : la landing comme la couverture à onglets
+   d'un registre, qui s'ouvre sur la pile de cartes de révision.
    ============================================================ */
 .landing {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-}
-.landing-hero {
-  position: relative;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  text-align: center;
-  padding: var(--space-5) var(--space-2) var(--space-4);
-}
-.landing-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(to right, rgba(194,113,12,0.06) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(194,113,12,0.06) 1px, transparent 1px);
-  background-size: 22px 22px;
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
-          mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
-  pointer-events: none;
-  z-index: -1;
-}
-[data-theme="dark"] .landing-hero::before {
-  background-image:
-    linear-gradient(to right, rgba(232,146,15,0.08) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(232,146,15,0.08) 1px, transparent 1px);
+  padding: var(--space-4) var(--space-2);
 }
 
-.landing-mark-frame {
-  width: 4.75rem;
-  height: 4.75rem;
-  margin: 0 auto var(--space-3);
-  border: 2px solid var(--accent);
-  padding: 4px;
-}
-.landing-mark-frame-inner {
+.landing-hero-frame {
   position: relative;
   width: 100%;
-  height: 100%;
-  border: 1px solid var(--accent);
+  max-width: 28rem;
+  margin: 0 auto;
+}
+
+/* --- Couverture --- */
+.landing-cover {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--secondary-ink);
+  background-image:
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.025) 0 2px, transparent 2px 5px);
+  padding: var(--space-5) var(--space-4) var(--space-4);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+}
+.landing-tabs {
+  position: absolute;
+  top: var(--space-3);
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.landing-tab {
+  width: 1.9rem;
+  height: 2.5rem;
+  border-radius: 0 7px 7px 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface);
-}
-.landing-mark-letter {
   font-family: 'Secular One', sans-serif;
-  font-size: 2.25rem;
-  color: var(--accent);
-  line-height: 1;
+  font-size: var(--text-base);
+  color: var(--secondary-ink);
+  box-shadow: 2px 2px 5px rgba(0,0,0,.25);
+  transition: transform 0.18s ease;
 }
+.landing-tab:hover { transform: translateX(-8px); }
+.landing-tab-1 { background: #C8A24B; }
+.landing-tab-2 { background: #A23E2B; }
+.landing-tab-3 { background: #5B7A6E; }
+.landing-tab-4 { background: #C8A24B; opacity: .5; }
 
-.landing-title { font-size: var(--text-4xl); }
-.landing-tagline {
-  color: var(--muted);
-  margin: var(--space-1) 0 var(--space-4);
-  max-width: 22rem;
+.landing-mark {
+  font-size: var(--text-sm);
+  color: #C8A24B;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--space-2);
 }
-.landing-cta-wrap { width: 100%; max-width: 320px; }
+.landing-cover-title {
+  font-family: 'Secular One', sans-serif;
+  font-size: 3rem;
+  color: #F3ECD8;
+  line-height: 1;
+  margin: 0 0 var(--space-2);
+}
+.landing-cover-tag {
+  font-size: var(--text-base);
+  color: #B9C9C0;
+  max-width: 20rem;
+  line-height: 1.6;
+  margin: 0 0 var(--space-3);
+}
+.landing-cover-cta { display: inline-flex; }
 .landing-admin-link {
   display: block;
   font-size: var(--text-sm);
-  color: var(--muted);
-  text-align: center;
-  padding: var(--space-1);
-  margin-top: var(--space-1);
+  color: #B9C9C0;
+  padding: var(--space-2) 0 0;
 }
 
-.landing-stats {
+/* --- Pli entre la couverture et la pile --- */
+.landing-fold-shadow {
+  height: 1rem;
+  margin-top: -1px;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,.16) 0%, transparent 72%);
+}
+
+/* --- Pile de cartes (même motif que la révision : graph paper + cartes qui dépassent) --- */
+.landing-stack-wrap {
+  padding: 0 var(--space-3) var(--space-1);
+}
+.landing-stack-card {
   position: relative;
-  display: flex;
-  justify-content: center;
-  gap: var(--space-4);
-  padding: var(--space-3) var(--space-2);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
+  margin-top: var(--space-1);
+  background-color: var(--surface);
+  background-image:
+    linear-gradient(to right, rgba(194,113,12,0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(194,113,12,0.07) 1px, transparent 1px);
+  background-size: 20px 20px;
+  border-radius: var(--radius-card);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.16), 0 2px 6px rgba(0,0,0,0.08);
+  padding: var(--space-3) var(--space-2) var(--space-1);
 }
-.landing-stat { text-align: center; }
-.landing-stat-num {
-  font-family: 'Secular One', sans-serif;
-  font-size: var(--text-xl);
-  color: var(--fg);
+[data-theme="dark"] .landing-stack-card {
+  background-image:
+    linear-gradient(to right, rgba(232,146,15,0.09) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(232,146,15,0.09) 1px, transparent 1px);
 }
-.landing-stat-label {
+.landing-stack-card::before,
+.landing-stack-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-card);
+  background-size: 20px 20px;
+  z-index: -1;
+}
+.landing-stack-card::before {
+  background-color: color-mix(in srgb, var(--surface), var(--border) 40%);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.14);
+  transform: rotate(-3.5deg) translateY(10px) translateX(-2px);
+}
+.landing-stack-card::after {
+  background-color: color-mix(in srgb, var(--surface), var(--border) 18%);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.10);
+  transform: rotate(-1.8deg) translateY(5px) translateX(-1px);
+}
+.landing-stack-eyebrow {
   font-size: var(--text-sm);
   color: var(--muted);
-  margin-top: 2px;
+  letter-spacing: 0.04em;
+  margin-bottom: var(--space-2);
 }
-
-.landing-features {
-  max-width: 26rem;
-  width: 100%;
-  margin: 0 auto;
-  padding: var(--space-4) var(--space-2) var(--space-5);
-}
-.landing-features > * + * { margin-top: var(--space-1); }
-.landing-feature {
+.landing-stack-entry {
   display: flex;
-  align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2);
-  border-radius: var(--radius-card);
-  border: 1px solid var(--border);
-  border-right: 3px solid var(--accent);
-  background: var(--surface);
+  padding: var(--space-2) 2px;
+  border-bottom: 1px solid var(--border);
 }
-.landing-feature-title { font-weight: 700; font-size: var(--text-base); }
-.landing-feature-sub {
+.landing-stack-entry:last-child { border-bottom: none; }
+.landing-stack-mark {
+  font-family: 'Secular One', sans-serif;
+  font-size: var(--text-lg);
+  color: var(--danger);
+  min-width: 1.5rem;
+}
+.landing-stack-title { font-weight: 700; font-size: var(--text-base); }
+.landing-stack-sub {
   font-size: var(--text-sm);
   color: var(--muted);
   margin-top: 2px;
   line-height: 1.5;
-}
-
-@media (min-width: 640px) {
-  .landing-hero { padding-top: var(--space-6); }
 }
