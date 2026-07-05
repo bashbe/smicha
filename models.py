@@ -74,6 +74,9 @@ class StudentProfile(db.Model):
     streak_days = db.Column(db.Integer, default=0, nullable=False)
     last_activity_date = db.Column(db.Date)
     onboarded = db.Column(db.Boolean, default=False, nullable=False)
+    # Collective calibration (Phase 2): learner ability estimate, counterpart of
+    # ItemStats.elo_difficulty. Higher = stronger learner.
+    elo_ability = db.Column(db.Float, default=0.0, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
@@ -177,6 +180,10 @@ class UserAnswer(db.Model):
     points_earned = db.Column(db.Integer, default=0, nullable=False)
     combo_at_time = db.Column(db.Integer, default=0, nullable=False)
     answered_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    # Collective calibration (Phase 2) — append-only enrichment, never rewritten.
+    z_item = db.Column(db.Float)     # (log rt - mu_item) / sigma_item
+    z_user = db.Column(db.Float)     # normalised for the user's reading speed
+    auto_grade = db.Column(db.Float)  # continuous 1.0..4.0 grade derived from latency
 
 
 class FsrsCard(db.Model):
@@ -198,4 +205,44 @@ class FsrsCard(db.Model):
     avg_response_time_ms = db.Column(db.Integer, default=0, nullable=False)
     target_stability = db.Column(db.Float, default=0.95, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
+class ItemStats(db.Model):
+    """Collective per-item aggregates driving the difficulty prior (Phase 2).
+
+    Only aggregates are stored here — no cross-user identification. Raw
+    response times stay on UserAnswer under the user_id.
+    """
+
+    __tablename__ = "item_stats"
+
+    question_id = db.Column(
+        db.String(36), db.ForeignKey("questions.id", ondelete="CASCADE"), primary_key=True
+    )
+    question_type = db.Column(db.String(48))
+    hidden_difficulty = db.Column(db.Integer)  # questions.difficulty (1..3) content prior
+    n_responses = db.Column(db.Integer, default=0, nullable=False)
+    n_correct = db.Column(db.Integer, default=0, nullable=False)
+    accuracy = db.Column(db.Float, default=0.0, nullable=False)
+    log_rt_mean = db.Column(db.Float)  # mean of log(rt) over CORRECT responses
+    log_rt_sd = db.Column(db.Float)    # sd of log(rt) over CORRECT responses
+    elo_difficulty = db.Column(db.Float, default=0.0, nullable=False)
+    elo_n_updates = db.Column(db.Integer, default=0, nullable=False)
+    d0_prior = db.Column(db.Float)        # derived FSRS initial difficulty (1..10)
+    s0_prior_good = db.Column(db.Float)   # derived per-item S0 for a "Good" first answer
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
+class UserSpeed(db.Model):
+    """Per-user reading-speed distribution used to normalise latency (Phase 2)."""
+
+    __tablename__ = "user_speed"
+
+    user_id = db.Column(
+        db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    log_rt_mean = db.Column(db.Float)
+    log_rt_sd = db.Column(db.Float)
+    n_responses = db.Column(db.Integer, default=0, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

@@ -10,7 +10,7 @@ import os
 
 from app import create_app
 from blueprints.auth import create_account
-from models import Question, User, db
+from models import ItemStats, Question, User, db
 from question_types import normalize_imported_question
 
 app = create_app()
@@ -60,6 +60,24 @@ def run():
                 )
             db.session.commit()
             print(f"seeded {Question.query.count()} approved questions")
+
+        # collective calibration: ensure an ItemStats row per question (Phase 2)
+        missing = (
+            Question.query.filter(
+                ~Question.id.in_(db.session.query(ItemStats.question_id))
+            ).all()
+        )
+        for q in missing:
+            db.session.add(
+                ItemStats(
+                    question_id=q.id,
+                    question_type=q.question_type,
+                    hidden_difficulty=q.difficulty,
+                )
+            )
+        if missing:
+            db.session.commit()
+            print(f"initialised item_stats for {len(missing)} questions")
 
 
 if __name__ == "__main__":

@@ -7,8 +7,25 @@ from datetime import date, datetime, timedelta
 from flask import Blueprint, jsonify, request
 
 from auth_helpers import current_user
-from fsrs import FsrsCardState, rating_for, roll_avg, schedule_next, speed_bucket, RATING_LABEL
-from models import FsrsCard, Progression, Question, StudentProfile, UserAnswer, db
+from fsrs import (
+    FsrsCardState,
+    rating_for,
+    roll_avg,
+    schedule_next,
+    soften_first_contact,
+    RATING_LABEL,
+)
+import calibration
+from models import (
+    FsrsCard,
+    ItemStats,
+    Progression,
+    Question,
+    StudentProfile,
+    UserAnswer,
+    UserSpeed,
+    db,
+)
 from points import compute_points
 from question_types import is_correct_answer, normalize_db_question
 
@@ -35,13 +52,36 @@ def answer():
     nq = normalize_db_question(q.as_dict())
 
     is_correct = is_correct_answer(nq, given_answer)
-    bucket = speed_bucket(q.difficulty, response_time_ms)
-    rating = rating_for(is_correct, bucket)
+
+    # Collective calibration (Phase 2): normalise the latency by item + user,
+    # derive the speed bucket / rating from z-scores (absolute-threshold
+    # fallback when uncalibrated).
+    card = FsrsCard.query.filter_by(user_id=user.id, question_id=q.id).first()
+    is_first_contact = card is None or card.state == "new"
+
+    item_stats = ItemStats.query.get(q.id)
+    if item_stats is None:
+        item_stats = ItemStats(
+            question_id=q.id,
+            question_type=q.question_type,
+            hidden_difficulty=q.difficulty,
+        )
+        db.session.add(item_stats)
+    user_speed = UserSpeed.query.get(user.id)
+    if user_speed is None:
+        user_speed = UserSpeed(user_id=user.id)
+        db.session.add(user_speed)
+
+    z_item, z_user = calibration.normalize_latency(response_time_ms, item_stats, user_speed)
+    z_eff = z_item if z_item is not None else z_user
+    bucket = calibration.bucket_from_z(z_item, z_user, q.difficulty, response_time_ms)
+    rating = soften_first_contact(rating_for(is_correct, bucket), is_correct, is_first_contact)
+    auto_grade = calibration.auto_grade_from_latency(is_correct, z_eff, bucket)
     new_combo = combo + 1 if is_correct else 0
 
     breakdown = compute_points(is_correct, q.difficulty, bucket, new_combo, sp.streak_days or 0)
 
-    # 1. record the answer
+    # 1. record the answer (enriched with the calibration signals)
     db.session.add(
         UserAnswer(
             user_id=user.id,
@@ -51,11 +91,13 @@ def answer():
             response_time_ms=response_time_ms,
             points_earned=breakdown["total"],
             combo_at_time=new_combo,
+            z_item=z_item,
+            z_user=z_user,
+            auto_grade=auto_grade,
         )
     )
 
     # 2. FSRS card upsert
-    card = FsrsCard.query.filter_by(user_id=user.id, question_id=q.id).first()
     if card:
         base = FsrsCardState(
             stability=card.stability,
@@ -79,7 +121,10 @@ def answer():
         db.session.add(card)
 
     exam = sp.exam_date.isoformat() if sp.exam_date else None
-    nx = schedule_next(base, rating, exam)
+    # Collective per-item prior — blended (never substituted) into S0/D0 for a
+    # brand-new card only (schedule_next ignores it once the card has history).
+    prior = calibration.build_prior(q.difficulty, item_stats) if is_first_contact else None
+    nx = schedule_next(base, rating, exam, prior=prior)
     avg = roll_avg(base.avg_response_time_ms, response_time_ms)
 
     card.stability = nx.stability
@@ -93,6 +138,34 @@ def answer():
     card.target_stability = nx.target_stability
     card.avg_response_time_ms = avg
     card.last_review = datetime.utcnow()
+
+    # 2b. collective calibration updates (online Elo + running stats).
+    new_diff, new_ability = calibration.update_elo(
+        item_stats.elo_difficulty or 0.0,
+        item_stats.elo_n_updates or 0,
+        sp.elo_ability or 0.0,
+        is_correct,
+        z_item,
+    )
+    item_stats.elo_difficulty = new_diff
+    item_stats.elo_n_updates = (item_stats.elo_n_updates or 0) + 1
+    sp.elo_ability = new_ability
+
+    item_stats.n_responses = (item_stats.n_responses or 0) + 1
+    if is_correct:
+        item_stats.n_correct = (item_stats.n_correct or 0) + 1
+        # per-item log-RT distribution is built from CORRECT responses only
+        item_stats.log_rt_mean, item_stats.log_rt_sd, _ = calibration.update_running_logrt(
+            item_stats.log_rt_mean, item_stats.log_rt_sd, item_stats.n_correct - 1, response_time_ms
+        )
+    item_stats.accuracy = item_stats.n_correct / item_stats.n_responses
+    item_stats.d0_prior, item_stats.s0_prior_good = calibration.derive_priors(item_stats)
+
+    # per-user reading-speed distribution (all valid responses)
+    us_mean, us_sd, us_n = calibration.update_running_logrt(
+        user_speed.log_rt_mean, user_speed.log_rt_sd, user_speed.n_responses or 0, response_time_ms
+    )
+    user_speed.log_rt_mean, user_speed.log_rt_sd, user_speed.n_responses = us_mean, us_sd, us_n
 
     # 3. progression upsert — a question only counts as "validated" once it has
     # been answered correctly at least once. A wrong answer never advances

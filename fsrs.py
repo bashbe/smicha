@@ -1,8 +1,27 @@
-"""FSRS-4.5 scheduler with speed-based automatic rating.
+"""FSRS-6 scheduler with speed-based automatic rating + per-item priors.
 
-Implements the full FSRS-4.5 mathematical model using published default
-weights. Rating (1-4) is derived automatically from correctness + response
-speed rather than user self-assessment.
+Implements the full FSRS-6 mathematical model (21 weights, w0-w20) as a
+dependency-free port of the reference implementation
+(open-spaced-repetition / py-fsrs). Rating (1-4) is derived automatically
+from correctness + response speed rather than user self-assessment.
+
+On top of vanilla FSRS-6 this module adds product-specific tuning knobs,
+all exposed as named constants / an ``FsrsConfig`` object so they can be
+swept and evaluated (see ``scripts/sim_schedule.py``):
+
+  * CAP_FIRST      — ceiling on the very first interval (failure mode "a":
+                     a card answered right on the first pass must not vanish
+                     for a week).
+  * WARMUP_INTERVALS — conservative fixed ramp for the first few successful
+                     passes before FSRS fully takes over.
+  * W7_FLOOR       — floor on the mean-reversion weight w7 so a card that was
+                     failed once climbs back to average difficulty quickly
+                     (failure mode "b"); the FSRS-6 default w7 = 0.001 is
+                     effectively inert.
+  * ItemPrior / alpha — collective per-item difficulty prior, *blended* into
+                     S0/D0 for brand-new cards. The blend weight alpha is
+                     capped (see calibration.py) so the collective signal
+                     never overrides the FSRS computation 100%.
 """
 
 from __future__ import annotations
@@ -12,24 +31,64 @@ from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timedelta
 
 # ---------------------------------------------------------------------------
-# FSRS-4.5 default weights (w0–w18) — published by the FSRS team
+# FSRS-6 default weights (w0-w20) — canonical defaults from py-fsrs.
+# Verified against the reference implementation (21 parameters).
 # ---------------------------------------------------------------------------
 DEFAULT_W = [
-    0.4072, 1.1829, 3.1262, 15.4722,  # w0–w3: S0 per rating 1–4
-    7.2102, 0.5316, 1.0651, 0.0589,   # w4–w7: difficulty params
-    1.5330, 0.1544, 1.0045, 1.9813,   # w8–w11: recall stability
-    0.0953, 0.2975, 2.2042, 0.2407,   # w12–w15: forget stability + hard mult
-    2.9466, 0.5034, 0.6567,           # w16–w18: easy mult + interval modifier
+    0.212, 1.2931, 2.3065, 8.2956,    # w0-w3 : S0 per rating 1-4 (Again/Hard/Good/Easy)
+    6.4133, 0.8334,                   # w4-w5 : initial difficulty D0
+    3.0194, 0.001,                    # w6-w7 : difficulty delta + mean reversion
+    1.8722, 0.1666, 0.796,            # w8-w10: recall stability
+    1.4835, 0.0614, 0.2629, 1.6483,   # w11-w14: forget stability
+    0.6014, 1.8729,                   # w15-w16: hard penalty + easy bonus
+    0.5425, 0.0912, 0.0658,           # w17-w19: short-term (same-day) stability
+    0.1542,                           # w20    : forgetting-curve decay
 ]
 
-# Forgetting curve parameters
-DECAY = -0.5
-FACTOR = 0.9 ** (1.0 / DECAY) - 1  # ≈ 0.2346
-
+MIN_DIFFICULTY = 1.0
+MAX_DIFFICULTY = 10.0
+STABILITY_MIN = 0.001
 MAX_INTERVAL = 365
 
 # ---------------------------------------------------------------------------
-# Difficulty → (fast_ms, medium_ms) thresholds
+# Product-specific tuning knobs (Phase 1 quick wins). All named + documented
+# so they can be swept in the simulation scripts and validated empirically.
+# ---------------------------------------------------------------------------
+CAP_FIRST = 4               # hard ceiling (days) on the very first interval
+WARMUP_INTERVALS = [1, 3, 7]  # conservative ramp for the first successful passes
+W7_FLOOR = 0.15             # floor on mean-reversion weight (default w7=0.001 is inert)
+
+
+@dataclass
+class FsrsConfig:
+    """Bundles the weights + tuning knobs so callers/sim scripts can sweep them."""
+
+    w: list[float] = field(default_factory=lambda: list(DEFAULT_W))
+    cap_first: int = CAP_FIRST
+    warmup_intervals: list[int] = field(default_factory=lambda: list(WARMUP_INTERVALS))
+    w7_floor: float = W7_FLOOR
+    max_interval: int = MAX_INTERVAL
+
+    @property
+    def decay(self) -> float:
+        return -self.w[20]
+
+    @property
+    def factor(self) -> float:
+        return 0.9 ** (1.0 / self.decay) - 1.0
+
+
+DEFAULT_CONFIG = FsrsConfig()
+
+# Module-level decay/factor derived from the default weights (used by the
+# public helpers that don't take a config).
+DECAY = DEFAULT_CONFIG.decay
+FACTOR = DEFAULT_CONFIG.factor
+
+# ---------------------------------------------------------------------------
+# Difficulty -> (fast_ms, medium_ms) thresholds (absolute fallback; the
+# collective z-score path in calibration.py supersedes this once an item has
+# enough responses).
 # ---------------------------------------------------------------------------
 THRESHOLDS = {
     1: (5000, 15000),
@@ -47,7 +106,7 @@ RATING_LABEL = {
 
 
 # ---------------------------------------------------------------------------
-# Speed → rating helpers (unchanged from original design)
+# Speed -> rating helpers
 # ---------------------------------------------------------------------------
 
 def speed_bucket(difficulty: int, ms: int) -> str:
@@ -67,6 +126,130 @@ def rating_for(is_correct: bool, bucket: str) -> int:
     if bucket == "medium":
         return 3
     return 4
+
+
+def soften_first_contact(rating: int, is_correct: bool, is_first_contact: bool) -> int:
+    """Phase 1 #4 — the latency of a card's *first* contact reflects reading /
+    discovery, not memory. So on the very first exposure never let a correct
+    answer drop below "Good" (3); a wrong answer still maps to "Again" (1).
+    """
+    if is_first_contact and is_correct:
+        return max(rating, 3)
+    return rating
+
+
+# ---------------------------------------------------------------------------
+# Per-item collective prior (Phase 2). Blended into S0/D0 for new cards.
+# ---------------------------------------------------------------------------
+
+@dataclass
+class ItemPrior:
+    """Collective difficulty prior for a question, blended with weight ``alpha``.
+
+    ``alpha`` is produced by calibration.py and is always < 1 (capped by
+    ALPHA_MAX there) so the collective signal never fully overrides FSRS.
+    """
+
+    d0: float          # collective difficulty estimate, 1..10
+    s0_good: float     # per-item initial stability for a "Good" first answer (days)
+    alpha: float = 0.0  # blend weight in [0, ALPHA_MAX]
+
+
+# ---------------------------------------------------------------------------
+# FSRS-6 core formulas
+# ---------------------------------------------------------------------------
+
+def _clamp_difficulty(d: float) -> float:
+    return min(max(d, MIN_DIFFICULTY), MAX_DIFFICULTY)
+
+
+def _clamp_stability(s: float) -> float:
+    return max(s, STABILITY_MIN)
+
+
+def retrievability(elapsed_days: float, stability: float, cfg: FsrsConfig = DEFAULT_CONFIG) -> float:
+    """R(t, S) = (1 + FACTOR * t / S)^DECAY — probability of recall."""
+    if stability <= 0:
+        return 0.0
+    return (1.0 + cfg.factor * elapsed_days / stability) ** cfg.decay
+
+
+def _initial_stability(rating: int, cfg: FsrsConfig = DEFAULT_CONFIG) -> float:
+    """S0 for a brand-new card, indexed by rating 1-4 -> w0-w3."""
+    return _clamp_stability(cfg.w[rating - 1])
+
+
+def _initial_difficulty(rating: int, cfg: FsrsConfig = DEFAULT_CONFIG, clamp: bool = True) -> float:
+    """D0(G) = w4 - e^(w5*(G-1)) + 1."""
+    d = cfg.w[4] - math.exp(cfg.w[5] * (rating - 1)) + 1.0
+    return _clamp_difficulty(d) if clamp else d
+
+
+def _next_difficulty(D: float, rating: int, cfg: FsrsConfig = DEFAULT_CONFIG) -> float:
+    """FSRS-6 difficulty update: linear damping + mean reversion toward D0(Easy).
+
+    The mean-reversion weight w7 is floored at ``cfg.w7_floor`` so a once-failed
+    card returns to average difficulty in a handful of reviews instead of
+    thousands (the raw FSRS-6 default w7 = 0.001 is effectively inert).
+    """
+    delta = -(cfg.w[6] * (rating - 3))
+    damped = (10.0 - D) * delta / 9.0
+    arg_2 = D + damped
+    arg_1 = _initial_difficulty(4, cfg, clamp=False)  # D0(Easy), unclamped
+    w7 = max(cfg.w[7], cfg.w7_floor)
+    d = w7 * arg_1 + (1.0 - w7) * arg_2
+    return _clamp_difficulty(d)
+
+
+def _next_recall_stability(
+    D: float, S: float, R: float, rating: int, cfg: FsrsConfig = DEFAULT_CONFIG
+) -> float:
+    """S'_r after a successful recall (rating 2, 3, or 4)."""
+    hard_penalty = cfg.w[15] if rating == 2 else 1.0
+    easy_bonus = cfg.w[16] if rating == 4 else 1.0
+    return S * (
+        1.0
+        + math.exp(cfg.w[8])
+        * (11.0 - D)
+        * (S ** (-cfg.w[9]))
+        * (math.exp((1.0 - R) * cfg.w[10]) - 1.0)
+        * hard_penalty
+        * easy_bonus
+    )
+
+
+def _next_forget_stability(
+    D: float, S: float, R: float, cfg: FsrsConfig = DEFAULT_CONFIG
+) -> float:
+    """S'_f after forgetting (rating 1) — min of long-term and short-term forms.
+
+    The short-term cap (S / e^(w17*w18)) guarantees a lapse never *increases*
+    stability, the FSRS-6 fix for the "failed card stuck as hard" mode.
+    """
+    long_term = (
+        cfg.w[11]
+        * (D ** (-cfg.w[12]))
+        * ((S + 1.0) ** cfg.w[13] - 1.0)
+        * math.exp((1.0 - R) * cfg.w[14])
+    )
+    short_term = S / math.exp(cfg.w[17] * cfg.w[18])
+    return min(long_term, short_term)
+
+
+def _short_term_stability(S: float, rating: int, cfg: FsrsConfig = DEFAULT_CONFIG) -> float:
+    """Same-day review stability increase (elapsed < 1 day)."""
+    increase = math.exp(cfg.w[17] * (rating - 3 + cfg.w[18])) * (S ** (-cfg.w[19]))
+    if rating >= 3:  # Good / Easy never shrink stability on a same-day success
+        increase = max(increase, 1.0)
+    return _clamp_stability(S * increase)
+
+
+def interval_for_stability(
+    S: float, target_r: float = 0.9, cfg: FsrsConfig = DEFAULT_CONFIG
+) -> int:
+    """Optimal review interval in days to hit target retention."""
+    days = S / cfg.factor * (target_r ** (1.0 / cfg.decay) - 1.0)
+    return max(1, min(cfg.max_interval, round(days)))
 
 
 # ---------------------------------------------------------------------------
@@ -89,68 +272,31 @@ class FsrsCardState:
 
 
 # ---------------------------------------------------------------------------
-# FSRS-4.5 core formulas
+# Prior blending (Phase 2) — never lets the collective signal win 100%.
 # ---------------------------------------------------------------------------
 
-def retrievability(elapsed_days: float, stability: float) -> float:
-    """R(t, S) = (1 + FACTOR * t / S)^DECAY — probability of recall."""
-    if stability <= 0:
-        return 0.0
-    return (1.0 + FACTOR * elapsed_days / stability) ** DECAY
+def _blend_initial(
+    rating: int, prior: ItemPrior | None, cfg: FsrsConfig
+) -> tuple[float, float]:
+    """Return (S0, D0) for a new card, blending FSRS defaults with the item prior.
 
+    D0 is a straight convex blend. S0 keeps the rating ordering
+    (Easy > Good > Hard > Again) by scaling the item's "Good" prior to the
+    actual rating via the ratio of the default S0s.
+    """
+    s0_default = _initial_stability(rating, cfg)
+    d0_default = _initial_difficulty(rating, cfg)
+    if prior is None or prior.alpha <= 0.0:
+        return s0_default, d0_default
 
-def _initial_stability(rating: int, w: list[float] = DEFAULT_W) -> float:
-    """S0 for a brand-new card, indexed by rating 1–4 → w0–w3."""
-    return max(0.1, w[rating - 1])
-
-
-def _initial_difficulty(rating: int, w: list[float] = DEFAULT_W) -> float:
-    """D0 for a brand-new card."""
-    d = w[4] - math.exp(w[5] * (rating - 1)) + 1
-    return max(1.0, min(10.0, d))
-
-
-def _next_difficulty(D: float, rating: int, w: list[float] = DEFAULT_W) -> float:
-    """Update difficulty with mean reversion toward D0(rating=3)."""
-    d = D + w[6] * (rating - 3)
-    # mean reversion
-    d = w[7] * _initial_difficulty(3, w) + (1.0 - w[7]) * d
-    return max(1.0, min(10.0, d))
-
-
-def _next_stability_recall(
-    D: float, S: float, R: float, rating: int, w: list[float] = DEFAULT_W
-) -> float:
-    """S'_r after a successful recall (rating 2, 3, or 4)."""
-    hard_penalty = w[15] if rating == 2 else 1.0
-    easy_bonus = w[16] if rating == 4 else 1.0
-    return S * (
-        math.exp(w[8])
-        * (11.0 - D)
-        * (S ** (-w[9]))
-        * (math.exp(w[10] * (1.0 - R)) - 1.0)
-        * hard_penalty
-        * easy_bonus
-        + 1.0
-    )
-
-
-def _next_stability_forget(
-    D: float, S: float, R: float, w: list[float] = DEFAULT_W
-) -> float:
-    """S'_f after forgetting (rating 1)."""
-    return (
-        w[11]
-        * (D ** (-w[12]))
-        * ((S + 1.0) ** w[13] - 1.0)
-        * math.exp(w[14] * (1.0 - R))
-    )
-
-
-def interval_for_stability(S: float, target_r: float = 0.9) -> int:
-    """Optimal review interval in days to hit target retention."""
-    days = S / FACTOR * (target_r ** (1.0 / DECAY) - 1.0)
-    return max(1, min(MAX_INTERVAL, round(days)))
+    a = prior.alpha
+    d0 = (1.0 - a) * d0_default + a * prior.d0
+    # scale the per-item "Good" stability to this rating
+    s0_good_default = _initial_stability(3, cfg)
+    rating_scale = s0_default / s0_good_default if s0_good_default else 1.0
+    s0_prior = prior.s0_good * rating_scale
+    s0 = (1.0 - a) * s0_default + a * s0_prior
+    return _clamp_stability(s0), _clamp_difficulty(d0)
 
 
 # ---------------------------------------------------------------------------
@@ -162,8 +308,26 @@ def _days_from_today(days: int) -> str:
     return d.isoformat()
 
 
-def schedule_next(card: FsrsCardState, rating: int, exam_date: str | None) -> FsrsCardState:
-    """Compute next card state after a review with the given rating (1–4)."""
+def _apply_warmup(scheduled_days: int, reps: int, cfg: FsrsConfig) -> int:
+    """Cap the interval by the conservative warm-up grid for early passes."""
+    idx = reps - 1  # reps is 1-based after increment
+    if 0 <= idx < len(cfg.warmup_intervals):
+        return min(scheduled_days, cfg.warmup_intervals[idx])
+    return scheduled_days
+
+
+def schedule_next(
+    card: FsrsCardState,
+    rating: int,
+    exam_date: str | None,
+    prior: ItemPrior | None = None,
+    cfg: FsrsConfig = DEFAULT_CONFIG,
+) -> FsrsCardState:
+    """Compute next card state after a review with the given rating (1-4).
+
+    ``prior`` (optional) supplies a collective per-item difficulty prior that
+    is *blended* — never substituted — into S0/D0 for brand-new cards.
+    """
     # Elapsed days since last actual review
     if card.last_review is not None:
         elapsed = (date.today() - card.last_review.date()).days
@@ -175,9 +339,8 @@ def schedule_next(card: FsrsCardState, rating: int, exam_date: str | None) -> Fs
     state = card.state
 
     if state == "new":
-        # First-ever review — initialise from scratch
-        S = _initial_stability(rating)
-        D = _initial_difficulty(rating)
+        # First-ever review — initialise from scratch (blended with item prior)
+        S, D = _blend_initial(rating, prior, cfg)
         if rating == 1:
             lapses += 1
             state = "relearning"
@@ -189,27 +352,36 @@ def schedule_next(card: FsrsCardState, rating: int, exam_date: str | None) -> Fs
     elif rating == 1:
         # Forgotten — use forgetting stability formula
         lapses += 1
-        R = retrievability(elapsed, card.stability)
-        S = _next_stability_forget(card.fsrs_difficulty, card.stability, R)
-        D = _next_difficulty(card.fsrs_difficulty, rating)
+        R = retrievability(elapsed, card.stability, cfg)
+        S = _next_forget_stability(card.fsrs_difficulty, card.stability, R, cfg)
+        D = _next_difficulty(card.fsrs_difficulty, rating, cfg)
         state = "relearning"
 
     else:
         # Recalled (rating 2, 3, or 4)
-        R = retrievability(elapsed, card.stability)
-        S = _next_stability_recall(card.fsrs_difficulty, card.stability, R, rating)
-        D = _next_difficulty(card.fsrs_difficulty, rating)
+        D = _next_difficulty(card.fsrs_difficulty, rating, cfg)
+        if elapsed < 1:
+            # same-day re-review
+            S = _short_term_stability(card.stability, rating, cfg)
+        else:
+            R = retrievability(elapsed, card.stability, cfg)
+            S = _next_recall_stability(card.fsrs_difficulty, card.stability, R, rating, cfg)
         state = "review" if reps >= 2 else "learning"
 
-    S = max(0.1, S)
+    S = _clamp_stability(S)
 
     # Compute interval from stability
     if rating == 1:
-        scheduled_days = 0  # see again tomorrow
+        scheduled_days = 0  # see again today/tomorrow
     else:
-        scheduled_days = interval_for_stability(S, card.target_stability)
+        scheduled_days = interval_for_stability(S, card.target_stability, cfg)
         if state == "learning":
             scheduled_days = min(scheduled_days, 1)
+        # Phase 1 #1 — hard ceiling on the very first interval
+        if card.state == "new":
+            scheduled_days = min(scheduled_days, cfg.cap_first)
+        # Phase 1 #3 — conservative warm-up ramp for the first passes
+        scheduled_days = _apply_warmup(scheduled_days, reps, cfg)
 
     # Exam-date pressure — smooth linear compression + hard cap when exam is near
     if exam_date and scheduled_days > 0:

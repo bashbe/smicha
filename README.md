@@ -43,7 +43,7 @@ Les étudiants préparent un examen de Halakha (loi juive) structuré autour de 
 
 - **Parcours** (`parcours`) → **Sujets** (`sujet`) → **Simanim** (chapitres) → **Seifim** (sous-sections)
 - Chaque question appartient à un ou plusieurs **sections de révision** (`exam_section` : `shulchan_aruch`, `tur`, etc.)
-- La répétition espacée (algorithme FSRS-4.5) adapte le calendrier de révision à chaque étudiant
+- La répétition espacée (algorithme FSRS-6 + calibration collective) adapte le calendrier de révision à chaque étudiant
 - Un système de **points / combos / séries** (streak) gamifie la progression
 - Un back-office permet à une équipe de **importateurs / validateurs** de gérer la banque de questions
 
@@ -58,6 +58,7 @@ Les étudiants préparent un examen de Halakha (loi juive) structuré autour de 
 | Templates | Jinja2 (SSR, RTL) |
 | Auth | Sessions Flask + Werkzeug (PBKDF2) |
 | JS côté client | Vanilla JS (uniquement dans `static/js/chapitre.js`) |
+| SRS | FSRS-6 maison (`fsrs.py`) + calibration collective (`calibration.py`) — sans dépendance externe |
 | Dépendances | 3 paquets (`Flask`, `Flask-SQLAlchemy`, `Werkzeug`) |
 
 Aucune dépendance externe (pas d'API tierce, pas d'IA, pas de CDN obligatoire).
@@ -120,10 +121,11 @@ smiha-flask/
 ├── config.py               # Classe Config (variables d'env)
 ├── models.py               # 8 modèles SQLAlchemy
 ├── auth_helpers.py         # Session, g.user, @login_required, @staff_required
-├── fsrs.py                 # Algorithme FSRS-4.5 (246 lignes, port du TS original)
+├── fsrs.py                 # Algorithme FSRS-6 (21 poids) + réglages produit (cap/warm-up/w7/priors)
+├── calibration.py          # Calibration collective : latence z-score, HSHS, Elo, priors par item
 ├── points.py               # Calcul points / combos / streak (54 lignes)
 ├── question_types.py       # Normalisation + validation des 4 types de questions
-├── seed.py                 # Initialisation BDD + données de démo
+├── seed.py                 # Initialisation BDD + données de démo + item_stats
 ├── requirements.txt        # Flask, Flask-SQLAlchemy, Werkzeug
 ├── sample_questions.json   # 3 questions d'exemple (MC, TF, dropdown) — maintenir en sync avec question_types.py
 │
@@ -140,11 +142,21 @@ smiha-flask/
 │   ├── student/            # onboarding, home, parcours, chapitre, revision, profil, settings
 │   └── admin/              # login, denied, dashboard, users, user_detail, import, validate
 │
-└── static/
-    ├── css/styles.css      # Thème navy/indigo/ambre, utilitaires RTL
-    └── js/
-        ├── chapitre.js     # Lecteur de questions interactif (463 lignes, vanilla JS)
-        └── hebrew-calendar.js
+├── static/
+│   ├── css/styles.css      # Thème navy/indigo/ambre, utilitaires RTL
+│   └── js/
+│       ├── chapitre.js     # Lecteur de questions interactif (463 lignes, vanilla JS)
+│       └── hebrew-calendar.js
+│
+├── scripts/
+│   ├── sim_schedule.py         # Simulation d'évaluation : scénarios + options utilisateur
+│   ├── sim_priors.py           # Démonstration du mélange des priors collectifs
+│   ├── recompute_item_stats.py # Batch : recalcul autoritaire des agrégats/priors
+│   └── migrate_phase2.py       # Migration schéma Phase 2 (bases existantes)
+│
+└── tests/
+    ├── test_fsrs.py            # Tests du scheduler FSRS-6 + quick wins (runner autonome)
+    └── test_calibration.py     # Tests de la calibration collective
 ```
 
 ---
@@ -231,8 +243,46 @@ Méthodes : `as_dict()`, `section_list()`.
 
 ---
 
+### `item_stats`
+Agrégats **collectifs par question** (calibration Phase 2). Clé = `question_id`. Ne contient que
+des agrégats (pas d'identification croisée d'utilisateur ; les RT bruts restent sur `user_answers`).
+
+| Colonne | Type | Notes |
+|---|---|---|
+| `question_id` | UUID (FK questions.id, PK) | |
+| `question_type` | String | Copié de la question |
+| `hidden_difficulty` | Integer | `questions.difficulty` (1..3) — prior de contenu |
+| `n_responses` / `n_correct` | Integer | Volumétrie (gating de confiance) |
+| `accuracy` | Float | `n_correct / n_responses` |
+| `log_rt_mean` / `log_rt_sd` | Float | μ/σ de `log(rt)` sur les réponses **correctes** |
+| `elo_difficulty` | Float | Rating Elo courant de l'item (Rasch dynamique) |
+| `elo_n_updates` | Integer | Nombre de mises à jour Elo (contrôle le K décroissant) |
+| `d0_prior` | Float | Difficulté FSRS dérivée (1..10) |
+| `s0_prior_good` | Float | S0 par item pour une 1re note « Good » |
+
+Recalculé de façon autoritaire par `scripts/recompute_item_stats.py` (batch) ; l'Elo est mis à jour
+en ligne à chaque réponse.
+
+---
+
+### `user_speed`
+Distribution de vitesse de lecture par utilisateur (normalisation de latence). Clé = `user_id`.
+
+| Colonne | Type | Notes |
+|---|---|---|
+| `user_id` | UUID (FK users.id, PK) | |
+| `log_rt_mean` / `log_rt_sd` | Float | μ/σ de `log(rt)` sur toutes les réponses valides |
+| `n_responses` | Integer | |
+
+---
+
 ### `user_answers`
-Trace de chaque réponse soumise. Ne jamais modifier rétroactivement.
+Trace de chaque réponse soumise. Ne jamais modifier rétroactivement — les champs de calibration
+ci-dessous sont **ajoutés** (append-only), jamais réécrits.
+
+Champs de calibration collective (Phase 2) : `z_item` (`(log rt − μ_item)/σ_item`), `z_user`
+(normalisé pour la vitesse de lecture), `auto_grade` (note continue 1.0..4.0 dérivée de la latence).
+`StudentProfile` porte aussi `elo_ability` (capacité Elo de l'apprenant).
 
 ---
 
@@ -497,39 +547,70 @@ Réponse JSON :
 ```
 
 **Effets de bord** (dans l'ordre) :
-1. Enregistre un `UserAnswer`
-2. Crée ou met à jour la `FsrsCard` (scheduling FSRS)
-3. Met à jour (ou crée) la `Progression` du chapitre
-4. Met à jour `StudentProfile` : `total_points`, `streak_days`, `last_activity_date`
+1. Enregistre un `UserAnswer` (avec `z_item`, `z_user`, `auto_grade`)
+2. Crée ou met à jour la `FsrsCard` (scheduling FSRS-6, prior collectif par item si carte neuve)
+3. Met à jour la calibration collective : Elo (`ItemStats.elo_difficulty`, `StudentProfile.elo_ability`),
+   compteurs et distributions log-RT (`ItemStats`, `UserSpeed`)
+4. Met à jour (ou crée) la `Progression` du chapitre
+5. Met à jour `StudentProfile` : `total_points`, `streak_days`, `last_activity_date`
 
 ---
 
 ## Logique métier clé
 
-### Algorithme FSRS-4.5 (`fsrs.py`)
+### Algorithme FSRS-6 (`fsrs.py`)
 
-Port complet de l'algorithme publié FSRS-4.5 (18 poids, paramètres par défaut).
+Port maison de l'algorithme publié **FSRS-6** (21 poids `w0–w20`, valeurs par défaut vérifiées
+contre `py-fsrs`), sans dépendance externe. La courbe d'oubli est personnalisable via `w20`
+(`DECAY = −w20`), la difficulté utilise le *linear damping* + réversion à la moyenne vers `D0(Easy)`,
+et un lapse ne peut jamais augmenter la stabilité (cap FSRS-6).
 
-- **Rating automatique** (pas de choix utilisateur) : déduit du `response_time_ms` et de la difficulté
-  - Difficulté 1 (facile) : rapide < 5 s, moyen < 15 s
-  - Difficulté 2 (moyen) : rapide < 10 s, moyen < 25 s
-  - Difficulté 3 (difficile) : rapide < 18 s, moyen < 40 s
-  - Rating 1 = mauvais, 2 = lent, 3 = moyen, 4 = rapide
-- **Rétentabilité** : `R(t, S) = (1 + FACTOR × t / S)^DECAY`
-- **Intervalle optimal** : `interval = S / FACTOR × (target^(1/DECAY) - 1)`
-  - À `target = 0.95` (défaut) : `interval ≈ S × 0.46`
-  - À `target = 0.92` : `interval ≈ S × 0.77`
-  - À `target = 0.96` : `interval ≈ S × 0.36`
-- **Pression examen** : compression continue quand l'examen est à moins de 90 jours
-  - Facteur : `max(0.30, days_left / 90)` — linéaire, sans saut abrupt
-  - Plafond absolu : l'intervalle ne peut jamais dépasser `days_left` (aucune révision après l'examen)
-  - Exemple : exam dans 30 j, intervalle naturel 125 j → `125 × 0.33 = 42 j`, plafonné à `30 j`
-- **Tri des révisions** : cartes présentées par stabilité croissante (moins bien mémorisée en premier)
-- **`target_stability`** configurable par étudiant — 3 niveaux proposés à l'onboarding :
-  - `0.92` — לימוד יעיל : intervalles plus longs, progression rapide
-  - `0.95` — למידה מאוזנת : valeur par défaut recommandée
-  - `0.96` — ביסוס מעמיק : révisions plus fréquentes, consolidation approfondie
-- **Intervalle max** : 365 jours
+- **Rating automatique** (pas de choix utilisateur) : déduit de l'exactitude + de la vitesse.
+  - Par défaut, la vitesse est normalisée par **z-score** collectif (voir `calibration.py`). Tant qu'un
+    item/utilisateur n'a pas assez de données, on retombe sur des seuils absolus par difficulté
+    (fallback rétro-compatible) :
+    - Difficulté 1 : rapide < 5 s, moyen < 15 s · Difficulté 2 : < 10 s / < 25 s · Difficulté 3 : < 18 s / < 40 s
+  - Rating 1 = mauvais, 2 = lent, 3 = moyen, 4 = rapide.
+- **Rétentabilité** : `R(t, S) = (1 + FACTOR × t / S)^DECAY`, avec `DECAY = −w20`.
+- **Intervalle optimal** : `interval = S / FACTOR × (target^(1/DECAY) − 1)` (≈ `S × 0.40` à `target = 0.95`).
+- **Pression examen** : compression continue quand l'examen est à moins de 90 jours.
+  - Facteur `max(0.30, days_left / 90)` — linéaire ; plafond absolu : l'intervalle ne dépasse jamais `days_left`.
+- **Tri des révisions** : cartes présentées par stabilité croissante (moins bien mémorisée en premier).
+- **`target_stability`** configurable par étudiant — 3 niveaux (`0.92` יעיל / `0.95` מאוזן / `0.96` מעמיק).
+- **Intervalle max** : 365 jours.
+
+#### Réglages produit (constantes nommées en tête de `fsrs.py`)
+
+Ces garde-fous corrigent deux modes d'échec observés ; ils sont **réglables** et à valider
+empiriquement (voir `scripts/sim_schedule.py` pour balayer scénarios + options) :
+
+- **`CAP_FIRST`** (4 j) — plafond du tout premier intervalle : une carte réussie au 1er coup ne
+  « disparaît » plus une semaine.
+- **`WARMUP_INTERVALS`** (`[1, 3, 7]`) — rampe conservatrice sur les premiers passages avant que FSRS
+  ne pilote pleinement.
+- **`W7_FLOOR`** (0.15) — plancher sur la réversion à la moyenne (le défaut FSRS-6 `w7 = 0.001` est
+  inerte) : une carte ratée au départ revient vite à une difficulté moyenne.
+- **Adoucissement du 1er contact** (`soften_first_contact`) — sur la 1re exposition, une réponse
+  correcte ne descend jamais sous « Good » (la latence y reflète la lecture, pas la mémoire).
+
+#### Calibration collective (`calibration.py`, Phase 2)
+
+Priors de difficulté **par item** issus des réponses de tous les utilisateurs, injectés dans `S0`/`D0`
+d'une carte neuve — **toujours par mélange, jamais en substitution** :
+
+```
+S0_card = (1 − α) · S0_fsrs + α · s0_prior_item
+D0_card = (1 − α) · D0_fsrs + α · d0_prior_item
+```
+
+- `α` (poids de mélange) monte avec la confiance (`n_responses`) mais est **plafonné à
+  `ALPHA_MAX = 0.6`** : le collectif *incline* la difficulté sans jamais la dicter à 100 %.
+- Gating : `< 30` réponses → prior de contenu léger (`hidden_difficulty`) ; `30–100` → Elo provisoire
+  (K décroissant) ; `≥ 100` → prior fiable (α = `ALPHA_MAX`).
+- **Normalisation de latence** : `z_item = (log rt − μ_item)/σ_item` (neutralise la longueur de
+  question), `z_user` (neutralise la vitesse de lecture), avec winsorisation (RT hors `[400 ms, 120 s]`).
+- **Elo dynamique** (Rasch) : met à jour ensemble `elo_difficulty` (item) et `elo_ability` (user),
+  score intégrant exactitude + latence (règle HSHS).
 
 ### Système de points (`points.py`)
 
@@ -651,6 +732,16 @@ Remove-Item smiha.db; python seed.py   # PowerShell
 # Lancer en mode développement (debug + auto-reload)
 python app.py
 
+# SRS / calibration collective (Phase 2)
+python -m scripts.sim_schedule          # évaluer le scheduler : scénarios + options utilisateur
+python -m scripts.sim_priors            # visualiser le mélange des priors (jamais 100 %)
+python -m scripts.recompute_item_stats  # batch : recalcul autoritaire des agrégats/priors
+python -m scripts.migrate_phase2        # migration schéma sur une base EXISTANTE (prod)
+
+# Tests (sans pytest requis)
+python tests/test_fsrs.py
+python tests/test_calibration.py
+
 # Vérifier l'état de la base en SQLite
 sqlite3 smiha.db ".tables"
 sqlite3 smiha.db "SELECT email, role FROM users JOIN user_roles ON users.id=user_roles.user_id;"
@@ -672,7 +763,17 @@ git config --global credential.helper store
 - **Filtrage strict des sections** : une question n'est proposée que si **toutes** ses sections sont dans celles de l'étudiant (`question.sections ⊆ student.sections`). Exemple : une question `["shulchan_aruch", "tur"]` est invisible pour un étudiant qui n'a que `shulchan_aruch`. Pas d'alias, pas d'implicite (sauf `shulchan_aruch` toujours injecté par `allowed_sections()`).
 - **Champs obligatoires des questions** : `parcours`, `sujet`/`subject`, `siman`, `seif` sont requis depuis l'import. Modifier leur validation dans `question_types.py` **doit** s'accompagner d'une mise à jour de ce README et de `sample_questions.json`.
 - **`VALID_PARCOURS`** dans `question_types.py` est la liste des parcours autorisés. Ajouter un parcours = ajouter ici + mettre à jour ce README.
-- **Pas de tests automatisés** : la couverture est nulle. Toute régression doit être vérifiée manuellement. Écrire des tests pytest avant d'ajouter une feature complexe.
+- **Tests** : le cœur SRS est couvert par `tests/test_fsrs.py` et `tests/test_calibration.py`
+  (runner autonome, pytest optionnel) ; le reste de l'app n'a pas de couverture — vérifier les
+  régressions manuellement et étendre les tests avant d'ajouter une feature complexe.
+- **FSRS-6 — réglages produit** : `CAP_FIRST`, `WARMUP_INTERVALS`, `W7_FLOOR`, `ALPHA_MAX` s'écartent
+  volontairement des défauts FSRS. Ils doivent être **validés empiriquement** sur les logs réels
+  (rétention cible vs réelle), pas figés. `scripts/sim_schedule.py` sert à les balayer.
+- **Calibration collective** : les priors par item ne remplacent jamais FSRS à 100 % (mélange
+  plafonné à `ALPHA_MAX`). L'Elo est mis à jour en ligne ; `scripts/recompute_item_stats.py` est la
+  source autoritaire des μ/σ de latence — le lancer en batch (cron nocturne) pour la stabilité.
+- **Migration** : sur une base existante, lancer `python -m scripts.migrate_phase2` (ajoute les
+  colonnes + tables Phase 2). Une base neuve (`python seed.py`) est déjà au bon schéma.
 - **`FsrsCard.target_stability`** est copié depuis `StudentProfile` à la création de la carte. Modifier le profil étudiant ne met pas à jour les cartes existantes — prévu par design.
 - **`/app/reset-progress`** efface `UserAnswer`, `FsrsCard`, `Progression` sans confirmation supplémentaire. Protéger en prod si nécessaire.
 - **`/admin/reset-db`** efface **toutes** les tables et déconnecte l'utilisateur. Réservé au `super_admin`, requiert la saisie du mot `"RESET"` en confirmation.
