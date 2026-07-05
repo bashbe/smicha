@@ -1,47 +1,34 @@
-"""Points / combo / streak scoring. Port of src/lib/points.ts.
-
-Task 2: Formulas de points with revision modes support.
-"""
+"""Points scoring — étude normale, révision du jour, révision volontaire."""
 
 from __future__ import annotations
 
 import math
 
 
+def _combo_multiplier(combo: int) -> float:
+    if combo >= 5:
+        return 1.5
+    if combo == 4:
+        return 1.3
+    if combo == 3:
+        return 1.2
+    if combo == 2:
+        return 1.1
+    return 1.0
+
+
 def compute_points(is_correct: bool, difficulty: int, speed: str, combo: int) -> dict:
-    """Compute points for a standard revision answer (no streak multiplier).
-
-    Args:
-        is_correct: Whether the answer was correct
-        difficulty: Question difficulty (1, 2, or 3)
-        speed: Speed classification ("fast", "medium", or "slow")
-        combo: Current combo count (1+)
-
-    Returns:
-        Dictionary with breakdown and total points.
+    """Étude normale (hors révision). Pas de multiplicateur de streak — le
+    seul mécanisme lié à la régularité est le bonus de complétion quotidienne
+    explicite (voir blueprints/api.py), pour éviter un double comptage.
     """
     if not is_correct:
-        return {
-            "base": 0,
-            "difficultyBonus": 0,
-            "speedBonus": 0,
-            "comboMultiplier": 1,
-            "total": 0,
-        }
+        return {"base": 0, "difficultyBonus": 0, "speedBonus": 0, "comboMultiplier": 1, "total": 0}
 
     base = 10
     difficulty_bonus = 2 if difficulty == 1 else 4 if difficulty == 2 else 6
     speed_bonus = 5 if speed == "fast" else 2 if speed == "medium" else 0
-
-    combo_multiplier = 1.0
-    if combo >= 5:
-        combo_multiplier = 1.5
-    elif combo == 4:
-        combo_multiplier = 1.3
-    elif combo == 3:
-        combo_multiplier = 1.2
-    elif combo == 2:
-        combo_multiplier = 1.1
+    combo_multiplier = _combo_multiplier(combo)
 
     raw = (base + difficulty_bonus + speed_bonus) * combo_multiplier
     return {
@@ -53,38 +40,38 @@ def compute_points(is_correct: bool, difficulty: int, speed: str, combo: int) ->
     }
 
 
-def compute_daily_points(day_number: int) -> float:
-    """Compute bonus points for daily revision mode (logarithmic scale, capped at 30).
-
-    Args:
-        day_number: Day number in the streak (0-indexed)
-
-    Returns:
-        Points value, capped at 30. Uses logarithmic formula for diminishing returns.
+def compute_daily_points(is_correct: bool, days_since_last_review: int, combo: int) -> dict:
+    """Mode "Révision du jour" : points proportionnels au temps écoulé depuis
+    la dernière réponse (pas à la stabilité), pour qu'échouer une carte exprès
+    ne puisse jamais artificiellement augmenter les points futurs — le
+    compteur de jours ne peut repartir que dans le futur, jamais en arrière.
+    Courbe logarithmique (plus de différence sur les premiers jours, plateau
+    ensuite), cappée à 30 points.
     """
-    if day_number <= 0:
-        return 0.0
-    # Logarithmic formula: cap is 30
-    # Formula: 30 * (1 - e^(-ln(2) * day_number / k))
-    # where k controls the decay rate. Using k=5 for reasonable growth.
-    points = 30.0 * (1.0 - math.exp(-math.log(2) * day_number / 5.0))
-    return min(30.0, points)
+    if not is_correct:
+        return {"base": 0, "comboMultiplier": 1, "total": 0}
+
+    days = max(0, days_since_last_review)
+    base = min(30, round(10 * math.log10(days + 1)))
+    combo_multiplier = _combo_multiplier(combo)
+    total = min(30, round(base * combo_multiplier))
+    return {"base": base, "comboMultiplier": combo_multiplier, "total": total}
 
 
-def compute_stability_points(retrievability: float) -> float:
-    """Compute bonus points based on FSRS retrievability (capped at 8).
-
-    Args:
-        retrievability: FSRS retrievability value (0.0 to 1.0)
-
-    Returns:
-        Points value, capped at 8. Linearly scales with retrievability.
+def compute_stability_points(is_correct: bool, retrievability: float, combo: int) -> dict:
+    """Modes "Révision par siman / sujet / aléatoire" : points inversement
+    proportionnels à la rétrievabilité FSRS (fsrs.retrievability), cappés à 8
+    pour limiter l'impact d'un éventuel abus (ces modes portent sur des
+    cartes déjà apprises, hors calendrier de révision obligatoire).
     """
-    if retrievability < 0.0 or retrievability > 1.0:
-        raise ValueError("retrievability must be in range [0.0, 1.0]")
-    # Linear formula: 8 * retrievability
-    points = 8.0 * retrievability
-    return min(8.0, max(0.0, points))
+    if not is_correct:
+        return {"base": 0, "comboMultiplier": 1, "total": 0}
+
+    r = max(0.0, min(1.0, retrievability))
+    base = min(8, round(8 * (1 - r)))
+    combo_multiplier = _combo_multiplier(combo)
+    total = min(8, round(base * combo_multiplier))
+    return {"base": base, "comboMultiplier": combo_multiplier, "total": total}
 
 
 def combo_label(combo: int) -> str | None:
