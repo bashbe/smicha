@@ -1256,7 +1256,7 @@ git commit -m "feat: add revision hub + siman/sujet templates, wire chapitre.htm
 - Consumes: `data-mode`, `data-mode-label`, `data-back-url` (Task 5) ; réponse JSON de `/api/answer` incluant `daily_bonus` (Task 3).
 - Produces: `POST /api/answer` envoie désormais `mode` dans son payload.
 
-- [ ] **Step 1: Lire les nouveaux attributs `data-*` dans `cfg`**
+- [x] **Step 1: Lire les nouveaux attributs `data-*` dans `cfg`**
 
 Remplacer :
 
@@ -1291,7 +1291,7 @@ par :
   const isRevision = root.dataset.revision === "true";
 ```
 
-- [ ] **Step 2: Ajouter l'état pour le bonus quotidien accumulé**
+- [x] **Step 2: Ajouter l'état pour le bonus quotidien accumulé**
 
 Remplacer :
 
@@ -1330,7 +1330,7 @@ par :
   };
 ```
 
-- [ ] **Step 3: Envoyer `mode` dans le payload de `/api/answer` et accumuler le bonus**
+- [x] **Step 3: Envoyer `mode` dans le payload de `/api/answer` et accumuler le bonus**
 
 Remplacer :
 
@@ -1380,7 +1380,7 @@ par :
     if (data.daily_bonus) state.dailyBonus += data.daily_bonus;
 ```
 
-- [ ] **Step 4: Bouton de fin de session générique (plus "יומית" en dur)**
+- [x] **Step 4: Bouton de fin de session générique (plus "יומית" en dur)**
 
 Remplacer :
 
@@ -1412,7 +1412,7 @@ par :
   }
 ```
 
-- [ ] **Step 5: Généraliser l'écran de fin de révision (titre dynamique + affichage du bonus)**
+- [x] **Step 5: Généraliser l'écran de fin de révision (titre dynamique + affichage du bonus)**
 
 Remplacer :
 
@@ -1493,7 +1493,7 @@ par :
     wrap.appendChild(grid);
 ```
 
-- [ ] **Step 6: Utiliser `cfg.back` pour le bouton retour**
+- [x] **Step 6: Utiliser `cfg.back` pour le bouton retour**
 
 Remplacer :
 
@@ -1507,7 +1507,7 @@ par :
     backBtn.addEventListener("click", () => { window.location.href = cfg.back; });
 ```
 
-- [ ] **Step 7: Afficher le libellé de mode générique dans l'en-tête (au lieu de "חזרה יומית" en dur)**
+- [x] **Step 7: Afficher le libellé de mode générique dans l'en-tête (au lieu de "חזרה יומית" en dur)**
 
 Remplacer :
 
@@ -1535,7 +1535,7 @@ par :
     }
 ```
 
-- [ ] **Step 8: Vérification manuelle en navigateur**
+- [x] **Step 8: Vérification manuelle en navigateur**
 
 Run: `python app.py`. Se connecter comme `student@example.com`.
 1. Répondre à toutes les cartes dues via `/app/revision/jour` → l'écran de fin doit afficher "סיום חזרה יומית!" et, si c'est un jour de complétion, le pill "בונוס השלמה יומית +150" (ou plus selon le streak).
@@ -1544,7 +1544,7 @@ Run: `python app.py`. Se connecter comme `student@example.com`.
 4. Vérifier que la flèche retour en haut de chaque session renvoie bien vers la bonne liste (siman → liste siman, sujet → liste sujet, aléatoire/jour → hub).
 5. Vérifier `/app/chapitre/<subject>/<siman>` (étude normale, hors révision) — comportement strictement identique à avant (pas de régression sur le flux principal d'apprentissage).
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add static/js/chapitre.js
