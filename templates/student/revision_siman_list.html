@@ -1,23 +1,18 @@
 {% extends "student/_layout.html" %}
-{% from "_icons.html" import icon_book, icon_check %}
+{% from "_icons.html" import icon_book, icon_chevron_left %}
 {% block title %}חזרה לפי סימן — סמיכה{% endblock %}
 {% block content %}
 <div class="animate-slide-up">
 
+  <!-- Titre vintage : חזרה לפי סימן avec cadre double et coins losanges -->
   <div class="toc-title-block">
-    <svg class="toc-ornament" viewBox="0 0 400 80" preserveAspectRatio="xMidYMid meet">
-      <path d="M 20 40 Q 40 20 80 40 T 160 40" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      <path d="M 200 10 L 210 25 L 220 35 L 210 45 L 200 60 L 190 45 L 180 35 L 190 25 Z" fill="currentColor"/>
-      <path d="M 220 40 Q 240 20 280 40 T 380 40" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-    </svg>
+    <span class="toc-corner tl"></span>
+    <span class="toc-corner tr"></span>
+    <span class="toc-corner bl"></span>
+    <span class="toc-corner br"></span>
     <div class="toc-title-inner">
       <p class="toc-title-heb">חזרה לפי סימן</p>
     </div>
-    <svg class="toc-ornament toc-ornament-bottom" viewBox="0 0 400 80" preserveAspectRatio="xMidYMid meet">
-      <path d="M 20 40 Q 40 60 80 40 T 160 40" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      <path d="M 200 70 L 210 55 L 220 45 L 210 35 L 200 20 L 190 35 L 180 45 L 190 55 Z" fill="currentColor"/>
-      <path d="M 220 40 Q 240 60 280 40 T 380 40" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-    </svg>
   </div>
 
   {% if not groups %}
@@ -30,16 +25,21 @@
     </div>
   {% else %}
     {% for g in groups %}
+    <!-- Zone 1 : sujet du פרשה/parcours, une fois par groupe -->
+    <div class="toc-group-subject">{{ g.subject }}</div>
+
     {% for s in g.simanim %}
     <details class="siman-item" {{ 'open' if loop.first and loop.index0 == 0 }}>
       <summary>
-        <div class="toc-chapter-marker">
+        <!-- Marqueur de chapitre : ──── סימן פ"ז ──── + indicateur d'ouverture/fermeture à gauche -->
+        <div class="toc-chapter-line">
           <span class="toc-marker-rule"></span>
-          <span class="toc-marker-num">{{ s.siman | to_hebrew }}</span>
+          <span class="toc-marker-num">סימן {{ s.siman | to_hebrew }}</span>
           <span class="toc-marker-rule"></span>
+          <span class="toc-chapter-toggle">{{ icon_chevron_left(16) }}</span>
         </div>
-        <div class="toc-chapter-subject">{{ g.subject }}</div>
       </summary>
+
       <div class="seif-chips">
         {% if s.seifim %}
           {% for sf in s.seifim %}
