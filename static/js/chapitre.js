@@ -9,6 +9,9 @@
     todayStats: root.dataset.todayStatsUrl,
     subject: root.dataset.subject,
     siman: root.dataset.siman,
+    mode: root.dataset.mode || "study",
+    modeLabel: root.dataset.modeLabel || "חזרה",
+    back: root.dataset.backUrl || root.dataset.parcoursUrl,
   };
 
   const isRevision = root.dataset.revision === "true";
@@ -22,6 +25,7 @@
     combo: 0,
     sessionPoints: 0,
     correctCount: 0,
+    dailyBonus: 0,
     results: new Array(origQuestions.length).fill(null),
     chosen: null,
     opinionAnswers: {},
@@ -128,17 +132,19 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question_id: q.id, given_answer: key, response_time_ms: elapsed, combo: state.combo,
+          mode: cfg.mode,
         }),
       });
       data = await res.json();
     } catch (e) {
       data = { is_correct: guessCorrect, correct_key: nq.correctKey, points: 0,
                combo: guessCorrect ? state.combo + 1 : 0,
-               explanation: nq.explanation, seif: q.seif, rating_badge: "", rating_tone: "" };
+               explanation: nq.explanation, seif: q.seif, rating_badge: "", rating_tone: "", daily_bonus: 0 };
     }
 
     state.combo = data.combo;
     state.results[origIdx] = data.is_correct ? "correct" : "wrong";
+    if (data.daily_bonus) state.dailyBonus += data.daily_bonus;
 
     if (data.is_correct) {
       state.sessionPoints += data.points;
@@ -173,7 +179,7 @@
     const btn = document.createElement("button");
     btn.className = "btn btn-primary btn-block btn-lg animate-slide-up mt-5";
     btn.textContent = isLast
-      ? (isRevision ? "סיים חזרות יומיות" : "סיים סימן")
+      ? (isRevision ? "סיים חזרה" : "סיים סימן")
       : "שאלה הבאה ←";
     btn.addEventListener("click", next);
     return btn;
@@ -268,8 +274,13 @@
         "display:flex;align-items:center;justify-content:center;margin:0 auto;",
     }, icon("check", 32));
     wrap.appendChild(doneMark);
-    wrap.appendChild(el("h2", "text-2xl bold mt-4", "סיום חזרות היומיות!"));
+    wrap.appendChild(el("h2", "text-2xl bold mt-4", "סיום " + cfg.modeLabel + "!"));
     wrap.appendChild(el("p", "text-sm muted", "עשית עבודה מצוינת היום"));
+
+    if (state.dailyBonus > 0) {
+      const bonusPill = el("div", "pill pill-accent animate-pop-in mt-3", icon("flame", 14), "בונוס השלמה יומית +" + state.dailyBonus);
+      wrap.appendChild(bonusPill);
+    }
 
     const grid = el("div", "grid grid-3 mt-6");
 
@@ -322,12 +333,12 @@
     const backBtn = el("button", "btn btn-outline");
     backBtn.style.cssText = "height:2.5rem;width:2.5rem;border-radius:999px;padding:0;display:flex;align-items:center;justify-content:center;";
     backBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>';
-    backBtn.addEventListener("click", () => { window.location.href = cfg.parcours; });
+    backBtn.addEventListener("click", () => { window.location.href = cfg.back; });
     const header = el("div", "row between");
     header.appendChild(backBtn);
     if (isRevision) {
       const revLabel = el("span", "");
-      revLabel.textContent = "חזרה יומית";
+      revLabel.textContent = cfg.modeLabel;
       revLabel.style.cssText = "font-family:'Secular One',sans-serif;font-size:var(--text-sm);color:var(--muted);";
       header.appendChild(revLabel);
     } else {
