@@ -601,7 +601,7 @@ git commit -m "feat: route /api/answer points through mode-specific formulas + d
   - Route `student.revision_aleatoire` (`GET /app/revision/aleatoire`) — render `student/chapitre.html`.
   - Utilisées par Task 5 (templates) et déjà consommées par `url_for(...)` dans le hub.
 
-- [ ] **Step 1: Ajouter l'import `random` et le helper `_learned_question_ids`**
+- [x] **Step 1: Ajouter l'import `random` et le helper `_learned_question_ids`**
 
 Remplacer les imports en tête de fichier :
 
@@ -652,7 +652,7 @@ def _learned_question_ids(user_id: str) -> list[str]:
     return [r[0] for r in rows]
 ```
 
-- [ ] **Step 2: Transformer `/revision` en hub, déplacer l'ancien contenu vers `/revision/jour`**
+- [x] **Step 2: Transformer `/revision` en hub, déplacer l'ancien contenu vers `/revision/jour`**
 
 Remplacer (le bloc actuel de la route `revision`, y compris son docstring de contexte) :
 
@@ -730,7 +730,7 @@ def revision_jour():
     )
 ```
 
-- [ ] **Step 3: Renommer le template utilisé par l'ancienne logique**
+- [x] **Step 3: Renommer le template utilisé par l'ancienne logique**
 
 Cette même fonction (maintenant `revision_jour`) se termine par le rendu du template. Remplacer :
 
@@ -756,7 +756,7 @@ par :
     )
 ```
 
-- [ ] **Step 4: Ajouter les routes "par siman"**
+- [x] **Step 4: Ajouter les routes "par siman"**
 
 Juste après la fonction `revision_jour` (avant `@bp.post("/advance-revisions")`), ajouter :
 
@@ -913,11 +913,11 @@ def revision_aleatoire():
 
 ```
 
-- [ ] **Step 5: Vérification manuelle**
+- [x] **Step 5: Vérification manuelle**
 
 Run: `python app.py`, se connecter comme `student@example.com`, visiter `/app/revision` — la page ne doit plus planter (elle sera cassée visuellement tant que Task 5 n'a pas créé `revision_hub.html`, c'est attendu à ce stade). Visiter directement `/app/revision/jour` — doit fonctionner (le template `student/revision_jour.html` n'existe pas encore non plus, erreur `TemplateNotFound` attendue avant Task 5).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add blueprints/student.py
