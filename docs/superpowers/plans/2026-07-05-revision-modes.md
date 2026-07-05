@@ -942,7 +942,7 @@ git commit -m "feat: add revision hub + siman/sujet/aleatoire routes (templates 
 - Consumes: routes de Task 4 (`student.revision_jour`, `student.revision_siman`, etc.), variables passées par ces routes (`due_count`, `learned_count`, `random_count`, `eligible_subjects`, `groups`, `subjects`, `questions`, `mode`, `mode_label`, `is_revision`, `back_url`).
 - Produces: attributs `data-mode`, `data-mode-label`, `data-revision`, `data-back-url` sur `#player`, consommés par Task 6 (`chapitre.js`).
 
-- [ ] **Step 1: Créer `templates/student/revision_hub.html`**
+- [x] **Step 1: Créer `templates/student/revision_hub.html`**
 
 ```html
 {% extends "student/_layout.html" %}
@@ -997,7 +997,7 @@ git commit -m "feat: add revision hub + siman/sujet/aleatoire routes (templates 
 {% endblock %}
 ```
 
-- [ ] **Step 2: Créer `templates/student/revision_jour.html` (contenu de l'ancien `revision.html`)**
+- [x] **Step 2: Créer `templates/student/revision_jour.html` (contenu de l'ancien `revision.html`)**
 
 ```html
 {% extends "student/_layout.html" %}
@@ -1044,11 +1044,11 @@ git commit -m "feat: add revision hub + siman/sujet/aleatoire routes (templates 
 {% endblock %}
 ```
 
-- [ ] **Step 3: Supprimer l'ancien `templates/student/revision.html`**
+- [x] **Step 3: Supprimer l'ancien `templates/student/revision.html`**
 
 Run: `rm "templates/student/revision.html"` (ou `Remove-Item templates\student\revision.html` en PowerShell) — son contenu a été déplacé vers `revision_jour.html` au Step 2, et la route `revision()` (Task 4) rend maintenant `revision_hub.html`.
 
-- [ ] **Step 4: Créer `templates/student/revision_siman_list.html`**
+- [x] **Step 4: Créer `templates/student/revision_siman_list.html`**
 
 ```html
 {% extends "student/_layout.html" %}
@@ -1115,7 +1115,7 @@ Run: `rm "templates/student/revision.html"` (ou `Remove-Item templates\student\r
 {% endblock %}
 ```
 
-- [ ] **Step 5: Créer `templates/student/revision_sujet_list.html`**
+- [x] **Step 5: Créer `templates/student/revision_sujet_list.html`**
 
 ```html
 {% extends "student/_layout.html" %}
@@ -1150,7 +1150,7 @@ Run: `rm "templates/student/revision.html"` (ou `Remove-Item templates\student\r
 {% endblock %}
 ```
 
-- [ ] **Step 6: Modifier `templates/student/chapitre.html` pour accepter `mode`/`mode_label`/`is_revision`/`back_url`**
+- [x] **Step 6: Modifier `templates/student/chapitre.html` pour accepter `mode`/`mode_label`/`is_revision`/`back_url`**
 
 Remplacer :
 
@@ -1186,7 +1186,7 @@ par :
 
 Note : `chapitre()` et `chapitre_seif()` (routes existantes, non modifiées) ne passent pas `mode`/`mode_label`/`is_revision`/`back_url` — les valeurs par défaut (`"study"`, `""`, `false`, `parcours`) reproduisent exactement le comportement actuel.
 
-- [ ] **Step 7: Mettre à jour le lien "חזרה יומית" de `home.html` vers la route directe**
+- [x] **Step 7: Mettre à jour le lien "חזרה יומית" de `home.html` vers la route directe**
 
 Dans `templates/student/home.html`, remplacer :
 
@@ -1206,7 +1206,7 @@ par :
           חזרה יומית
 ```
 
-- [ ] **Step 8: Élargir le surlignage actif de l'onglet "חזרה" dans `_layout.html`**
+- [x] **Step 8: Élargir le surlignage actif de l'onglet "חזרה" dans `_layout.html`**
 
 Dans `templates/student/_layout.html`, remplacer :
 
@@ -1224,7 +1224,7 @@ par :
 
 (le tab reste actif quel que soit le sous-mode de révision visité).
 
-- [ ] **Step 9: Vérification manuelle**
+- [x] **Step 9: Vérification manuelle**
 
 Run: `python app.py`. Se connecter comme `student@example.com`. Naviguer :
 - `/app/home` → le lien "חזרה יומית" doit mener directement à `/app/revision/jour`.
@@ -1235,7 +1235,7 @@ Run: `python app.py`. Se connecter comme `student@example.com`. Naviguer :
 - `/app/revision/aleatoire` → doit lancer une session avec ≤10 cartes.
 - Vérifier l'alignement RTL sur les 3 nouveaux templates (titres, chips, listes) — pas de texte qui déborde ou s'inverse mal.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add templates/student/revision_hub.html templates/student/revision_jour.html \
