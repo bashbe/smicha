@@ -15,7 +15,7 @@
       <a href="{{ url_for('student.parcours') }}" class="{{ 'active' if request.endpoint == 'student.parcours' }}">
         {{ icon_list() }}<span>מסלול</span>
       </a>
-      <a href="{{ url_for('student.revision') }}" class="{{ 'active' if request.endpoint == 'student.revision' }}">
+      <a href="{{ url_for('student.revision') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('student.revision') }}">
         {{ icon_repeat() }}<span>חזרה</span>
       </a>
       <a href="{{ url_for('student.profil') }}" class="{{ 'active' if request.endpoint == 'student.profil' }}">

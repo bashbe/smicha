@@ -24,7 +24,11 @@
          data-today-stats-url="{{ url_for('student.today_stats') }}"
          data-subject="{{ subject }}"
          data-siman="{{ siman }}"
-         data-streak="{{ profile.streak_days or 0 }}"></div>
+         data-streak="{{ profile.streak_days or 0 }}"
+         data-revision="{{ 'true' if is_revision | default(false) else 'false' }}"
+         data-mode="{{ mode | default('study') }}"
+         data-mode-label="{{ mode_label | default('') }}"
+         data-back-url="{{ back_url if back_url is defined and back_url else url_for('student.parcours') }}"></div>
   </div>
   <script src="{{ url_for('static', filename='js/chapitre.js') }}"></script>
 {% endif %}

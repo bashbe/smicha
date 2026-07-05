@@ -1,0 +1,30 @@
+{% extends "student/_layout.html" %}
+{% from "_icons.html" import icon_target %}
+{% block title %}חזרה לפי נושא — סמיכה{% endblock %}
+{% block content %}
+<div class="stack animate-slide-up">
+  <h2 class="mb-2">חזרה לפי נושא</h2>
+
+  {% if not subjects %}
+    <div class="stack page-empty">
+      <div style="color:var(--muted);">{{ icon_target(48) }}</div>
+      <div>
+        <h2 class="mb-2">עוד אין נושא עם מספיק כרטיסים</h2>
+        <p style="font-size:var(--text-sm);color:var(--muted);">נדרשים לפחות 3 כרטיסים שנלמדו באותו נושא כדי שיופיע כאן.</p>
+      </div>
+    </div>
+  {% else %}
+    <div class="stack-sm">
+      {% for s in subjects %}
+      <a href="{{ url_for('student.revision_sujet_detail', subject=s.subject) }}" class="folio-action">
+        <div class="folio-action-body">
+          <div class="folio-action-title">{{ s.subject }}</div>
+          <div class="folio-action-sub">{{ s.count }} כרטיסים שנלמדו</div>
+        </div>
+        <div class="folio-action-arrow">‹</div>
+      </a>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

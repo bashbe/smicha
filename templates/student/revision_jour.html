@@ -19,7 +19,7 @@
     </div>
     {% endif %}
     <div class="stack-sm narrow-centered">
-      <a href="{{ url_for('student.home') }}" class="btn btn-primary btn-block">חזרה לבית</a>
+      <a href="{{ url_for('student.revision') }}" class="btn btn-primary btn-block">חזרה לתפריט</a>
       <a href="{{ url_for('student.parcours') }}" class="btn btn-outline btn-block">להמשיך ללמוד</a>
     </div>
   </div>
@@ -33,7 +33,10 @@
        data-subject="חזרה"
        data-siman="יומית"
        data-streak="{{ profile.streak_days or 0 }}"
-       data-revision="true"></div>
+       data-revision="true"
+       data-mode="revision_daily"
+       data-mode-label="חזרה יומית"
+       data-back-url="{{ url_for('student.revision') }}"></div>
   <script src="{{ url_for('static', filename='js/chapitre.js') }}"></script>
 {% endif %}
 {% endblock %}

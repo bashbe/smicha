@@ -1,0 +1,50 @@
+{% extends "student/_layout.html" %}
+{% from "_icons.html" import icon_calendar, icon_book, icon_target, icon_refresh %}
+{% block title %}חזרה — סמיכה{% endblock %}
+{% block content %}
+<div class="stack animate-slide-up">
+  <h2 class="mb-2">בחר סוג חזרה</h2>
+
+  <div class="stack-sm">
+    <a href="{{ url_for('student.revision_jour') }}" class="folio-action">
+      <div class="folio-action-body">
+        <div class="folio-action-title row gap-1">
+          חזרה יומית
+          {% if due_count > 0 %}<span class="badge">{{ due_count }}</span>{% endif %}
+        </div>
+        <div class="folio-action-sub">
+          {% if due_count > 0 %}{{ due_count }} כרטיסים ממתינים היום{% else %}אין כרטיסים ממתינים היום{% endif %}
+        </div>
+      </div>
+      <div class="icon-box icon-box-primary">{{ icon_calendar(20) }}</div>
+    </a>
+
+    <a href="{{ url_for('student.revision_siman') }}" class="folio-action">
+      <div class="folio-action-body">
+        <div class="folio-action-title">חזרה לפי סימן</div>
+        <div class="folio-action-sub">בחר סימן או סעיף שכבר למדת</div>
+      </div>
+      <div class="icon-box icon-box-primary">{{ icon_book(20) }}</div>
+    </a>
+
+    <a href="{{ url_for('student.revision_sujet') }}" class="folio-action">
+      <div class="folio-action-body">
+        <div class="folio-action-title row gap-1">
+          חזרה לפי נושא
+          {% if eligible_subjects > 0 %}<span class="badge">{{ eligible_subjects }}</span>{% endif %}
+        </div>
+        <div class="folio-action-sub">נושאים עם 3 כרטיסים ומעלה שכבר נלמדו</div>
+      </div>
+      <div class="icon-box icon-box-primary">{{ icon_target(20) }}</div>
+    </a>
+
+    <a href="{{ url_for('student.revision_aleatoire') }}" class="folio-action">
+      <div class="folio-action-body">
+        <div class="folio-action-title">חזרה אקראית</div>
+        <div class="folio-action-sub">{{ random_count }} כרטיסים אקראיים מתוך מה שכבר למדת</div>
+      </div>
+      <div class="icon-box icon-box-primary">{{ icon_refresh(20) }}</div>
+    </a>
+  </div>
+</div>
+{% endblock %}
