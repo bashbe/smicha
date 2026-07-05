@@ -16,6 +16,16 @@ from question_types import normalize_db_question
 bp = Blueprint("student", __name__, url_prefix="/app")
 
 
+def _tag_counts(qs: list) -> dict[str, int]:
+    """Count occurrences of each free-text tag among the given questions."""
+    counts: dict[str, int] = {}
+    for q in qs:
+        for t in (q.tags or []):
+            if t:
+                counts[t] = counts.get(t, 0) + 1
+    return counts
+
+
 def _learned_question_ids(user_id: str) -> list[str]:
     """IDs des questions pour lesquelles l'utilisateur a au moins une réponse
     enregistrée (peu importe si correcte), tous modes de révision non-"jour"
@@ -334,17 +344,14 @@ def revision():
     learned_ids = _learned_question_ids(sp.id)
     learned_count = len(learned_ids)
 
-    eligible_subjects = 0
+    eligible_tags = 0
     if learned_ids:
         allowed = allowed_sections(sp.section)
         qs = [q for q in Question.query.filter(
             Question.status == "approved", Question.id.in_(learned_ids),
         ).all() if question_in_sections(q, allowed)]
-        counts: dict[str, int] = {}
-        for q in qs:
-            if q.subject:
-                counts[q.subject] = counts.get(q.subject, 0) + 1
-        eligible_subjects = sum(1 for c in counts.values() if c >= 3)
+        counts = _tag_counts(qs)
+        eligible_tags = sum(1 for c in counts.values() if c >= 3)
 
     return render_template(
         "student/revision_hub.html",
@@ -352,7 +359,7 @@ def revision():
         due_count=due_count,
         learned_count=learned_count,
         random_count=min(10, learned_count),
-        eligible_subjects=eligible_subjects,
+        eligible_tags=eligible_tags,
     )
 
 
@@ -478,33 +485,33 @@ def revision_sujet():
     allowed = allowed_sections(sp.section)
     learned_ids = _learned_question_ids(sp.id)
 
-    subjects = []
+    tags = []
     if learned_ids:
         qs = [q for q in Question.query.filter(
             Question.status == "approved", Question.id.in_(learned_ids),
         ).all() if question_in_sections(q, allowed)]
-        counts: dict[str, int] = {}
-        for q in qs:
-            if q.subject:
-                counts[q.subject] = counts.get(q.subject, 0) + 1
-        subjects = sorted(
-            ({"subject": s, "count": c} for s, c in counts.items() if c >= 3),
+        counts = _tag_counts(qs)
+        tags = sorted(
+            ({"tag": t, "count": c} for t, c in counts.items() if c >= 3),
             key=lambda x: -x["count"],
         )
 
-    return render_template("student/revision_sujet_list.html", subjects=subjects, profile=sp)
+    return render_template("student/revision_sujet_list.html", tags=tags, profile=sp)
 
 
-@bp.route("/revision/sujet/<path:subject>")
+@bp.route("/revision/sujet/<path:tag>")
 @login_required
-def revision_sujet_detail(subject: str):
+def revision_sujet_detail(tag: str):
     sp = get_profile()
     allowed = allowed_sections(sp.section)
     learned_ids = _learned_question_ids(sp.id)
 
-    rows = [q for q in Question.query.filter(
-        Question.subject == subject, Question.status == "approved", Question.id.in_(learned_ids),
-    ).order_by(Question.siman.asc(), Question.seif.asc()).all() if question_in_sections(q, allowed)]
+    rows = [
+        q for q in Question.query.filter(
+            Question.status == "approved", Question.id.in_(learned_ids),
+        ).order_by(Question.subject.asc(), Question.siman.asc(), Question.seif.asc()).all()
+        if question_in_sections(q, allowed) and tag in (q.tags or [])
+    ]
 
     if not rows:
         flash("אין עדיין כרטיסים שנלמדו בנושא זה.", "info")
@@ -519,7 +526,7 @@ def revision_sujet_detail(subject: str):
         for q in rows
     ]
     return render_template(
-        "student/chapitre.html", subject=subject, siman=rows[0].siman, questions=questions, profile=sp,
+        "student/chapitre.html", subject=tag, siman=rows[0].siman, questions=questions, profile=sp,
         mode="revision_sujet", mode_label="חזרה לפי נושא", is_revision=True,
         back_url=url_for("student.revision_sujet"),
     )

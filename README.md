@@ -499,8 +499,8 @@ Retourne uniquement un tableau JSON valide, sans texte avant ou après.
 | GET | `/app/revision/jour` | Révision du jour : cartes dues (répétition espacée FSRS) |
 | GET | `/app/revision/siman` | Liste des simanim déjà appris, groupés par sujet |
 | GET | `/app/revision/siman/<subject>/<siman>` | Session de révision sur un siman déjà appris |
-| GET | `/app/revision/sujet` | Liste des sujets ayant ≥ 3 cartes déjà apprises |
-| GET | `/app/revision/sujet/<subject>` | Session de révision sur tout un sujet déjà appris |
+| GET | `/app/revision/sujet` | Liste des tags (`Question.tags`) ayant ≥ 3 cartes déjà apprises |
+| GET | `/app/revision/sujet/<tag>` | Session de révision sur toutes les cartes déjà apprises portant ce tag |
 | GET | `/app/revision/aleatoire` | Session de révision aléatoire (max 10 cartes déjà apprises, retirée à chaque visite) |
 | POST | `/app/advance-revisions` | Avance toutes les cartes dues de 1 jour (outil de test) |
 | POST | `/app/reset-progress` | Efface UserAnswer + FsrsCard + Progression (nucléaire) |

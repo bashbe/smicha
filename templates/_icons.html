@@ -27,7 +27,8 @@
 {% endmacro %}
 
 {% macro icon_book(size=20) %}
-{{ _svg('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>', size) }}
+{# Miroir horizontal : reliure à droite (orientation livre hébreu RTL) #}
+{{ _svg('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>', size, 'style="transform:scaleX(-1)"') }}
 {% endmacro %}
 
 {% macro icon_flame(size=20) %}
@@ -71,7 +72,8 @@
 {% endmacro %}
 
 {% macro icon_refresh(size=20) %}
-{{ _svg('<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>', size) }}
+{# Miroir horizontal : sens de rotation cohérent en contexte RTL #}
+{{ _svg('<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>', size, 'style="transform:scaleX(-1)"') }}
 {% endmacro %}
 
 {% macro icon_logout(size=20) %}
