@@ -123,7 +123,7 @@ smiha-flask/
 ├── auth_helpers.py         # Session, g.user, @login_required, @staff_required
 ├── fsrs.py                 # Algorithme FSRS-6 (21 poids) + réglages produit (cap/warm-up/w7/priors)
 ├── calibration.py          # Calibration collective : latence z-score, HSHS, Elo, priors par item
-├── points.py               # Calcul points / combos / streak (54 lignes)
+├── points.py               # Calcul points / combos (3 formules : étude / jour / stabilité)
 ├── question_types.py       # Normalisation + validation des 4 types de questions
 ├── seed.py                 # Initialisation BDD + données de démo + item_stats
 ├── requirements.txt        # Flask, Flask-SQLAlchemy, Werkzeug
@@ -495,7 +495,13 @@ Retourne uniquement un tableau JSON valide, sans texte avant ou après.
 | GET | `/app/home` | Dashboard : compte à rebours, cartes dues, streak, % préparation |
 | GET | `/app/parcours` | Table des matières : sujet → simanim rétractables → seifim en chips hébraïques |
 | GET | `/app/chapitre/<subject>/<siman>[/<seif>]` | Lecture d'un chapitre |
-| GET | `/app/revision` | Cartes dues du jour (répétition espacée) |
+| GET | `/app/revision` | Hub de révision : 4 cartes (jour / siman / sujet / aléatoire) avec compteurs |
+| GET | `/app/revision/jour` | Révision du jour : cartes dues (répétition espacée FSRS) |
+| GET | `/app/revision/siman` | Liste des simanim déjà appris, groupés par sujet |
+| GET | `/app/revision/siman/<subject>/<siman>` | Session de révision sur un siman déjà appris |
+| GET | `/app/revision/sujet` | Liste des sujets ayant ≥ 3 cartes déjà apprises |
+| GET | `/app/revision/sujet/<subject>` | Session de révision sur tout un sujet déjà appris |
+| GET | `/app/revision/aleatoire` | Session de révision aléatoire (max 10 cartes déjà apprises, retirée à chaque visite) |
 | POST | `/app/advance-revisions` | Avance toutes les cartes dues de 1 jour (outil de test) |
 | POST | `/app/reset-progress` | Efface UserAnswer + FsrsCard + Progression (nucléaire) |
 | GET | `/app/profil` | Profil : total réponses, précision % |
@@ -528,9 +534,17 @@ Corps JSON attendu :
   "question_id": "uuid",
   "given_answer": "texte de la réponse",
   "response_time_ms": 8500,
-  "combo": 3
+  "combo": 3,
+  "mode": "revision_daily"
 }
 ```
+
+`mode` (optionnel, défaut `"study"`) sélectionne la formule de points appliquée (voir
+[Système de points](#système-de-points-pointspy)) :
+- `"study"` (ou champ omis) — étude normale (`/app/chapitre/…`) : `compute_points`
+- `"revision_daily"` — révision du jour (`/app/revision/jour`) : `compute_daily_points`, cappé à 30
+- `"revision_siman"` / `"revision_sujet"` / `"revision_random"` — révisions volontaires
+  (`/app/revision/siman/…`, `/app/revision/sujet/…`, `/app/revision/aleatoire`) : `compute_stability_points`, cappé à 8
 
 Réponse JSON :
 ```json
@@ -542,9 +556,15 @@ Réponse JSON :
   "streak": 7,
   "total_points": 1240,
   "explanation": "...",
-  "rating_badge": "⚡ Rapide !"
+  "rating_badge": "⚡ Rapide !",
+  "daily_bonus": 0
 }
 ```
+
+`daily_bonus` — bonus de complétion quotidienne (150 + 20 par jour de série consécutive). Toujours
+`0` sauf quand `mode == "revision_daily"` **et** que cette réponse vide complètement la file des
+cartes dues du jour (`FsrsCard.due_date <= aujourd'hui`) — auquel cas il est ajouté à `total_points`
+en plus de `points`.
 
 **Effets de bord** (dans l'ordre) :
 1. Enregistre un `UserAnswer` (avec `z_item`, `z_user`, `auto_grade`)
@@ -553,6 +573,9 @@ Réponse JSON :
    compteurs et distributions log-RT (`ItemStats`, `UserSpeed`)
 4. Met à jour (ou crée) la `Progression` du chapitre
 5. Met à jour `StudentProfile` : `total_points`, `streak_days`, `last_activity_date`
+6. Si `mode == "revision_daily"` et que la file du jour vient d'être vidée : ajoute le bonus de
+   complétion quotidienne (`daily_bonus`) à `total_points` et met à jour `daily_completion_streak` /
+   `last_daily_completion_date`
 
 ---
 
@@ -614,17 +637,44 @@ D0_card = (1 − α) · D0_fsrs + α · d0_prior_item
 
 ### Système de points (`points.py`)
 
+Trois formules distinctes selon le `mode` transmis à `POST /api/answer` (voir
+[POST /api/answer](#post-apianswer)) — **aucun multiplicateur de streak** : le seul mécanisme lié à
+la régularité est le bonus de complétion quotidienne explicite (`daily_bonus`, calculé dans
+`blueprints/api.py`, pas dans `points.py`), pour éviter un double comptage.
+
+Dans les trois formules : mauvaise réponse → 0 point, combo réinitialisé à 0 côté client.
+`combo` (multiplicateur commun) : `{2: ×1.1, 3: ×1.2, 4: ×1.3, 5+: ×1.5}`.
+
+#### `compute_points` — étude normale (`mode` omis ou `"study"`)
+
 ```
-points = (base + bonus_difficulté + bonus_vitesse) × multiplicateur_combo × multiplicateur_streak
+points = (base + bonus_difficulté + bonus_vitesse) × multiplicateur_combo
 
 base = 10
 bonus_difficulté : {1: +2, 2: +4, 3: +6}
 bonus_vitesse    : {rapide: +5, moyen: +2, lent: 0}
-combo            : {2: ×1.1, 3: ×1.2, 4: ×1.3, 5+: ×1.5}
-streak           : {7+ jours: ×1.2, 30+ jours: ×1.5}
-
-Mauvaise réponse → 0 points, combo réinitialisé
 ```
+
+#### `compute_daily_points` — révision du jour (`mode="revision_daily"`)
+
+```
+points = min(30, base × multiplicateur_combo)
+base    = min(30, round(10 × log10(jours_depuis_dernière_réponse + 1)))
+```
+
+Proportionnel au temps écoulé depuis la dernière réponse (jamais à la stabilité), pour qu'échouer
+une carte exprès ne puisse jamais augmenter artificiellement les points futurs. Courbe
+logarithmique (plafond 30), voir `blueprints/api.py` pour le calcul de `jours_depuis_dernière_réponse`.
+
+#### `compute_stability_points` — révision par siman / sujet / aléatoire (`mode="revision_siman"` / `"revision_sujet"` / `"revision_random"`)
+
+```
+points = min(8, base × multiplicateur_combo)
+base    = min(8, round(8 × (1 − retrievability)))
+```
+
+Inversement proportionnel à la `retrievability` FSRS (`fsrs.retrievability`) — plus la carte est
+« fraîche » en mémoire, moins la révision volontaire rapporte de points (plafond 8).
 
 ### Validation des questions (`question_types.py`)
 
