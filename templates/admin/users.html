@@ -11,7 +11,8 @@
   <div class="card"><p class="text-sm muted">עוד אין תלמידים רשומים.</p></div>
   {% else %}
   <div class="card" style="padding:0;overflow:hidden;">
-    <table style="width:100%;border-collapse:collapse;font-size:0.875rem;">
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+    <table style="width:100%;border-collapse:collapse;font-size:0.875rem;min-width:42rem;">
       <thead>
         <tr style="border-bottom:1px solid var(--border);background:rgba(0,0,0,0.15);">
           <th style="padding:0.75rem 1rem;text-align:right;font-weight:600;">שם</th>
@@ -38,12 +39,13 @@
           <td style="padding:0.75rem 1rem;">{{ card_counts.get(user.id, 0) }}</td>
           <td style="padding:0.75rem 1rem;" class="muted text-xs">{{ profile.created_at.strftime('%d/%m/%Y') }}</td>
           <td style="padding:0.75rem 1rem;">
-            <a href="{{ url_for('admin.user_detail', user_id=user.id) }}" class="btn btn-outline" style="font-size:0.75rem;padding:0.25rem 0.75rem;">פרופיל ▸</a>
+            <a href="{{ url_for('admin.user_detail', user_id=user.id) }}" class="btn btn-outline" style="font-size:0.75rem;padding:0.25rem 0.75rem;white-space:nowrap;">פרופיל ▸</a>
           </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
+    </div>
   </div>
   {% endif %}
 </div>
