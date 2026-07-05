@@ -4,3 +4,6 @@ __pycache__/
 .venv/
 venv/
 .env
+
+# Local git worktrees (superpowers:using-git-worktrees)
+.worktrees/
