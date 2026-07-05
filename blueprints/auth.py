@@ -5,7 +5,7 @@ from __future__ import annotations
 from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
 
 from auth_helpers import current_user, login_user, logout_user
-from models import StudentProfile, User, UserRole, db
+from models import Question, StudentProfile, User, UserRole, db
 
 bp = Blueprint("auth", __name__)
 
@@ -26,7 +26,8 @@ def create_account(email: str, password: str, full_name: str | None) -> User:
 
 @bp.route("/")
 def index():
-    return render_template("landing.html")
+    question_count = Question.query.filter_by(status="approved").count()
+    return render_template("landing.html", question_count=question_count)
 
 
 @bp.route("/auth", methods=["GET", "POST"])

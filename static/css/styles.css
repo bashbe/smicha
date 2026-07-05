@@ -726,8 +726,27 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 
 /* --- Grand compteur folio --- */
 .home-folio {
+  position: relative;
   text-align: center;
   padding: var(--space-4) 0 var(--space-3);
+}
+.home-folio::before {
+  content: '';
+  position: absolute;
+  inset: calc(-1 * var(--space-2)) 0;
+  background-image:
+    linear-gradient(to right, rgba(194,113,12,0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(194,113,12,0.07) 1px, transparent 1px);
+  background-size: 20px 20px;
+  -webkit-mask-image: radial-gradient(ellipse 60% 70% at center, black 0%, transparent 80%);
+          mask-image: radial-gradient(ellipse 60% 70% at center, black 0%, transparent 80%);
+  pointer-events: none;
+  z-index: -1;
+}
+[data-theme="dark"] .home-folio::before {
+  background-image:
+    linear-gradient(to right, rgba(232,146,15,0.09) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(232,146,15,0.09) 1px, transparent 1px);
 }
 .folio-big-number {
   font-family: 'Secular One', sans-serif;
@@ -1163,4 +1182,132 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 /* Choice grid: 1 column on very small phones */
 @media (max-width: 400px) {
   .choice-grid { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   LANDING — page d'accueil publique
+   ============================================================ */
+.landing {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.landing-hero {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-5) var(--space-2) var(--space-4);
+}
+.landing-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(194,113,12,0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(194,113,12,0.06) 1px, transparent 1px);
+  background-size: 22px 22px;
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+          mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+  pointer-events: none;
+  z-index: -1;
+}
+[data-theme="dark"] .landing-hero::before {
+  background-image:
+    linear-gradient(to right, rgba(232,146,15,0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(232,146,15,0.08) 1px, transparent 1px);
+}
+
+.landing-mark-frame {
+  width: 4.75rem;
+  height: 4.75rem;
+  margin: 0 auto var(--space-3);
+  border: 2px solid var(--accent);
+  padding: 4px;
+}
+.landing-mark-frame-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+}
+.landing-mark-letter {
+  font-family: 'Secular One', sans-serif;
+  font-size: 2.25rem;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.landing-title { font-size: var(--text-4xl); }
+.landing-tagline {
+  color: var(--muted);
+  margin: var(--space-1) 0 var(--space-4);
+  max-width: 22rem;
+}
+.landing-cta-wrap { width: 100%; max-width: 320px; }
+.landing-admin-link {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  text-align: center;
+  padding: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+.landing-stats {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.landing-stat { text-align: center; }
+.landing-stat-num {
+  font-family: 'Secular One', sans-serif;
+  font-size: var(--text-xl);
+  color: var(--fg);
+}
+.landing-stat-label {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.landing-features {
+  max-width: 26rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-2) var(--space-5);
+}
+.landing-features > * + * { margin-top: var(--space-1); }
+.landing-feature {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border);
+  border-right: 3px solid var(--accent);
+  background: var(--surface);
+}
+.landing-feature-title { font-weight: 700; font-size: var(--text-base); }
+.landing-feature-sub {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin-top: 2px;
+  line-height: 1.5;
+}
+
+@media (min-width: 640px) {
+  .landing-hero { padding-top: var(--space-6); }
 }
