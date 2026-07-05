@@ -73,6 +73,10 @@ class StudentProfile(db.Model):
     total_points = db.Column(db.Integer, default=0, nullable=False)
     streak_days = db.Column(db.Integer, default=0, nullable=False)
     last_activity_date = db.Column(db.Date)
+    # Bonus de complétion quotidienne (mode "Révision du jour"), distinct de
+    # streak_days/last_activity_date qui restent purement informatifs.
+    daily_completion_streak = db.Column(db.Integer, default=0, nullable=False)
+    last_daily_completion_date = db.Column(db.Date)
     onboarded = db.Column(db.Boolean, default=False, nullable=False)
     # Collective calibration (Phase 2): learner ability estimate, counterpart of
     # ItemStats.elo_difficulty. Higher = stronger learner.
