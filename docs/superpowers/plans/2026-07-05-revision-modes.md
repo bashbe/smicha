@@ -34,7 +34,7 @@ Chaque tâche ci-dessous est indépendante et se termine par un commit. Pour rep
 **Interfaces:**
 - Produces: `StudentProfile.daily_completion_streak` (Integer, défaut 0), `StudentProfile.last_daily_completion_date` (Date, nullable) — utilisés par Task 3 (`blueprints/api.py`).
 
-- [ ] **Step 1: Ajouter les 2 colonnes à `StudentProfile`**
+- [x] **Step 1: Ajouter les 2 colonnes à `StudentProfile`**
 
 Dans `models.py`, remplacer :
 
@@ -58,7 +58,7 @@ par :
     onboarded = db.Column(db.Boolean, default=False, nullable=False)
 ```
 
-- [ ] **Step 2: Créer le script de migration**
+- [x] **Step 2: Créer le script de migration**
 
 Créer `scripts/migrate_revision_modes.py` :
 
@@ -117,17 +117,17 @@ if __name__ == "__main__":
     migrate()
 ```
 
-- [ ] **Step 3: Exécuter la migration sur la base de dev**
+- [x] **Step 3: Exécuter la migration sur la base de dev**
 
 Run: `python -m scripts.migrate_revision_modes`
 Expected: affiche `add  student_profiles.daily_completion_streak INTEGER NOT NULL DEFAULT 0`, `add  student_profiles.last_daily_completion_date DATE`, puis `migration complete`. Si la base de dev n'existe pas encore (`smiha.db` absent), lancer d'abord `python seed.py`.
 
-- [ ] **Step 4: Vérifier le schéma**
+- [x] **Step 4: Vérifier le schéma**
 
 Run: `sqlite3 smiha.db ".schema student_profiles"`
 Expected: la sortie contient `daily_completion_streak INTEGER NOT NULL DEFAULT 0` et `last_daily_completion_date DATE`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add models.py scripts/migrate_revision_modes.py
