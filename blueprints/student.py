@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import random
 from datetime import date, datetime, timedelta
 
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
@@ -13,6 +14,20 @@ from models import FsrsCard, Progression, Question, StudentProfile, UserAnswer, 
 from question_types import normalize_db_question
 
 bp = Blueprint("student", __name__, url_prefix="/app")
+
+
+def _learned_question_ids(user_id: str) -> list[str]:
+    """IDs des questions pour lesquelles l'utilisateur a au moins une réponse
+    enregistrée (peu importe si correcte), tous modes de révision non-"jour"
+    confondus — "déjà apprise" = au moins une tentative.
+    """
+    rows = (
+        db.session.query(UserAnswer.question_id)
+        .filter(UserAnswer.user_id == user_id)
+        .distinct()
+        .all()
+    )
+    return [r[0] for r in rows]
 
 
 def _to_section_list(section) -> list[str]:
@@ -315,6 +330,38 @@ def revision():
     sp = get_profile()
     today = date.today()
 
+    due_count = FsrsCard.query.filter(FsrsCard.user_id == sp.id, FsrsCard.due_date <= today).count()
+    learned_ids = _learned_question_ids(sp.id)
+    learned_count = len(learned_ids)
+
+    eligible_subjects = 0
+    if learned_ids:
+        allowed = allowed_sections(sp.section)
+        qs = [q for q in Question.query.filter(
+            Question.status == "approved", Question.id.in_(learned_ids),
+        ).all() if question_in_sections(q, allowed)]
+        counts: dict[str, int] = {}
+        for q in qs:
+            if q.subject:
+                counts[q.subject] = counts.get(q.subject, 0) + 1
+        eligible_subjects = sum(1 for c in counts.values() if c >= 3)
+
+    return render_template(
+        "student/revision_hub.html",
+        profile=sp,
+        due_count=due_count,
+        learned_count=learned_count,
+        random_count=min(10, learned_count),
+        eligible_subjects=eligible_subjects,
+    )
+
+
+@bp.route("/revision/jour")
+@login_required
+def revision_jour():
+    sp = get_profile()
+    today = date.today()
+
     due_cards = (
         db.session.query(FsrsCard, Question)
         .join(Question, Question.id == FsrsCard.question_id)
@@ -351,11 +398,161 @@ def revision():
     next_due_days = (next_due_date - today).days if next_due_date else None
 
     return render_template(
-        "student/revision.html",
+        "student/revision_jour.html",
         questions=questions,
         profile=sp,
         next_due_days=next_due_days,
         next_due_count=next_due_count,
+    )
+
+
+@bp.route("/revision/siman")
+@login_required
+def revision_siman():
+    sp = get_profile()
+    allowed = allowed_sections(sp.section)
+    learned_ids = _learned_question_ids(sp.id)
+
+    groups = []
+    if learned_ids:
+        qs = [q for q in Question.query.filter(
+            Question.status == "approved", Question.id.in_(learned_ids),
+        ).all() if question_in_sections(q, allowed)]
+
+        by_subject: dict[str, dict[int, dict]] = {}
+        for q in qs:
+            if not q.subject or q.siman is None:
+                continue
+            by_subject.setdefault(q.subject, {})
+            by_subject[q.subject].setdefault(q.siman, {})
+            by_subject[q.subject][q.siman][q.seif] = by_subject[q.subject][q.siman].get(q.seif, 0) + 1
+
+        for subject in sorted(by_subject.keys()):
+            simanim = []
+            for siman, seif_counts in sorted(by_subject[subject].items()):
+                seifim = [
+                    {"seif": seif, "count": sc}
+                    for seif, sc in sorted((k, v) for k, v in seif_counts.items() if k is not None)
+                ]
+                simanim.append({"siman": siman, "count": sum(seif_counts.values()), "seifim": seifim})
+            groups.append({"subject": subject, "simanim": simanim})
+
+    return render_template("student/revision_siman_list.html", groups=groups, profile=sp)
+
+
+@bp.route("/revision/siman/<path:subject>/<int:siman>")
+@login_required
+def revision_siman_detail(subject: str, siman: int):
+    sp = get_profile()
+    allowed = allowed_sections(sp.section)
+    learned_ids = _learned_question_ids(sp.id)
+
+    rows = [q for q in Question.query.filter(
+        Question.subject == subject, Question.siman == siman,
+        Question.status == "approved", Question.id.in_(learned_ids),
+    ).order_by(Question.seif.asc()).all() if question_in_sections(q, allowed)]
+
+    if not rows:
+        flash("אין עדיין כרטיסים שנלמדו בסימן זה.", "info")
+        return redirect(url_for("student.revision_siman"))
+
+    questions = [
+        {
+            "id": q.id, "difficulty": q.difficulty, "seif": q.seif,
+            "subject": q.subject, "siman": q.siman,
+            "normalized": normalize_db_question(q.as_dict()),
+        }
+        for q in rows
+    ]
+    return render_template(
+        "student/chapitre.html", subject=subject, siman=siman, questions=questions, profile=sp,
+        mode="revision_siman", mode_label="חזרה לפי סימן", is_revision=True,
+        back_url=url_for("student.revision_siman"),
+    )
+
+
+@bp.route("/revision/sujet")
+@login_required
+def revision_sujet():
+    sp = get_profile()
+    allowed = allowed_sections(sp.section)
+    learned_ids = _learned_question_ids(sp.id)
+
+    subjects = []
+    if learned_ids:
+        qs = [q for q in Question.query.filter(
+            Question.status == "approved", Question.id.in_(learned_ids),
+        ).all() if question_in_sections(q, allowed)]
+        counts: dict[str, int] = {}
+        for q in qs:
+            if q.subject:
+                counts[q.subject] = counts.get(q.subject, 0) + 1
+        subjects = sorted(
+            ({"subject": s, "count": c} for s, c in counts.items() if c >= 3),
+            key=lambda x: -x["count"],
+        )
+
+    return render_template("student/revision_sujet_list.html", subjects=subjects, profile=sp)
+
+
+@bp.route("/revision/sujet/<path:subject>")
+@login_required
+def revision_sujet_detail(subject: str):
+    sp = get_profile()
+    allowed = allowed_sections(sp.section)
+    learned_ids = _learned_question_ids(sp.id)
+
+    rows = [q for q in Question.query.filter(
+        Question.subject == subject, Question.status == "approved", Question.id.in_(learned_ids),
+    ).order_by(Question.siman.asc(), Question.seif.asc()).all() if question_in_sections(q, allowed)]
+
+    if not rows:
+        flash("אין עדיין כרטיסים שנלמדו בנושא זה.", "info")
+        return redirect(url_for("student.revision_sujet"))
+
+    questions = [
+        {
+            "id": q.id, "difficulty": q.difficulty, "seif": q.seif,
+            "subject": q.subject, "siman": q.siman,
+            "normalized": normalize_db_question(q.as_dict()),
+        }
+        for q in rows
+    ]
+    return render_template(
+        "student/chapitre.html", subject=subject, siman=rows[0].siman, questions=questions, profile=sp,
+        mode="revision_sujet", mode_label="חזרה לפי נושא", is_revision=True,
+        back_url=url_for("student.revision_sujet"),
+    )
+
+
+@bp.route("/revision/aleatoire")
+@login_required
+def revision_aleatoire():
+    sp = get_profile()
+    allowed = allowed_sections(sp.section)
+    learned_ids = _learned_question_ids(sp.id)
+
+    rows = [q for q in Question.query.filter(
+        Question.status == "approved", Question.id.in_(learned_ids),
+    ).all() if question_in_sections(q, allowed)]
+
+    if not rows:
+        flash("עדיין אין כרטיסים שנלמדו לחזרה אקראית.", "info")
+        return redirect(url_for("student.revision"))
+
+    sample = random.sample(rows, min(10, len(rows)))
+    questions = [
+        {
+            "id": q.id, "difficulty": q.difficulty, "seif": q.seif,
+            "subject": q.subject, "siman": q.siman,
+            "normalized": normalize_db_question(q.as_dict()),
+        }
+        for q in sample
+    ]
+    return render_template(
+        "student/chapitre.html", subject="חזרה אקראית", siman=sample[0].siman, questions=questions,
+        profile=sp, mode="revision_random", mode_label="חזרה אקראית", is_revision=True,
+        back_url=url_for("student.revision"),
     )
 
 
