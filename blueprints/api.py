@@ -86,9 +86,15 @@ def answer():
     # due_date de cette carte).
     due_before = 0
     if mode == "revision_daily":
-        due_before = FsrsCard.query.filter(
-            FsrsCard.user_id == user.id, FsrsCard.due_date <= date.today()
-        ).count()
+        due_before = (
+            FsrsCard.query.join(Question, Question.id == FsrsCard.question_id)
+            .filter(
+                FsrsCard.user_id == user.id,
+                FsrsCard.due_date <= date.today(),
+                Question.status == "approved",
+            )
+            .count()
+        )
 
     if mode == "revision_daily":
         days_since = (date.today() - card.last_review.date()).days if (card and card.last_review) else 0
@@ -227,9 +233,15 @@ def answer():
     # card.due_date mis à jour en mémoire au step 2 du FSRS upsert).
     daily_bonus = 0
     if mode == "revision_daily" and due_before > 0 and sp.last_daily_completion_date != today:
-        due_after = FsrsCard.query.filter(
-            FsrsCard.user_id == user.id, FsrsCard.due_date <= today
-        ).count()
+        due_after = (
+            FsrsCard.query.join(Question, Question.id == FsrsCard.question_id)
+            .filter(
+                FsrsCard.user_id == user.id,
+                FsrsCard.due_date <= today,
+                Question.status == "approved",
+            )
+            .count()
+        )
         if due_after == 0:
             yesterday = today - timedelta(days=1)
             new_daily_streak = (
