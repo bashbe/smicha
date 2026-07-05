@@ -1558,12 +1558,12 @@ git commit -m "feat: chapitre.js sends revision mode to the API, shows daily com
 **Files:**
 - Aucun fichier nouveau — vérification manuelle complète du parcours (règle du `README.md` : ne pas déclarer une modification terminée sans avoir navigué dans les pages impactées).
 
-- [ ] **Step 1: Rejouer la suite de tests automatisés complète**
+- [x] **Step 1: Rejouer la suite de tests automatisés complète**
 
 Run: `python -m pytest tests/ -v`
 Expected: tous les tests passent (`test_fsrs.py`, `test_calibration.py`, `test_points.py`).
 
-- [ ] **Step 2: Parcours complet en navigateur (étudiant de démo)**
+- [x] **Step 2: Parcours complet en navigateur (étudiant de démo)**
 
 Avec `python app.py` lancé et connecté comme `student@example.com` :
 1. `/app/home` → vérifier badge streak, badge points, lien "חזרה יומית" fonctionnel.
@@ -1576,19 +1576,19 @@ Avec `python app.py` lancé et connecté comme `student@example.com` :
 5. `/app/profil` et `/app/settings` → vérifier qu'ils s'affichent normalement (non touchés par ce plan, contrôle de non-régression).
 6. Recharger `/app/home` après une session de révision du jour complète → `total_points` doit refléter le bonus de complétion.
 
-- [ ] **Step 3: Vérifier le cas "aucune carte due" sur `/app/revision/jour`**
+- [x] **Step 3: Vérifier le cas "aucune carte due" sur `/app/revision/jour`**
 
 Utiliser `/app/advance-revisions` (outil de test existant) pour vider la file du jour, puis revisiter `/app/revision/jour` → l'état vide doit s'afficher avec un lien "חזרה לתפריט" fonctionnel vers le hub.
 
-- [ ] **Step 4: Vérifier le RTL sur les 3 nouveaux templates**
+- [x] **Step 4: Vérifier le RTL sur les 3 nouveaux templates**
 
 Zoomer/inspecter `/app/revision`, `/app/revision/siman`, `/app/revision/sujet` — texte hébreu aligné à droite, chips/badges non coupés, pas de débordement horizontal.
 
-- [ ] **Step 5: Mettre à jour le README si nécessaire**
+- [x] **Step 5: Mettre à jour le README si nécessaire**
 
 Si de nouvelles routes publiques changent la liste documentée dans `README.md` (section "Routes et API"), ajouter les nouvelles routes `/app/revision/jour`, `/app/revision/siman[/…]`, `/app/revision/sujet[/…]`, `/app/revision/aleatoire` au tableau existant, et documenter le champ `mode` optionnel de `POST /api/answer` dans la section correspondante.
 
-- [ ] **Step 6: Commit final**
+- [x] **Step 6: Commit final**
 
 ```bash
 git add README.md
