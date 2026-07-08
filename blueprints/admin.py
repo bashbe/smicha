@@ -345,6 +345,27 @@ def validate():
     )
 
 
+@bp.route("/validate/approve-all", methods=["POST"])
+@staff_required
+def approve_all_pending():
+    user = current_user()
+    pending = Question.query.filter_by(status="pending").all()
+    for q in pending:
+        previous = q.as_dict()
+        q.status = "approved"
+        q.validated_by = user.id
+        db.session.add(
+            QuestionEdit(
+                question_id=q.id, editor_id=user.id, action="approved",
+                previous_content=previous, new_content=q.as_dict(),
+                note="אישור גורף של כל השאלות הממתינות",
+            )
+        )
+    db.session.commit()
+    flash(f"{len(pending)} שאלות אושרו", "success")
+    return redirect(url_for("admin.validate", status="pending"))
+
+
 @bp.route("/export/rejected")
 @staff_required
 def export_rejected():

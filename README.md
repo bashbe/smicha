@@ -521,6 +521,7 @@ Retourne uniquement un tableau JSON valide, sans texte avant ou après.
 | GET | `/admin/users/<user_id>` | Détail étudiant (progression, stabilité, réponses) |
 | GET/POST | `/admin/import` | Import JSON (prévisualisation → confirmation) |
 | GET/POST | `/admin/validate` | File de questions `pending` (incluant les questions signalées) : approuver / rejeter |
+| POST | `/admin/validate/approve-all` | Approuve en un clic toutes les questions `pending` (bouton « אשר הכל » de la file) |
 | GET | `/admin/questions` | Recherche/édition de toutes les questions — filtres `status`, `type`, `parcours`, `siman`, `q` (texte libre) |
 | POST | `/admin/questions/<qid>/edit` | Sauvegarde / approuve / rejette une question depuis `/admin/questions` |
 | POST | `/admin/reset-db` | **super_admin uniquement** — efface et recrée toutes les tables (confirmation texte `"RESET"` requise) |

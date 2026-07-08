@@ -6,14 +6,22 @@
     <h1 class="text-2xl bold">אימות שאלות</h1>
     <p class="text-sm muted">ערוך והשלם שדות חסרים לפני אישור</p>
   </div>
-  <form method="get" class="row gap-2" style="width:auto;align-items:center;">
-    <label style="margin:0;">סטטוס</label>
-    <select name="status" onchange="this.form.submit()" style="width:10rem;">
-      {% for v, l in [('pending','ממתינות'),('approved','מאושרות'),('rejected','נדחו')] %}
-      <option value="{{ v }}" {{ 'selected' if status == v }}>{{ l }}</option>
-      {% endfor %}
-    </select>
-  </form>
+  <div class="row gap-2" style="width:auto;align-items:center;flex-wrap:wrap;">
+    <form method="get" class="row gap-2" style="width:auto;align-items:center;">
+      <label style="margin:0;">סטטוס</label>
+      <select name="status" onchange="this.form.submit()" style="width:10rem;">
+        {% for v, l in [('pending','ממתינות'),('approved','מאושרות'),('rejected','נדחו')] %}
+        <option value="{{ v }}" {{ 'selected' if status == v }}>{{ l }}</option>
+        {% endfor %}
+      </select>
+    </form>
+    {% if status == 'pending' and questions %}
+    <form method="post" action="{{ url_for('admin.approve_all_pending') }}"
+          onsubmit="return confirm('לאשר את כל {{ questions|length }} השאלות הממתינות?');">
+      <button type="submit" class="btn btn-success">✓ אשר הכל ({{ questions|length }})</button>
+    </form>
+    {% endif %}
+  </div>
 </div>
 
 <div class="admin-tab-bar" data-has-selection="{{ 'true' if selected else 'false' }}">
