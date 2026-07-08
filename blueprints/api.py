@@ -22,6 +22,7 @@ from models import (
     ItemStats,
     Progression,
     Question,
+    QuestionEdit,
     StudentProfile,
     UserAnswer,
     UserSpeed,
@@ -273,3 +274,34 @@ def answer():
             "daily_bonus": daily_bonus,
         }
     )
+
+
+@bp.post("/report")
+def report():
+    """Un étudiant signale une question douteuse : elle repasse en "pending"
+    pour qu'un validateur la retraite dans /admin/validate."""
+    user = current_user()
+    if user is None:
+        return jsonify({"error": "unauthorized"}), 401
+
+    data = request.get_json(force=True)
+    question_id = data.get("question_id")
+    reason = (data.get("reason") or "").strip()
+
+    q = Question.query.get(question_id)
+    if q is None:
+        return jsonify({"error": "question not found"}), 404
+
+    previous = q.as_dict()
+    q.status = "pending"
+    db.session.add(
+        QuestionEdit(
+            question_id=q.id,
+            editor_id=user.id,
+            action="reported",
+            note=reason or None,
+            previous_content=previous,
+        )
+    )
+    db.session.commit()
+    return jsonify({"ok": True})

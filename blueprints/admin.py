@@ -188,7 +188,7 @@ def import_questions():
                             siman=ins.get("siman"),
                             seif=ins.get("seif"),
                             parcours=ins.get("parcours"),
-                            status="pending",
+                            status="approved",
                             created_by=user.id,
                         )
                     )
@@ -371,6 +371,7 @@ def questions():
     qtype = request.args.get("type", "")
     parcours_filter = request.args.get("parcours", "")
     search = request.args.get("q", "").strip()
+    siman_filter = request.args.get("siman", "").strip()
     selected_id = request.args.get("id", "")
 
     query = Question.query
@@ -380,6 +381,12 @@ def questions():
         query = query.filter_by(question_type=qtype)
     if parcours_filter:
         query = query.filter_by(parcours=parcours_filter)
+    if siman_filter:
+        try:
+            query = query.filter_by(siman=int(siman_filter))
+        except ValueError:
+            flash("סימן חייב להיות מספר", "error")
+            siman_filter = ""
     if search:
         query = query.filter(
             or_(
@@ -393,7 +400,7 @@ def questions():
     if all_questions:
         selected = next((q for q in all_questions if q.id == selected_id), all_questions[0])
 
-    filters = {"status": status, "type": qtype, "parcours": parcours_filter, "q": search}
+    filters = {"status": status, "type": qtype, "parcours": parcours_filter, "q": search, "siman": siman_filter}
     return render_template(
         "admin/questions.html",
         questions=all_questions,
@@ -418,6 +425,7 @@ def edit_question(qid):
         "type": request.form.get("filter_type", ""),
         "parcours": request.form.get("filter_parcours", ""),
         "q": request.form.get("filter_q", ""),
+        "siman": request.form.get("filter_siman", ""),
         "id": qid,
     }
 
