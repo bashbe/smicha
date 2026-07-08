@@ -25,9 +25,10 @@
       <option value="" {{ 'selected' if not filters.parcours }}>כל הפרוסים</option>
       <option value="bassar_bechalav" {{ 'selected' if filters.parcours == 'bassar_bechalav' }}>בשר בחלב</option>
     </select>
+    <input name="siman" type="number" min="1" value="{{ filters.siman }}" placeholder="סימן…" style="width:7rem;" />
     <input name="q" value="{{ filters.q }}" placeholder="חיפוש נושא / טקסט…" style="width:13rem;" />
     <button type="submit" class="btn btn-outline">חפש</button>
-    {% if filters.status or filters.type or filters.parcours or filters.q %}
+    {% if filters.status or filters.type or filters.parcours or filters.q or filters.siman %}
     <a href="{{ url_for('admin.questions') }}" class="btn" style="background:none;color:var(--muted-foreground);">× נקה</a>
     {% endif %}
   </form>
@@ -47,7 +48,7 @@
     {% else %}
       {% for q in questions %}
       {% set is_sel = selected and selected.id == q.id %}
-      <a href="{{ url_for('admin.questions', id=q.id, status=filters.status, type=filters.type, parcours=filters.parcours, q=filters.q) }}"
+      <a href="{{ url_for('admin.questions', id=q.id, status=filters.status, type=filters.type, parcours=filters.parcours, q=filters.q, siman=filters.siman) }}"
          style="display:block;border-bottom:1px solid var(--border);padding:0.625rem 0.75rem;text-align:right;{{ 'background:rgba(99,102,241,0.12);' if is_sel }}">
         <div class="row between" style="margin-bottom:0.25rem;gap:0.5rem;">
           {% if q.status == 'approved' %}
@@ -91,6 +92,7 @@
         <input type="hidden" name="filter_type" value="{{ filters.type }}" />
         <input type="hidden" name="filter_parcours" value="{{ filters.parcours }}" />
         <input type="hidden" name="filter_q" value="{{ filters.q }}" />
+        <input type="hidden" name="filter_siman" value="{{ filters.siman }}" />
 
         {# ── Status + type row ── #}
         <div class="row gap-2 text-xs" style="flex-wrap:wrap;">

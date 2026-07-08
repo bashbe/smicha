@@ -6,6 +6,7 @@
     parcours: root.dataset.parcoursUrl,
     home: root.dataset.homeUrl,
     answer: root.dataset.answerUrl,
+    report: root.dataset.reportUrl,
     todayStats: root.dataset.todayStatsUrl,
     subject: root.dataset.subject,
     siman: root.dataset.siman,
@@ -33,6 +34,7 @@
     feedback: null,
     showNext: false,
     start: Date.now(),
+    reportedIds: new Set(),
   };
 
   const refs = {};
@@ -66,6 +68,7 @@
     coin: '<circle cx="12" cy="12" r="9"/><path d="M12 7v1m0 8v1M9.5 9.5C9.5 8.67 10.17 8 11 8h2a1.5 1.5 0 0 1 0 3h-2a1.5 1.5 0 0 0 0 3h2a1.5 1.5 0 0 0 0-3"/>',
     check: '<polyline points="20 6 9 17 4 12"/>',
     x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+    flag: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
   };
   function icon(name, size) {
     size = size || 16;
@@ -172,6 +175,23 @@
       state.showNext = true;
       if (refs.exp) refs.exp.appendChild(nextButton());
     }, 800);
+  }
+
+  async function reportQuestion(qId, btn) {
+    if (state.reportedIds.has(qId)) return;
+    const reason = window.prompt("מה הבעיה בשאלה? (אופציונלי)") || "";
+    state.reportedIds.add(qId);
+    btn.disabled = true;
+    btn.title = "השאלה דווחה, תודה";
+    btn.innerHTML = "";
+    btn.appendChild(icon("check", 16));
+    try {
+      await fetch(cfg.report, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question_id: qId, reason: reason.trim() }),
+      });
+    } catch (e) { /* best-effort — no need to block the player */ }
   }
 
   function nextButton() {
@@ -336,14 +356,30 @@
     backBtn.addEventListener("click", () => { window.location.href = cfg.back; });
     const header = el("div", "row between");
     header.appendChild(backBtn);
+
+    const headerRight = el("div", "row gap-2");
+    const reportBtn = el("button", "btn btn-outline report-btn");
+    reportBtn.type = "button";
+    reportBtn.title = "דווח על שאלה זו";
+    reportBtn.style.cssText = "height:2.5rem;width:2.5rem;border-radius:999px;padding:0;display:flex;align-items:center;justify-content:center;";
+    reportBtn.appendChild(icon("flag", 16));
+    if (state.reportedIds.has(q.id)) {
+      reportBtn.disabled = true;
+      reportBtn.title = "השאלה כבר דווחה";
+    } else {
+      reportBtn.addEventListener("click", () => reportQuestion(q.id, reportBtn));
+    }
+    headerRight.appendChild(reportBtn);
+
     if (isRevision) {
       const revLabel = el("span", "");
       revLabel.textContent = cfg.modeLabel;
       revLabel.style.cssText = "font-family:'Secular One',sans-serif;font-size:var(--text-sm);color:var(--muted);";
-      header.appendChild(revLabel);
+      headerRight.appendChild(revLabel);
     } else {
-      header.appendChild(el("div", "pill pill-accent", icon("coin", 14), String(state.sessionPoints)));
+      headerRight.appendChild(el("div", "pill pill-accent", icon("coin", 14), String(state.sessionPoints)));
     }
+    header.appendChild(headerRight);
     root.appendChild(header);
 
     // dots

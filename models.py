@@ -96,7 +96,10 @@ class Question(db.Model):
     difficulty = db.Column(db.Integer, default=2, nullable=False)
     section = db.Column(db.JSON, default=lambda: ["shulchan_aruch"], nullable=False)
     tags = db.Column(db.JSON, default=list)
-    status = db.Column(db.String(16), default="pending", nullable=False, index=True)
+    # Toute question est acceptée par défaut ("approved"). Elle ne repasse en
+    # "pending" que si un étudiant la signale (bouton "signaler" côté player) ;
+    # l'admin la traite alors dans /admin/validate comme un import classique.
+    status = db.Column(db.String(16), default="approved", nullable=False, index=True)
     created_by = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"))
     validated_by = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"))
     validator_note = db.Column(db.Text)
@@ -149,7 +152,7 @@ class QuestionEdit(db.Model):
     id = db.Column(db.String(36), primary_key=True, default=_uuid)
     question_id = db.Column(db.String(36), db.ForeignKey("questions.id", ondelete="CASCADE"), nullable=False)
     editor_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"))
-    action = db.Column(db.String(16), nullable=False)  # approved | corrected | rejected
+    action = db.Column(db.String(16), nullable=False)  # approved | corrected | rejected | reported
     previous_content = db.Column(db.JSON)
     new_content = db.Column(db.JSON)
     note = db.Column(db.Text)

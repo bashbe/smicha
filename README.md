@@ -152,7 +152,8 @@ smiha-flask/
 │   ├── sim_schedule.py         # Simulation d'évaluation : scénarios + options utilisateur
 │   ├── sim_priors.py           # Démonstration du mélange des priors collectifs
 │   ├── recompute_item_stats.py # Batch : recalcul autoritaire des agrégats/priors
-│   └── migrate_phase2.py       # Migration schéma Phase 2 (bases existantes)
+│   ├── migrate_phase2.py       # Migration schéma Phase 2 (bases existantes)
+│   └── migrate_approve_pending.py  # Approuve les questions "pending" historiques (bases existantes)
 │
 └── tests/
     ├── test_fsrs.py            # Tests du scheduler FSRS-6 + quick wins (runner autonome)
@@ -213,7 +214,7 @@ Contrainte unique `(user_id, role)`. Valeurs de `role` : `"super_admin"`, `"impo
 | `section` | JSON | Liste de sections de révision |
 | `question_type` | Enum | `multiple_choice`, `true_false`, `multiple_opinions_dropdown`, `practical_scenario` |
 | `payload` | JSON | Structure spécifique au type |
-| `status` | String | `"pending"` / `"approved"` / `"rejected"` |
+| `status` | String | `"pending"` / `"approved"` / `"rejected"` — défaut `"approved"` (voir [règle de statut](#règle-métier--acceptation-par-défaut-et-signalement)) |
 | `parcours` | String | Parcours d'apprentissage — valeurs dans `VALID_PARCOURS` (ex : `"bassar_bechalav"`) |
 | `subject` | String | Sujet Halakhique en hébreu (ex : `"בשר בחלב"`) — champ JSON `sujet` à l'import |
 | `siman` | Integer | Numéro de chapitre (entier positif, obligatoire) |
@@ -470,7 +471,7 @@ Retourne uniquement un tableau JSON valide, sans texte avant ou après.
 
 - **`exam_section` multi-valeur** : une question couvrant plusieurs sources doit lister toutes les sections pertinentes (`["shulchan_aruch", "tur"]`). Elle ne sera proposée qu'aux étudiants ayant **toutes** ces sections.
 - **Validation à l'import** : tout lot est passé par `normalize_imported_question()` — les erreurs sont remontées ligne par ligne avant sauvegarde. Aucune question n'est importée si le lot contient une erreur.
-- **Statut initial** : toute question importée arrive avec `status="pending"` et doit être approuvée par un validateur avant d'être proposée aux étudiants.
+- **Statut initial** : toute question importée arrive avec `status="approved"` et est immédiatement proposée aux étudiants ; elle ne repasse en `"pending"` que si un étudiant la signale (voir [règle de statut](#règle-métier--acceptation-par-défaut-et-signalement)).
 
 ---
 
@@ -519,7 +520,9 @@ Retourne uniquement un tableau JSON valide, sans texte avant ou après.
 | GET | `/admin/users` | Liste étudiants + nombre de cartes |
 | GET | `/admin/users/<user_id>` | Détail étudiant (progression, stabilité, réponses) |
 | GET/POST | `/admin/import` | Import JSON (prévisualisation → confirmation) |
-| GET/POST | `/admin/validate` | File de questions `pending` : approuver / rejeter |
+| GET/POST | `/admin/validate` | File de questions `pending` (incluant les questions signalées) : approuver / rejeter |
+| GET | `/admin/questions` | Recherche/édition de toutes les questions — filtres `status`, `type`, `parcours`, `siman`, `q` (texte libre) |
+| POST | `/admin/questions/<qid>/edit` | Sauvegarde / approuve / rejette une question depuis `/admin/questions` |
 | POST | `/admin/reset-db` | **super_admin uniquement** — efface et recrée toutes les tables (confirmation texte `"RESET"` requise) |
 
 ---
@@ -576,6 +579,22 @@ en plus de `points`.
 6. Si `mode == "revision_daily"` et que la file du jour vient d'être vidée : ajoute le bonus de
    complétion quotidienne (`daily_bonus`) à `total_points` et met à jour `daily_completion_streak` /
    `last_daily_completion_date`
+
+#### `POST /api/report`
+
+Signalement d'une question par un étudiant, depuis le bouton 🚩 du lecteur (`chapitre.js`).
+
+Corps JSON attendu :
+```json
+{
+  "question_id": "uuid",
+  "reason": "motif optionnel du signalement"
+}
+```
+
+Réponse JSON : `{"ok": true}`. Effet de bord : `Question.status` repasse à `"pending"` et une
+`QuestionEdit` (`action="reported"`, `note=reason`) est journalisée. La question redevient
+invisible pour tous les étudiants tant qu'un validateur ne l'a pas retraitée dans `/admin/validate`.
 
 ---
 
@@ -735,18 +754,30 @@ Implémenté dans `allowed_sections()` + `question_in_sections()` (`blueprints/s
 
 `shulchan_aruch` est automatiquement injecté dans l'ensemble autorisé de tout étudiant par `allowed_sections()`, même s'il n'est pas explicitement dans `StudentProfile.section`. À l'onboarding et dans les paramètres, la case correspondante est verrouillée et toujours cochée.
 
+### Règle métier : acceptation par défaut et signalement
+
+Toute question est **acceptée par défaut** (`status="approved"` dès sa création — import ou seed), et donc immédiatement proposée aux étudiants. Il n'y a plus de file d'attente systématique avant mise en ligne.
+
+- **Signalement étudiant** — dans le lecteur de questions (`chapitre.js`), un bouton 🚩 (icône drapeau) permet à l'étudiant de signaler une question douteuse, avec un motif optionnel. Cela appelle `POST /api/report` (`blueprints/api.py`) qui repasse la question en `status="pending"` et journalise l'action dans `question_edits` (`action="reported"`, `note` = motif). La question disparaît alors du parcours de tous les étudiants jusqu'à décision.
+- **Décision de l'admin** — la question signalée réapparaît dans la file `/admin/validate` (statut `pending`, la vue par défaut) exactement comme une question nouvellement importée ; le validateur l'approuve ou la rejette normalement.
+- **Base existante** — `scripts/migrate_approve_pending.py` bascule en `approved` les questions `pending` d'une base existante (celles jamais explicitement rejetées) pour aligner les anciennes données sur ce nouveau défaut.
+
 ---
 
 ## Pipeline d'import des questions
 
 ```
-Importer (JSON) → Prévisualisation (normalize_imported_question) → Sauvegarde status="pending"
+Importer (JSON) → Prévisualisation (normalize_imported_question) → Sauvegarde status="approved"
+                                                                          ↓
+                                                        (visible immédiatement aux étudiants)
+                                                                          ↓
+                                        Étudiant signale (🚩) → status="pending"
                                                                           ↓
 Validateur → /admin/validate → Édite métadonnées (subject/siman/seif/parcours, difficulté, tags)
                                     ↓                        ↓
                               Approuve → status="approved"   Rejette → status="rejected" + note
                                     ↓
-                         Audit enregistré dans question_edits
+                         Audit enregistré dans question_edits (action="approved"/"rejected"/"reported")
 ```
 
 Le format JSON d'import accepte un tableau d'objets. Chaque objet est normalisé par `question_types.py`. Les erreurs de validation sont remontées ligne par ligne dans la prévisualisation — aucune question n'est importée si le lot contient des erreurs.
@@ -787,6 +818,7 @@ python -m scripts.sim_schedule          # évaluer le scheduler : scénarios + o
 python -m scripts.sim_priors            # visualiser le mélange des priors (jamais 100 %)
 python -m scripts.recompute_item_stats  # batch : recalcul autoritaire des agrégats/priors
 python -m scripts.migrate_phase2        # migration schéma sur une base EXISTANTE (prod)
+python -m scripts.migrate_approve_pending  # approuve les questions "pending" historiques (base EXISTANTE)
 
 # Tests (sans pytest requis)
 python tests/test_fsrs.py
@@ -824,6 +856,10 @@ git config --global credential.helper store
   source autoritaire des μ/σ de latence — le lancer en batch (cron nocturne) pour la stabilité.
 - **Migration** : sur une base existante, lancer `python -m scripts.migrate_phase2` (ajoute les
   colonnes + tables Phase 2). Une base neuve (`python seed.py`) est déjà au bon schéma.
+- **Acceptation par défaut** : `Question.status` vaut `"approved"` par défaut (voir
+  [règle métier](#règle-métier--acceptation-par-défaut-et-signalement)). Sur une base existante,
+  lancer `python -m scripts.migrate_approve_pending` pour approuver les questions `pending`
+  historiques.
 - **`FsrsCard.target_stability`** est copié depuis `StudentProfile` à la création de la carte. Modifier le profil étudiant ne met pas à jour les cartes existantes — prévu par design.
 - **`/app/reset-progress`** efface `UserAnswer`, `FsrsCard`, `Progression` sans confirmation supplémentaire. Protéger en prod si nécessaire.
 - **`/admin/reset-db`** efface **toutes** les tables et déconnecte l'utilisateur. Réservé au `super_admin`, requiert la saisie du mot `"RESET"` en confirmation.
