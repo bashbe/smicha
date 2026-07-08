@@ -30,6 +30,7 @@
     results: new Array(origQuestions.length).fill(null),
     chosen: null,
     opinionAnswers: {},
+    activeOpinionId: null,
     revealed: false,
     feedback: null,
     showNext: false,
@@ -214,10 +215,33 @@
     pick(JSON.stringify(ordered));
   }
 
+  function activeOpinionId(nq) {
+    const decisors = nq.decisors || [];
+    if (state.activeOpinionId && decisors.some((d) => d.id === state.activeOpinionId)) {
+      return state.activeOpinionId;
+    }
+    const firstEmpty = decisors.find((d) => !state.opinionAnswers[d.id]);
+    return firstEmpty ? firstEmpty.id : null;
+  }
+
+  function assignOpinionChoice(nq, choice) {
+    if (state.revealed) return;
+    const id = activeOpinionId(nq);
+    if (!id) return;
+    state.opinionAnswers[id] = choice;
+
+    const decisors = nq.decisors || [];
+    const currentIndex = decisors.findIndex((d) => d.id === id);
+    const nextEmpty = decisors.find((d, index) => index > currentIndex && !state.opinionAnswers[d.id])
+      || decisors.find((d) => !state.opinionAnswers[d.id]);
+    state.activeOpinionId = nextEmpty ? nextEmpty.id : null;
+    render();
+  }
+
   function next() {
     if (state.idx + 1 >= queue.length) { renderComplete(); return; }
     state.idx++;
-    state.chosen = null; state.opinionAnswers = {}; state.revealed = false;
+    state.chosen = null; state.opinionAnswers = {}; state.activeOpinionId = null; state.revealed = false;
     state.feedback = null; state.showNext = false; state.start = Date.now();
     render();
   }
@@ -421,68 +445,53 @@
     const answers = el("div", (isTrueFalse ? "choice-grid" : "stack-sm") + " player-answers");
 
     if (isOpinions) {
-      const useButtons = window.innerWidth >= 640 && (nq.dropdownChoices || []).length <= 4;
-      const wrap = el("div", "stack-sm");
+      const wrap = el("div", "opinions-match");
+      const activeId = activeOpinionId(nq);
+      const rows = el("div", "opinions-rows");
       nq.decisors.forEach((d) => {
         const selected = state.opinionAnswers[d.id];
         const good = selected === d.correctChoice;
-        const box = el("div", "card");
+        const isActive = !state.revealed && activeId === d.id;
+        let rowCls = "opinions-row";
         if (state.revealed) {
-          box.style.border = "2px solid " + (good ? "var(--success)" : "var(--destructive)");
-          box.style.background = good ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)";
-        } else {
-          box.style.border = "2px solid var(--border)";
+          rowCls += good ? " is-correct" : " is-wrong";
+        } else if (isActive) {
+          rowCls += " is-active";
+        } else if (selected) {
+          rowCls += " is-filled";
         }
-        box.appendChild(el("div", "bold mb-2", d.name));
 
-        if (useButtons) {
-          const grid = el("div", "opinions-btn-grid");
-          (nq.dropdownChoices || []).forEach((c) => {
-            const isChosen = selected === c;
-            const isCorrectChoice = c === d.correctChoice;
-            let btnCls = "btn btn-outline opinions-choice-btn";
-            if (state.revealed) {
-              if (isCorrectChoice) btnCls += " opi-correct";
-              else if (isChosen) btnCls += " opi-wrong";
-              else btnCls += " opi-dim";
-            } else if (isChosen) {
-              btnCls += " opi-selected";
-            }
-            const btn = el("button", btnCls, c);
-            if (!state.revealed) {
-              btn.addEventListener("click", () => {
-                state.opinionAnswers[d.id] = c;
-                render();
-              });
-            } else {
-              btn.disabled = true;
-            }
-            grid.appendChild(btn);
+        const row = el("button", rowCls);
+        row.type = "button";
+        if (!state.revealed) {
+          row.addEventListener("click", () => {
+            state.activeOpinionId = d.id;
+            render();
           });
-          box.appendChild(grid);
         } else {
-          const sel = document.createElement("select");
-          sel.addEventListener("change", (e) => { state.opinionAnswers[d.id] = e.target.value; });
-          const placeholder = el("option", "");
-          placeholder.value = "";
-          placeholder.textContent = "בחר עמדה";
-          sel.appendChild(placeholder);
-          (nq.dropdownChoices || []).forEach((c) => {
-            const opt = el("option", "");
-            opt.value = c;
-            opt.textContent = c;
-            if (selected === c) opt.selected = true;
-            sel.appendChild(opt);
-          });
-          if (state.revealed) sel.disabled = true;
-          box.appendChild(sel);
+          row.disabled = true;
         }
+
+        row.appendChild(el("span", "opinions-decisor", d.name));
+        row.appendChild(el("span", selected ? "opinions-slot is-filled" : "opinions-slot", selected || "בחר תשובה"));
 
         if (state.revealed && !good) {
-          box.appendChild(el("div", "text-sm success mt-2", "התשובה: " + d.correctChoice));
+          row.appendChild(el("span", "opinions-correct-answer", d.correctChoice));
         }
-        wrap.appendChild(box);
+        rows.appendChild(row);
       });
+      wrap.appendChild(rows);
+
+      if (!state.revealed) {
+        const bank = el("div", "opinions-bank");
+        (nq.dropdownChoices || []).forEach((c) => {
+          const btn = el("button", "opinions-bank-choice", c);
+          btn.type = "button";
+          btn.addEventListener("click", () => assignOpinionChoice(nq, c));
+          bank.appendChild(btn);
+        });
+        wrap.appendChild(bank);
+      }
       if (!state.revealed) {
         const submitBtn = el("button", "btn btn-primary btn-block btn-lg", "בדוק תשובות");
         submitBtn.addEventListener("click", submitOpinions);
