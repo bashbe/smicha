@@ -342,7 +342,7 @@ Journal d'audit : chaque action d'un validateur (approve / correct / reject) est
   "tags": ["המתנה"]
 }
 ```
-Règles : exactement 4 options numérotées 1–4, exactement une seule `is_correct: true`.
+Règles : au moins 2 options, numérotées en séquence à partir de 1 (1, 2, 3, …) sans trou ni doublon, exactement une seule `is_correct: true`. Le nombre d'options n'est plus figé à 4 — `options` peut contenir autant de propositions que nécessaire.
 
 #### `true_false`
 ```json

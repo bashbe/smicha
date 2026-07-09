@@ -221,11 +221,11 @@ def _payload_from_form(form, question_type: str) -> dict:
         correct = form.get("correct_option")
         payload["options"] = [
             {
-                "number": n,
-                "text": form.get(f"option_text_{n}") or "",
-                "is_correct": str(n) == str(correct),
+                "number": i,
+                "text": text,
+                "is_correct": str(i) == str(correct),
             }
-            for n in (1, 2, 3, 4)
+            for i, text in enumerate(form.getlist("option_text"), start=1)
         ]
     elif question_type == "multiple_opinions_dropdown":
         payload["question_text"] = form.get("question_text") or ""

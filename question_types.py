@@ -99,12 +99,12 @@ def _validate_common(q, issues: list):
 
 def _validate_numbered_options(q, issues: list) -> None:
     options = q.get("options") if isinstance(q.get("options"), list) else []
-    if len(options) != 4:
-        issues.append("חייבות להיות בדיוק 4 תשובות")
+    if len(options) < 2:
+        issues.append("חייבות להיות לפחות 2 תשובות")
     numbers = [o.get("number") if isinstance(o, dict) else None for o in options]
-    unique_numbers = set(numbers)
-    if len(unique_numbers) != len(options) or not all(n in unique_numbers for n in (1, 2, 3, 4)):
-        issues.append("מספרי התשובות חייבים להיות 1, 2, 3, 4 ללא כפילות")
+    expected_numbers = set(range(1, len(options) + 1))
+    if len(set(numbers)) != len(numbers) or set(numbers) != expected_numbers:
+        issues.append("מספרי התשובות חייבים להיות רצף החל מ-1 (1, 2, 3, ...) ללא כפילות")
     for index, option in enumerate(options):
         option = option if isinstance(option, dict) else {}
         _add_text_issue(issues, option.get("text"), f"תשובה {index + 1}")
