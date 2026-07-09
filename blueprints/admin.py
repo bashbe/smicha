@@ -218,12 +218,15 @@ def _payload_from_form(form, question_type: str) -> dict:
 
     if question_type == "multiple_choice":
         payload["question_text"] = form.get("question_text") or ""
-        correct = form.get("correct_option")
+        try:
+            correct_indices = set(json.loads(form.get("correct_options") or "[]"))
+        except (ValueError, TypeError):
+            correct_indices = set()
         payload["options"] = [
             {
                 "number": i,
                 "text": text,
-                "is_correct": str(i) == str(correct),
+                "is_correct": i in correct_indices,
             }
             for i, text in enumerate(form.getlist("option_text"), start=1)
         ]

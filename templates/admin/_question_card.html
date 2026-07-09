@@ -1,6 +1,6 @@
 {# Shared question-content editor card, styled like the student player card.
    Included by admin/questions.html and admin/validate.html — both set up
-   `payload`, `options_list` and `correct_index` identically before including this. #}
+   `payload` and `options_list` identically before including this. #}
 <div class="glass-card player-card">
   <div class="card-meta" id="admin-card-meta"></div>
   <div class="card-tags" id="admin-card-tags"></div>
@@ -9,20 +9,20 @@
   <div class="type-block stack-sm" data-type="multiple_choice">
     <textarea name="question_text" class="question-prompt-input" rows="3" placeholder="טקסט השאלה">{{ payload.get('question_text') or '' }}</textarea>
     <div class="row between" style="margin-top:var(--space-2);">
-      <label class="text-xs muted" style="margin:0;">תשובות — סמן אחת בלבד כנכונה</label>
+      <label class="text-xs muted" style="margin:0;">תשובות — ניתן לסמן תשובה אחת או יותר כנכונות</label>
       <button type="button" class="btn btn-outline" onclick="addOption()">+ הוסף תשובה</button>
     </div>
     <div id="options" class="stack-sm" style="margin-top:var(--space-1);">
       {% for o in options_list %}
-      <div class="choice option-row{{ ' is-correct' if loop.index == correct_index.v }}">
-        <input type="radio" name="mc_correct_preview" class="option-correct-radio" style="width:1.1rem;height:1.1rem;flex-shrink:0;" {{ 'checked' if loop.index == correct_index.v }} />
+      <div class="choice option-row{{ ' is-correct' if o.get('is_correct') }}">
+        <input type="checkbox" class="option-correct-checkbox" style="width:1.1rem;height:1.1rem;flex-shrink:0;" {{ 'checked' if o.get('is_correct') }} />
         <input name="option_text" class="flex-1 choice-text-input" placeholder="תשובה {{ loop.index }}" value="{{ o.get('text', '') }}" />
         <span class="key">{{ loop.index }}</span>
         <button type="button" class="btn btn-outline" onclick="this.closest('.option-row').remove()">🗑</button>
       </div>
       {% endfor %}
     </div>
-    <input type="hidden" name="correct_option" id="correct_option_hidden" value="{{ correct_index.v }}" />
+    <input type="hidden" name="correct_options" id="correct_options_hidden" value="" />
   </div>
 
   {# ── Content: multiple_opinions_dropdown ── #}

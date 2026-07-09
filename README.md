@@ -342,7 +342,7 @@ Journal d'audit : chaque action d'un validateur (approve / correct / reject) est
   "tags": ["המתנה"]
 }
 ```
-Règles : au moins 2 options, numérotées en séquence à partir de 1 (1, 2, 3, …) sans trou ni doublon, exactement une seule `is_correct: true`. Le nombre d'options n'est plus figé à 4 — `options` peut contenir autant de propositions que nécessaire.
+Règles : au moins 2 options, numérotées en séquence à partir de 1 (1, 2, 3, …) sans trou ni doublon, au moins une `is_correct: true`. Le nombre d'options n'est plus figé à 4 — `options` peut contenir autant de propositions que nécessaire. Plusieurs options peuvent être marquées `is_correct: true` — dans ce cas l'étudiant doit sélectionner toutes les bonnes réponses (sélection multiple) pour que la question soit comptée juste.
 
 #### `true_false`
 ```json

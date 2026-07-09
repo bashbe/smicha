@@ -29,6 +29,7 @@
     dailyBonus: 0,
     results: new Array(origQuestions.length).fill(null),
     chosen: null,
+    multiSelected: new Set(),
     opinionAnswers: {},
     activeOpinionId: null,
     revealed: false,
@@ -105,9 +106,20 @@
   }
 
   function isCorrectAnswer(nq, key) {
-    if (nq.type !== "multiple_opinions_dropdown") return nq.correctKey === key;
-    const given = parseAnswerMap(key);
-    return (nq.decisors || []).every((d) => given[d.id] === d.correctChoice);
+    if (nq.type === "multiple_opinions_dropdown") {
+      const given = parseAnswerMap(key);
+      return (nq.decisors || []).every((d) => given[d.id] === d.correctChoice);
+    }
+    if (nq.type === "multiple_choice" && nq.multiSelect) {
+      let given;
+      try {
+        given = JSON.parse(key);
+        if (!Array.isArray(given)) given = [];
+      } catch (e) { given = []; }
+      const correct = nq.correctKeys || [];
+      return given.length === correct.length && correct.every((k) => given.includes(k));
+    }
+    return nq.correctKey === key;
   }
 
   const PARCOURS_LABELS = { bassar_bechalav: "בשר בחלב" };
@@ -219,6 +231,11 @@
     return btn;
   }
 
+  function submitMultiSelect() {
+    if (state.multiSelected.size === 0) return;
+    pick(JSON.stringify(Array.from(state.multiSelected)));
+  }
+
   function submitOpinions() {
     const nq = queue[state.idx].normalized;
     const missing = nq.decisors.some((d) => !state.opinionAnswers[d.id]);
@@ -254,7 +271,7 @@
   function next() {
     if (state.idx + 1 >= queue.length) { renderComplete(); return; }
     state.idx++;
-    state.chosen = null; state.opinionAnswers = {}; state.activeOpinionId = null; state.revealed = false;
+    state.chosen = null; state.multiSelected = new Set(); state.opinionAnswers = {}; state.activeOpinionId = null; state.revealed = false;
     state.feedback = null; state.showNext = false; state.start = Date.now();
     render();
   }
@@ -529,6 +546,39 @@
         wrap.appendChild(submitBtn);
       }
       answers.appendChild(wrap);
+    } else if (nq.multiSelect) {
+      nq.choices.forEach((c, i) => {
+        const isCorrect = (nq.correctKeys || []).includes(c.key);
+        const isChosen = state.multiSelected.has(c.key);
+        let cls = "choice";
+        let mark = null;
+        if (state.revealed) {
+          if (isCorrect) { cls += " is-correct"; mark = el("span", "success", icon("check", 18)); }
+          else if (isChosen) { cls += " is-wrong"; mark = el("span", "destructive", icon("x", 18)); }
+          else cls += " is-dim";
+        } else if (isChosen) {
+          cls += " is-selected";
+        }
+        const btn = el("button", cls);
+        if (!state.revealed) {
+          btn.addEventListener("click", () => {
+            if (state.multiSelected.has(c.key)) state.multiSelected.delete(c.key);
+            else state.multiSelected.add(c.key);
+            render();
+          });
+        } else {
+          btn.disabled = true;
+        }
+        btn.appendChild(el("span", "flex-1 line-height-loose", c.text));
+        btn.appendChild(mark || el("span", "key", c.label || String(i + 1)));
+        answers.appendChild(btn);
+      });
+      if (!state.revealed) {
+        const submitBtn = el("button", "btn btn-primary btn-block btn-lg mt-3", "בדוק תשובות");
+        submitBtn.disabled = state.multiSelected.size === 0;
+        submitBtn.addEventListener("click", submitMultiSelect);
+        answers.appendChild(submitBtn);
+      }
     } else {
       nq.choices.forEach((c, i) => {
         const isCorrect = nq.correctKey === c.key;

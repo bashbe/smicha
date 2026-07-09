@@ -79,8 +79,6 @@
       {% set payload = selected.payload or {} %}
       {% set qtype = payload.get('type') or selected.question_type or 'multiple_choice' %}
       {% set options_list = payload.get('options') or [{}, {}, {}, {}] %}
-      {% set correct_index = namespace(v=0) %}
-      {% for o in options_list %}{% if o.get('is_correct') %}{% set correct_index.v = loop.index %}{% endif %}{% endfor %}
       {% set cur_sections = (payload.exam_section if payload.exam_section is iterable and payload.exam_section is not string else [payload.exam_section]) if payload.exam_section else selected.section_list() %}
       {% set cur_tags = (selected.tags or []) | join(', ') %}
 

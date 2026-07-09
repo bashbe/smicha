@@ -113,8 +113,6 @@ def _validate_numbered_options(q, issues: list) -> None:
     correct = [o for o in options if isinstance(o, dict) and o.get("is_correct") is True]
     if len(correct) == 0:
         issues.append("No correct answer marked (is_correct: true)")
-    if len(correct) > 1:
-        issues.append("יש יותר מתשובה נכונה אחת")
 
 
 def normalize_imported_question(q) -> dict:
@@ -170,8 +168,8 @@ def normalize_imported_question(q) -> dict:
 
         if qtype == "multiple_choice":
             prompt = _text(q.get("question_text"))
-            correct = next(o for o in q["options"] if o.get("is_correct") is True)
-            correct_answer = str(correct["number"])
+            correct_opts = [o for o in q["options"] if o.get("is_correct") is True]
+            correct_answer = ",".join(str(o["number"]) for o in correct_opts)
             choices = [{"label": str(o["number"]), "text": _text(o.get("text"))} for o in q["options"]]
         elif qtype == "multiple_opinions_dropdown":
             prompt = _text(q.get("question_text"))
@@ -308,24 +306,36 @@ def normalize_db_question(row: dict) -> dict:
         }
 
     opts = payload.get("options") if isinstance(payload.get("options"), list) else []
-    correct_opt = next((o for o in opts if o.get("is_correct") is True), None)
+    correct_keys = [str(o["number"]) for o in opts if o.get("is_correct") is True]
+    if not correct_keys and row.get("correct_answer"):
+        correct_keys = [str(row["correct_answer"])]
     return {
         "type": qtype,
         "prompt": _text(payload.get("question_text")) or row.get("text") or "",
         "scenario": None,
         "choices": [{"key": str(o["number"]), "label": str(o["number"]), "text": _text(o.get("text"))} for o in opts],
-        "correctKey": str(correct_opt["number"]) if correct_opt else str(row.get("correct_answer") or ""),
+        "correctKey": correct_keys[0] if len(correct_keys) == 1 else None,
+        "correctKeys": correct_keys,
+        "multiSelect": len(correct_keys) > 1,
         "explanation": explanation,
     }
 
 
 def is_correct_answer(question: dict, key: str) -> bool:
-    if question["type"] != "multiple_opinions_dropdown":
-        return question["correctKey"] == key
-    try:
-        given = json.loads(key)
-        if not isinstance(given, dict):
+    if question["type"] == "multiple_opinions_dropdown":
+        try:
+            given = json.loads(key)
+            if not isinstance(given, dict):
+                given = {}
+        except (ValueError, TypeError):
             given = {}
-    except (ValueError, TypeError):
-        given = {}
-    return all(given.get(d["id"]) == d["correctChoice"] for d in question.get("decisors", []))
+        return all(given.get(d["id"]) == d["correctChoice"] for d in question.get("decisors", []))
+    if question["type"] == "multiple_choice" and question.get("multiSelect"):
+        try:
+            given = json.loads(key)
+            if not isinstance(given, list):
+                given = []
+        except (ValueError, TypeError):
+            given = []
+        return {str(g) for g in given} == set(question.get("correctKeys") or [])
+    return question["correctKey"] == key

@@ -56,8 +56,6 @@
       {% set payload = selected.payload or {} %}
       {% set qtype = payload.type or selected.question_type or 'multiple_choice' %}
       {% set options_list = payload.options or [{}, {}, {}, {}] %}
-      {% set correct_index = namespace(v=0) %}
-      {% for o in options_list %}{% if o.is_correct %}{% set correct_index.v = loop.index %}{% endif %}{% endfor %}
       {% set cur_tags = (selected.tags or []) | join(', ') %}
 
       <form method="post" id="vform" class="stack-sm">

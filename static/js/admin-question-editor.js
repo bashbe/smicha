@@ -22,21 +22,21 @@
       const qt = form.querySelector("[name=question_text]");
       if (qt && op) qt.value = op.value;
     }
-    // compute correct_option from the checked radio's position among option rows
+    // compute correct_options from the checked checkboxes' positions among option rows
     const rows = Array.from(document.querySelectorAll("#options .option-row"));
-    let correctIdx = 0;
+    const correctIndices = [];
     rows.forEach((row, i) => {
-      const radio = row.querySelector(".option-correct-radio");
-      if (radio && radio.checked) correctIdx = i + 1;
+      const cb = row.querySelector(".option-correct-checkbox");
+      if (cb && cb.checked) correctIndices.push(i + 1);
     });
-    const hidden = document.getElementById("correct_option_hidden");
-    if (hidden) hidden.value = correctIdx;
+    const hidden = document.getElementById("correct_options_hidden");
+    if (hidden) hidden.value = JSON.stringify(correctIndices);
   });
 
   function addOption() {
     const div = document.createElement("div");
     div.className = "choice option-row";
-    div.innerHTML = '<input type="radio" name="mc_correct_preview" class="option-correct-radio" style="width:1.1rem;height:1.1rem;flex-shrink:0;" />' +
+    div.innerHTML = '<input type="checkbox" class="option-correct-checkbox" style="width:1.1rem;height:1.1rem;flex-shrink:0;" />' +
       '<input name="option_text" class="flex-1 choice-text-input" placeholder="תשובה" />' +
       '<span class="key">' + (document.querySelectorAll("#options .option-row").length + 1) + '</span>' +
       '<button type="button" class="btn btn-outline" onclick="this.closest(\'.option-row\').remove()">🗑</button>';
@@ -110,17 +110,17 @@
   });
   updateCardPreview();
 
-  // ── Highlight the correct answer like the revealed state of the player card ──
+  // ── Highlight the correct answer(s) like the revealed state of the player card ──
   function refreshOptionCorrect() {
     document.querySelectorAll("#options .option-row").forEach((row) => {
-      const radio = row.querySelector(".option-correct-radio");
-      row.classList.toggle("is-correct", !!(radio && radio.checked));
+      const cb = row.querySelector(".option-correct-checkbox");
+      row.classList.toggle("is-correct", !!(cb && cb.checked));
     });
   }
   const optionsWrap = document.getElementById("options");
   if (optionsWrap) {
     optionsWrap.addEventListener("change", (e) => {
-      if (e.target.classList.contains("option-correct-radio")) refreshOptionCorrect();
+      if (e.target.classList.contains("option-correct-checkbox")) refreshOptionCorrect();
     });
   }
 
