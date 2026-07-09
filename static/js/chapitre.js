@@ -465,6 +465,11 @@
       refs.ratingBadge = el("div", "pill animate-pop-in rating-badge-pos " + state.feedback.ratingTone, state.feedback.ratingBadge);
       card.appendChild(refs.ratingBadge);
     }
+    if (q.tags && q.tags.length) {
+      const tagsRow = el("div", "card-tags");
+      q.tags.forEach((t) => tagsRow.appendChild(el("span", "card-tag", t)));
+      card.appendChild(tagsRow);
+    }
     cardUnified.appendChild(card);
 
     // answers

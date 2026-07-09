@@ -724,6 +724,8 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 .player-card    { position: relative; margin-top: var(--space-2); padding: var(--space-3); }
 .player-answers { position: relative; margin-top: var(--space-3); }
 .card-meta      { font-size: var(--text-sm); font-weight: 700; color: var(--muted); margin-bottom: var(--space-1); }
+.card-tags      { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-top: var(--space-2); }
+.card-tag       { display: inline-block; border-radius: var(--radius-pill); background: var(--accent-dim); color: var(--accent); padding: 0.2rem 0.5625rem; font-size: var(--text-xs); font-weight: 600; }
 .player-exp {
   position: fixed;
   inset-inline: 0;
