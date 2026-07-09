@@ -40,6 +40,16 @@
 
   const refs = {};
 
+  // The explanation/next-button bar is fixed to the screen, so it must live outside
+  // #player: an ancestor (#player itself) carries .animate-slide-up, whose keyframe
+  // leaves a lingering `transform` (fill-mode "both"), which would turn it into a
+  // containing block for position:fixed descendants and break the fixed positioning.
+  function removeExpPanel() {
+    const existing = document.querySelector("body > .player-exp");
+    if (existing) existing.remove();
+    document.body.classList.remove("has-player-exp");
+  }
+
   // ── helpers ────────────────────────────────────────────────────────────────
 
   function el(tag, cls, ...children) {
@@ -252,6 +262,7 @@
   // ── screens ────────────────────────────────────────────────────────────────
 
   function renderComplete() {
+    removeExpPanel();
     root.innerHTML = "";
     if (isRevision) { renderRevisionComplete(); }
     else { renderParcoursComplete(); }
@@ -373,6 +384,7 @@
     const isTrueFalse = nq.type === "true_false";
     const isOpinions = nq.type === "multiple_opinions_dropdown";
     root.innerHTML = "";
+    removeExpPanel();
     refs.exp = null;
     refs.ratingBadge = null;
 
@@ -543,18 +555,22 @@
     cardUnified.appendChild(answers);
     root.appendChild(cardUnified);
 
-    // explanation panel
+    // explanation panel — a full-width bar fixed to the bottom of the screen, outside the page flow.
+    // Appended to <body> (not #player) so it isn't caught by an ancestor's transform — see removeExpPanel().
     if (state.revealed && state.feedback) {
       const exp = el("div", "animate-slide-up player-exp");
+      const inner = el("div", "player-exp-inner");
       if (!state.feedback.isCorrect && state.combo === 0) {
-        exp.appendChild(el("div", "exp-combo-break", "הקומבו נשבר"));
+        inner.appendChild(el("div", "exp-combo-break", "הקומבו נשבר"));
       }
       if (state.feedback.explanation) {
-        exp.appendChild(el("p", "text-sm line-height-loose", state.feedback.explanation));
+        inner.appendChild(el("p", "text-sm line-height-loose", state.feedback.explanation));
       }
-      if (state.showNext) exp.appendChild(nextButton());
-      refs.exp = exp;
-      root.appendChild(exp);
+      if (state.showNext) inner.appendChild(nextButton());
+      exp.appendChild(inner);
+      refs.exp = inner;
+      document.body.appendChild(exp);
+      document.body.classList.add("has-player-exp");
     }
   }
 
