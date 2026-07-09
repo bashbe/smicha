@@ -100,6 +100,9 @@
     return (nq.decisors || []).every((d) => given[d.id] === d.correctChoice);
   }
 
+  const PARCOURS_LABELS = { bassar_bechalav: "בשר בחלב" };
+  function parcoursLabel(p) { return PARCOURS_LABELS[p] || p || ""; }
+
   function toHebNum(n) {
     if (!n || n <= 0) return String(n);
     const h = ["","ק","ר","ש","ת","תק","תר","תש","תת","תתק"];
@@ -428,6 +431,17 @@
 
     // question card
     const card = el("div", "glass-card player-card" + (state.revealed ? "" : " glow-indigo"));
+    const metaParts = [];
+    const pLabel = parcoursLabel(q.parcours);
+    if (pLabel) metaParts.push(pLabel);
+    const srcSubject = q.subject || cfg.subject;
+    if (srcSubject) metaParts.push(srcSubject);
+    const srcSiman = q.siman != null ? q.siman : Number(cfg.siman);
+    if (srcSiman) metaParts.push("סימן " + toHebNum(srcSiman));
+    if (q.seif !== null && q.seif !== undefined) metaParts.push("סעיף " + toHebNum(q.seif));
+    if (metaParts.length) {
+      card.appendChild(el("div", "card-meta", metaParts.join(" · ")));
+    }
     if (nq.scenario) {
       card.appendChild(el("div", "text-sm muted scenario-box", nq.scenario));
     }
@@ -534,12 +548,6 @@
       const exp = el("div", "animate-slide-up player-exp");
       if (!state.feedback.isCorrect && state.combo === 0) {
         exp.appendChild(el("div", "exp-combo-break", "הקומבו נשבר"));
-      }
-      if (q.seif !== null && q.seif !== undefined) {
-        const srcSubject = q.subject || cfg.subject;
-        const srcSiman = q.siman != null ? q.siman : Number(cfg.siman);
-        exp.appendChild(el("div", "exp-source",
-          "מקור: " + srcSubject + " · סימן " + toHebNum(srcSiman) + " · סעיף " + toHebNum(q.seif)));
       }
       if (state.feedback.explanation) {
         exp.appendChild(el("p", "text-sm line-height-loose", state.feedback.explanation));

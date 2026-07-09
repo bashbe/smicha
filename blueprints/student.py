@@ -282,7 +282,7 @@ def _load_chapitre(sp, base_filters: list, allowed: set[str] | None = None) -> l
     return [
         {
             "id": q.id, "difficulty": q.difficulty, "seif": q.seif,
-            "subject": q.subject, "siman": q.siman,
+            "subject": q.subject, "siman": q.siman, "parcours": q.parcours,
             "normalized": normalize_db_question(q.as_dict()),
         }
         for q in rows
@@ -390,6 +390,7 @@ def revision_jour():
             "seif": q.seif,
             "subject": q.subject,
             "siman": q.siman,
+            "parcours": q.parcours,
             "normalized": nq,
         })
 
@@ -466,7 +467,7 @@ def revision_siman_detail(subject: str, siman: int):
     questions = [
         {
             "id": q.id, "difficulty": q.difficulty, "seif": q.seif,
-            "subject": q.subject, "siman": q.siman,
+            "subject": q.subject, "siman": q.siman, "parcours": q.parcours,
             "normalized": normalize_db_question(q.as_dict()),
         }
         for q in rows
@@ -520,7 +521,7 @@ def revision_sujet_detail(tag: str):
     questions = [
         {
             "id": q.id, "difficulty": q.difficulty, "seif": q.seif,
-            "subject": q.subject, "siman": q.siman,
+            "subject": q.subject, "siman": q.siman, "parcours": q.parcours,
             "normalized": normalize_db_question(q.as_dict()),
         }
         for q in rows
@@ -551,7 +552,7 @@ def revision_aleatoire():
     questions = [
         {
             "id": q.id, "difficulty": q.difficulty, "seif": q.seif,
-            "subject": q.subject, "siman": q.siman,
+            "subject": q.subject, "siman": q.siman, "parcours": q.parcours,
             "normalized": normalize_db_question(q.as_dict()),
         }
         for q in sample

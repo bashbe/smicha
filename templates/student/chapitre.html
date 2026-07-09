@@ -14,8 +14,6 @@
   </div>
 {% else %}
   <div class="player-wrap">
-    <!-- Repère de référence : sibling de #player car le player réécrit son propre innerHTML. -->
-    <div class="daf-thread-label">{{ subject }} · סימן {{ siman | to_hebrew }}</div>
     <div id="player" class="animate-slide-up"
          data-questions='{{ questions | tojson }}'
          data-parcours-url="{{ url_for('student.parcours') }}"
