@@ -78,10 +78,9 @@
     {% else %}
       {% set payload = selected.payload or {} %}
       {% set qtype = payload.get('type') or selected.question_type or 'multiple_choice' %}
-      {% set opts = {} %}
-      {% for o in payload.get('options') or [] %}{% set _ = opts.update({o.number: o}) %}{% endfor %}
-      {% set correct_num = namespace(v=0) %}
-      {% for o in payload.get('options') or [] %}{% if o.get('is_correct') %}{% set correct_num.v = o.number %}{% endif %}{% endfor %}
+      {% set options_list = payload.get('options') or [{}, {}, {}, {}] %}
+      {% set correct_index = namespace(v=0) %}
+      {% for o in options_list %}{% if o.get('is_correct') %}{% set correct_index.v = loop.index %}{% endif %}{% endfor %}
       {% set cur_sections = (payload.exam_section if payload.exam_section is iterable and payload.exam_section is not string else [payload.exam_section]) if payload.exam_section else selected.section_list() %}
       {% set cur_tags = (selected.tags or []) | join(', ') %}
 
@@ -169,71 +168,78 @@
           </div>
         </div>
 
-        {# ── Content: multiple_choice ── #}
-        <div class="type-block stack-sm" data-type="multiple_choice">
-          <div>
-            <label>טקסט השאלה</label>
-            <textarea name="question_text" rows="3">{{ payload.get('question_text') or '' }}</textarea>
-          </div>
-          <label>תשובות — סמן אחת בלבד כנכונה</label>
-          {% for n in [1,2,3,4] %}
-          <div class="row gap-2" style="align-items:center;">
-            <input value="{{ n }}" disabled style="width:3rem;text-align:center;" />
-            <input name="option_text_{{ n }}" class="flex-1" placeholder="תשובה {{ n }}" value="{{ opts.get(n, {}).get('text', '') }}" />
-            <label style="margin:0;display:flex;align-items:center;gap:0.25rem;width:auto;">
-              <input type="radio" name="correct_option" value="{{ n }}" style="width:auto;" {{ 'checked' if correct_num.v == n }} /> נכונה
-            </label>
-          </div>
-          {% endfor %}
-        </div>
+        {# ── Question card — styled like the student player card ── #}
+        <div class="glass-card player-card">
+          <div class="card-meta" id="admin-card-meta"></div>
+          <div class="card-tags" id="admin-card-tags"></div>
 
-        {# ── Content: multiple_opinions_dropdown ── #}
-        <div class="type-block stack-sm" data-type="multiple_opinions_dropdown" style="display:none;">
-          <div>
-            <label>טקסט השאלה</label>
-            <textarea name="question_text_op" rows="3">{{ payload.get('question_text') or '' }}</textarea>
-          </div>
-          <div class="row between"><label>אפשרויות בדרופדאון</label><button type="button" class="btn btn-outline" onclick="addChoice()">+ הוסף</button></div>
-          <div id="choices">
-            {% for c in payload.get('dropdown_choices') or ['',''] %}
-            <div class="row gap-2" style="margin-bottom:0.5rem;">
-              <input name="dropdown_choice" class="flex-1" value="{{ c }}" placeholder="לדוגמה: מותר" />
-              <button type="button" class="btn btn-outline" onclick="this.parentNode.remove()">🗑</button>
+          {# ── Content: multiple_choice ── #}
+          <div class="type-block stack-sm" data-type="multiple_choice">
+            <textarea name="question_text" class="question-prompt-input" rows="3" placeholder="טקסט השאלה">{{ payload.get('question_text') or '' }}</textarea>
+            <div class="row between" style="margin-top:var(--space-2);">
+              <label class="text-xs muted" style="margin:0;">תשובות — סמן אחת בלבד כנכונה</label>
+              <button type="button" class="btn btn-outline" onclick="addOption()">+ הוסף תשובה</button>
             </div>
-            {% endfor %}
-          </div>
-          <div class="row between"><label>פוסקים ותשובה נכונה</label><button type="button" class="btn btn-outline" onclick="addDecisor()">+ הוסף</button></div>
-          <div id="decisors">
-            {% for d in payload.get('decisors') or [] %}
-            <div class="row gap-2" style="margin-bottom:0.5rem;">
-              <input name="decisor_id" value="{{ d.id }}" placeholder="id" style="width:6rem;" />
-              <input name="decisor_name" class="flex-1" value="{{ d.name }}" placeholder="שם הפוסק" />
-              <input name="decisor_correct" class="flex-1" value="{{ d.correct_choice }}" placeholder="עמדה נכונה" />
-              <button type="button" class="btn btn-outline" onclick="this.parentNode.remove()">🗑</button>
+            <div id="options" class="stack-sm" style="margin-top:var(--space-1);">
+              {% for o in options_list %}
+              <div class="choice option-row{{ ' is-correct' if loop.index == correct_index.v }}">
+                <input type="radio" name="mc_correct_preview" class="option-correct-radio" style="width:1.1rem;height:1.1rem;flex-shrink:0;" {{ 'checked' if loop.index == correct_index.v }} />
+                <input name="option_text" class="flex-1 choice-text-input" placeholder="תשובה {{ loop.index }}" value="{{ o.get('text', '') }}" />
+                <span class="key">{{ loop.index }}</span>
+                <button type="button" class="btn btn-outline" onclick="this.closest('.option-row').remove()">🗑</button>
+              </div>
+              {% endfor %}
             </div>
-            {% endfor %}
+            <input type="hidden" name="correct_option" id="correct_option_hidden" value="{{ correct_index.v }}" />
           </div>
-        </div>
 
-        {# ── Content: true_false ── #}
-        <div class="type-block stack-sm" data-type="true_false" style="display:none;">
-          <div>
-            <label>טקסט ההצהרה</label>
-            <textarea name="statement_text" rows="3">{{ payload.get('statement_text') or '' }}</textarea>
+          {# ── Content: multiple_opinions_dropdown ── #}
+          <div class="type-block stack-sm" data-type="multiple_opinions_dropdown" style="display:none;">
+            <textarea name="question_text_op" class="question-prompt-input" rows="3" placeholder="טקסט השאלה">{{ payload.get('question_text') or '' }}</textarea>
+            <div class="row between" style="margin-top:var(--space-2);"><label class="text-xs muted" style="margin:0;">אפשרויות בדרופדאון</label><button type="button" class="btn btn-outline" onclick="addChoice()">+ הוסף</button></div>
+            <div id="choices">
+              {% for c in payload.get('dropdown_choices') or ['',''] %}
+              <div class="row gap-2" style="margin-bottom:0.5rem;">
+                <input name="dropdown_choice" class="flex-1" value="{{ c }}" placeholder="לדוגמה: מותר" />
+                <button type="button" class="btn btn-outline" onclick="this.parentNode.remove()">🗑</button>
+              </div>
+              {% endfor %}
+            </div>
+            <div class="row between"><label class="text-xs muted" style="margin:0;">פוסקים ותשובה נכונה</label><button type="button" class="btn btn-outline" onclick="addDecisor()">+ הוסף</button></div>
+            <div id="decisors">
+              {% for d in payload.get('decisors') or [] %}
+              <div class="row gap-2" style="margin-bottom:0.5rem;">
+                <input name="decisor_id" value="{{ d.id }}" placeholder="id" style="width:6rem;" />
+                <input name="decisor_name" class="flex-1" value="{{ d.name }}" placeholder="שם הפוסק" />
+                <input name="decisor_correct" class="flex-1" value="{{ d.correct_choice }}" placeholder="עמדה נכונה" />
+                <button type="button" class="btn btn-outline" onclick="this.parentNode.remove()">🗑</button>
+              </div>
+              {% endfor %}
+            </div>
           </div>
-          <div>
-            <label>התשובה הנכונה</label>
-            <select name="correct_answer">
-              <option value="true" {{ 'selected' if payload.get('correct_answer') != false }}>נכון</option>
-              <option value="false" {{ 'selected' if payload.get('correct_answer') == false }}>לא נכון</option>
-            </select>
-          </div>
-        </div>
 
-        {# ── Explanation ── #}
-        <div>
-          <label>הסבר <span class="destructive">*</span></label>
-          <textarea name="explanation" rows="3">{{ payload.get('explanation') or selected.explanation or '' }}</textarea>
+          {# ── Content: true_false ── #}
+          <div class="type-block stack-sm" data-type="true_false" style="display:none;">
+            <textarea name="statement_text" class="question-prompt-input" rows="3" placeholder="טקסט ההצהרה">{{ payload.get('statement_text') or '' }}</textarea>
+            <div class="choice-grid" style="margin-top:var(--space-2);">
+              <label class="choice choice-tf{{ ' is-correct' if payload.get('correct_answer') != false }}">
+                <input type="radio" name="correct_answer" value="true" style="width:1.1rem;height:1.1rem;" {{ 'checked' if payload.get('correct_answer') != false }} />
+                <span style="font-size:1.5rem;">✓</span>
+                <span class="text-lg bold">נכון</span>
+              </label>
+              <label class="choice choice-tf{{ ' is-correct' if payload.get('correct_answer') == false }}">
+                <input type="radio" name="correct_answer" value="false" style="width:1.1rem;height:1.1rem;" {{ 'checked' if payload.get('correct_answer') == false }} />
+                <span style="font-size:1.5rem;">✗</span>
+                <span class="text-lg bold">לא נכון</span>
+              </label>
+            </div>
+          </div>
+
+          {# ── Explanation — shown like the fixed explanation panel students see ── #}
+          <div style="margin-top:var(--space-3);border-top:1px solid var(--border);padding-top:var(--space-2);">
+            <label class="text-xs muted">הסבר <span class="destructive">*</span></label>
+            <textarea name="explanation" rows="3">{{ payload.get('explanation') or selected.explanation or '' }}</textarea>
+          </div>
         </div>
 
         {# ── Note ── #}
@@ -269,6 +275,89 @@
             const qt = form.querySelector("[name=question_text]");
             if (qt && op) qt.value = op.value;
           }
+          // compute correct_option from the checked radio's position among option rows
+          const rows = Array.from(document.querySelectorAll("#options .option-row"));
+          let correctIdx = 0;
+          rows.forEach((row, i) => {
+            const radio = row.querySelector(".option-correct-radio");
+            if (radio && radio.checked) correctIdx = i + 1;
+          });
+          document.getElementById("correct_option_hidden").value = correctIdx;
+        });
+
+        function addOption() {
+          const div = document.createElement("div");
+          div.className = "choice option-row";
+          div.innerHTML = '<input type="radio" name="mc_correct_preview" class="option-correct-radio" style="width:1.1rem;height:1.1rem;flex-shrink:0;" />' +
+            '<input name="option_text" class="flex-1 choice-text-input" placeholder="תשובה" />' +
+            '<span class="key">' + (document.querySelectorAll("#options .option-row").length + 1) + '</span>' +
+            '<button type="button" class="btn btn-outline" onclick="this.closest(\'.option-row\').remove()">🗑</button>';
+          document.getElementById("options").appendChild(div);
+        }
+
+        // ── Question card preview (mirrors the student player card: meta line + tags) ──
+        const PARCOURS_LABELS = { bassar_bechalav: "בשר בחלב" };
+        function toHebNum(n) {
+          if (!n || n <= 0) return String(n);
+          const h = ["","ק","ר","ש","ת","תק","תר","תש","תת","תתק"];
+          const t = ["","י","כ","ל","מ","נ","ס","ע","פ","צ"];
+          const o = ["","א","ב","ג","ד","ה","ו","ז","ח","ט"];
+          let r = h[Math.floor(n / 100)];
+          const rem = n % 100;
+          if (rem === 15) return r + "טו";
+          if (rem === 16) return r + "טז";
+          r += t[Math.floor(rem / 10)] + o[rem % 10];
+          return r;
+        }
+        function updateCardPreview() {
+          const parcoursSel = form.querySelector("[name=parcours]");
+          const subjectInput = form.querySelector("[name=subject]");
+          const simanInput = form.querySelector("[name=siman]");
+          const seifInput = form.querySelector("[name=seif]");
+          const tagsInput = form.querySelector("[name=tags]");
+          const parts = [];
+          if (parcoursSel && parcoursSel.value) parts.push(PARCOURS_LABELS[parcoursSel.value] || parcoursSel.value);
+          if (subjectInput && subjectInput.value) parts.push(subjectInput.value);
+          if (simanInput && simanInput.value) parts.push("סימן " + toHebNum(Number(simanInput.value)));
+          if (seifInput && seifInput.value) parts.push("סעיף " + toHebNum(Number(seifInput.value)));
+          document.getElementById("admin-card-meta").textContent = parts.join(" · ");
+
+          const tagsWrap = document.getElementById("admin-card-tags");
+          tagsWrap.innerHTML = "";
+          (tagsInput && tagsInput.value ? tagsInput.value.split(",") : [])
+            .map((t) => t.trim()).filter(Boolean)
+            .forEach((t) => {
+              const span = document.createElement("span");
+              span.className = "card-tag";
+              span.textContent = t;
+              tagsWrap.appendChild(span);
+            });
+        }
+        ["parcours", "subject", "siman", "seif", "tags"].forEach((name) => {
+          const field = form.querySelector(`[name=${name}]`);
+          if (field) field.addEventListener("input", updateCardPreview);
+        });
+        updateCardPreview();
+
+        // ── Highlight the correct answer like the revealed state of the player card ──
+        function refreshOptionCorrect() {
+          document.querySelectorAll("#options .option-row").forEach((row) => {
+            const radio = row.querySelector(".option-correct-radio");
+            row.classList.toggle("is-correct", !!(radio && radio.checked));
+          });
+        }
+        document.getElementById("options").addEventListener("change", (e) => {
+          if (e.target.classList.contains("option-correct-radio")) refreshOptionCorrect();
+        });
+
+        function refreshTFCorrect() {
+          document.querySelectorAll('.type-block[data-type="true_false"] .choice-tf').forEach((row) => {
+            const radio = row.querySelector('input[type="radio"]');
+            row.classList.toggle("is-correct", !!(radio && radio.checked));
+          });
+        }
+        document.querySelectorAll('.type-block[data-type="true_false"] input[name="correct_answer"]').forEach((r) => {
+          r.addEventListener("change", refreshTFCorrect);
         });
 
         function addChoice() {

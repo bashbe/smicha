@@ -418,6 +418,21 @@ td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
 .choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-1); }
 .choice-tf   { flex-direction: column; align-items: center; justify-content: center; min-height: 88px; text-align: center; }
 
+/* ---- Éditeur admin : réutilise l'habillage carte/choix du lecteur étudiant ---- */
+label.choice { cursor: pointer; }
+.question-prompt-input {
+  display: block; width: 100%;
+  border: none; background: transparent; padding: 0;
+  font-size: var(--text-lg); line-height: 1.6;
+  color: var(--fg); font-family: inherit; resize: vertical;
+}
+.question-prompt-input:focus { outline: none; }
+.choice-text-input {
+  border: none; background: transparent; padding: 0;
+  font-size: var(--text-base); color: inherit; font-family: inherit;
+}
+.choice-text-input:focus { outline: none; }
+
 /* ---- Points de progression ---- */
 .dot { height: 8px; width: 8px; border-radius: var(--radius-pill); background: var(--border); transition: all 0.2s; flex-shrink: 0; }
 .dot.correct    { background: var(--success); }
