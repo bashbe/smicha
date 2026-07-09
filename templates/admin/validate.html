@@ -58,6 +58,7 @@
       {% set options_list = payload.options or [{}, {}, {}, {}] %}
       {% set correct_index = namespace(v=0) %}
       {% for o in options_list %}{% if o.is_correct %}{% set correct_index.v = loop.index %}{% endif %}{% endfor %}
+      {% set cur_tags = (selected.tags or []) | join(', ') %}
 
       <form method="post" id="vform" class="stack-sm">
         <input type="hidden" name="action" value="approve" />
@@ -90,6 +91,13 @@
                 <option value="{{ val }}" {{ 'selected' if val in cur_sections }}>{{ lbl }}</option>
                 {% endfor %}
               </select>
+            </div>
+          </div>
+
+          <div class="grid grid-3" style="margin-top:0.75rem;">
+            <div>
+              <label>תגיות (פסיק כמפריד)</label>
+              <input name="tags" value="{{ cur_tags }}" placeholder="לדוגמה: המתנה, מחלוקת" />
             </div>
           </div>
 
