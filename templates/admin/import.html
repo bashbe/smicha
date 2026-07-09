@@ -28,19 +28,20 @@
     </form>
   </div>
 
-  <div class="card" style="padding:0;overflow-x:auto;">
-    <table>
-      <thead><tr><th>מצב</th><th>סוג</th><th>טקסט</th></tr></thead>
-      <tbody>
-        {% for r in rows[:100] %}
-        <tr>
-          <td>{% if r.valid %}<span class="success">✓</span>{% else %}<span class="destructive" title="{{ r.issue }}">✗ {{ r.issue }}</span>{% endif %}</td>
-          <td class="text-xs muted">{{ type_label.get(r.raw.type, r.raw.type) if r.raw.type else "—" }}</td>
-          <td class="truncate">{{ r.raw.question_text or r.raw.scenario_text or r.raw.statement_text or "—" }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="card" style="padding:0;">
+    {% for r in rows[:100] %}
+    <div style="border-bottom:1px solid var(--border);padding:0.625rem 0.75rem;">
+      <div class="row between" style="margin-bottom:0.25rem;gap:0.5rem;">
+        {% if r.valid %}
+        <span class="badge" style="background:rgba(34,197,94,0.15);color:#22c55e;font-size:0.65rem;">✓ תקינה</span>
+        {% else %}
+        <span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;font-size:0.65rem;" title="{{ r.issue }}">✗ {{ r.issue }}</span>
+        {% endif %}
+        <span class="badge text-xs">{{ type_label.get(r.raw.type, r.raw.type) if r.raw.type else "—" }}</span>
+      </div>
+      <div class="text-sm truncate">{{ r.raw.question_text or r.raw.scenario_text or r.raw.statement_text or "—" }}</div>
+    </div>
+    {% endfor %}
     {% if rows | length > 100 %}<p class="center-text text-xs muted" style="padding:0.5rem;">מציג 100 ראשונות מתוך {{ rows | length }}</p>{% endif %}
   </div>
   {% endif %}

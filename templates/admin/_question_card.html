@@ -1,0 +1,75 @@
+{# Shared question-content editor card, styled like the student player card.
+   Included by admin/questions.html and admin/validate.html — both set up
+   `payload`, `options_list` and `correct_index` identically before including this. #}
+<div class="glass-card player-card">
+  <div class="card-meta" id="admin-card-meta"></div>
+  <div class="card-tags" id="admin-card-tags"></div>
+
+  {# ── Content: multiple_choice ── #}
+  <div class="type-block stack-sm" data-type="multiple_choice">
+    <textarea name="question_text" class="question-prompt-input" rows="3" placeholder="טקסט השאלה">{{ payload.get('question_text') or '' }}</textarea>
+    <div class="row between" style="margin-top:var(--space-2);">
+      <label class="text-xs muted" style="margin:0;">תשובות — סמן אחת בלבד כנכונה</label>
+      <button type="button" class="btn btn-outline" onclick="addOption()">+ הוסף תשובה</button>
+    </div>
+    <div id="options" class="stack-sm" style="margin-top:var(--space-1);">
+      {% for o in options_list %}
+      <div class="choice option-row{{ ' is-correct' if loop.index == correct_index.v }}">
+        <input type="radio" name="mc_correct_preview" class="option-correct-radio" style="width:1.1rem;height:1.1rem;flex-shrink:0;" {{ 'checked' if loop.index == correct_index.v }} />
+        <input name="option_text" class="flex-1 choice-text-input" placeholder="תשובה {{ loop.index }}" value="{{ o.get('text', '') }}" />
+        <span class="key">{{ loop.index }}</span>
+        <button type="button" class="btn btn-outline" onclick="this.closest('.option-row').remove()">🗑</button>
+      </div>
+      {% endfor %}
+    </div>
+    <input type="hidden" name="correct_option" id="correct_option_hidden" value="{{ correct_index.v }}" />
+  </div>
+
+  {# ── Content: multiple_opinions_dropdown ── #}
+  <div class="type-block stack-sm" data-type="multiple_opinions_dropdown" style="display:none;">
+    <textarea name="question_text_op" class="question-prompt-input" rows="3" placeholder="טקסט השאלה">{{ payload.get('question_text') or '' }}</textarea>
+    <div class="row between" style="margin-top:var(--space-2);"><label class="text-xs muted" style="margin:0;">אפשרויות בדרופדאון</label><button type="button" class="btn btn-outline" onclick="addChoice()">+ הוסף</button></div>
+    <div id="choices">
+      {% for c in payload.get('dropdown_choices') or ['',''] %}
+      <div class="row gap-2" style="margin-bottom:0.5rem;">
+        <input name="dropdown_choice" class="flex-1" value="{{ c }}" placeholder="לדוגמה: מותר" />
+        <button type="button" class="btn btn-outline" onclick="this.parentNode.remove()">🗑</button>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="row between"><label class="text-xs muted" style="margin:0;">פוסקים ותשובה נכונה</label><button type="button" class="btn btn-outline" onclick="addDecisor()">+ הוסף</button></div>
+    <div id="decisors">
+      {% for d in payload.get('decisors') or [] %}
+      <div class="row gap-2" style="margin-bottom:0.5rem;">
+        <input name="decisor_id" value="{{ d.id }}" placeholder="id" style="width:6rem;" />
+        <input name="decisor_name" class="flex-1" value="{{ d.name }}" placeholder="שם הפוסק" />
+        <input name="decisor_correct" class="flex-1" value="{{ d.correct_choice }}" placeholder="עמדה נכונה" />
+        <button type="button" class="btn btn-outline" onclick="this.parentNode.remove()">🗑</button>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {# ── Content: true_false ── #}
+  <div class="type-block stack-sm" data-type="true_false" style="display:none;">
+    <textarea name="statement_text" class="question-prompt-input" rows="3" placeholder="טקסט ההצהרה">{{ payload.get('statement_text') or '' }}</textarea>
+    <div class="choice-grid" style="margin-top:var(--space-2);">
+      <label class="choice choice-tf{{ ' is-correct' if payload.get('correct_answer') != false }}">
+        <input type="radio" name="correct_answer" value="true" style="width:1.1rem;height:1.1rem;" {{ 'checked' if payload.get('correct_answer') != false }} />
+        <span style="font-size:1.5rem;">✓</span>
+        <span class="text-lg bold">נכון</span>
+      </label>
+      <label class="choice choice-tf{{ ' is-correct' if payload.get('correct_answer') == false }}">
+        <input type="radio" name="correct_answer" value="false" style="width:1.1rem;height:1.1rem;" {{ 'checked' if payload.get('correct_answer') == false }} />
+        <span style="font-size:1.5rem;">✗</span>
+        <span class="text-lg bold">לא נכון</span>
+      </label>
+    </div>
+  </div>
+
+  {# ── Explanation — shown like the fixed explanation panel students see ── #}
+  <div style="margin-top:var(--space-3);border-top:1px solid var(--border);padding-top:var(--space-2);">
+    <label class="text-xs muted">הסבר <span class="destructive">*</span></label>
+    <textarea name="explanation" rows="3">{{ payload.get('explanation') or selected.explanation or '' }}</textarea>
+  </div>
+</div>

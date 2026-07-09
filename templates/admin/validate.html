@@ -55,10 +55,9 @@
     {% else %}
       {% set payload = selected.payload or {} %}
       {% set qtype = payload.type or selected.question_type or 'multiple_choice' %}
-      {% set opts = {} %}
-      {% for o in payload.options or [] %}{% set _ = opts.update({o.number: o}) %}{% endfor %}
-      {% set correct_num = namespace(v=0) %}
-      {% for o in payload.options or [] %}{% if o.is_correct %}{% set correct_num.v = o.number %}{% endif %}{% endfor %}
+      {% set options_list = payload.options or [{}, {}, {}, {}] %}
+      {% set correct_index = namespace(v=0) %}
+      {% for o in options_list %}{% if o.is_correct %}{% set correct_index.v = loop.index %}{% endif %}{% endfor %}
 
       <form method="post" id="vform" class="stack-sm">
         <input type="hidden" name="action" value="approve" />
@@ -94,69 +93,9 @@
             </div>
           </div>
 
-          <!-- multiple_choice -->
-          <div class="type-block stack-sm" data-type="multiple_choice" style="margin-top:1rem;">
-            <div>
-              <label>טקסט השאלה</label>
-              <textarea name="question_text" rows="3">{{ payload.question_text or '' }}</textarea>
-            </div>
-            <label>תשובות — סמן אחת בלבד כנכונה</label>
-            {% for n in [1,2,3,4] %}
-            <div class="row gap-2" style="align-items:center;">
-              <input value="{{ n }}" disabled style="width:3rem;text-align:center;" />
-              <input name="option_text_{{ n }}" class="flex-1" placeholder="תשובה {{ n }}" value="{{ opts.get(n, {}).get('text', '') }}" />
-              <label style="margin:0;display:flex;align-items:center;gap:0.25rem;width:auto;">
-                <input type="radio" name="correct_option" value="{{ n }}" style="width:auto;" {{ 'checked' if correct_num.v == n }} /> נכונה
-              </label>
-            </div>
-            {% endfor %}
-          </div>
-
-          <!-- multiple_opinions_dropdown -->
-          <div class="type-block stack-sm" data-type="multiple_opinions_dropdown" style="margin-top:1rem;display:none;">
-            <div>
-              <label>טקסט השאלה</label>
-              <textarea name="question_text_op" rows="3">{{ payload.question_text or '' }}</textarea>
-            </div>
-            <div class="row between"><label>אפשרויות בדרופדאון</label><button type="button" class="btn btn-outline" onclick="addChoice()">+ הוסף</button></div>
-            <div id="choices">
-              {% for c in payload.dropdown_choices or ['',''] %}
-              <div class="row gap-2" style="margin-bottom:0.5rem;"><input name="dropdown_choice" class="flex-1" value="{{ c }}" placeholder="לדוגמה: מותר" /><button type="button" class="btn btn-outline" onclick="this.parentNode.remove()">🗑</button></div>
-              {% endfor %}
-            </div>
-            <div class="row between"><label>פוסקים ותשובה נכונה</label><button type="button" class="btn btn-outline" onclick="addDecisor()">+ הוסף</button></div>
-            <div id="decisors">
-              {% for d in payload.decisors or [] %}
-              <div class="row gap-2" style="margin-bottom:0.5rem;">
-                <input name="decisor_id" value="{{ d.id }}" placeholder="id" style="width:6rem;" />
-                <input name="decisor_name" class="flex-1" value="{{ d.name }}" placeholder="שם הפוסק" />
-                <input name="decisor_correct" class="flex-1" value="{{ d.correct_choice }}" placeholder="עמדה נכונה" />
-                <button type="button" class="btn btn-outline" onclick="this.parentNode.remove()">🗑</button>
-              </div>
-              {% endfor %}
-            </div>
-          </div>
-
-          <!-- true_false -->
-          <div class="type-block stack-sm" data-type="true_false" style="margin-top:1rem;display:none;">
-            <div>
-              <label>טקסט ההצהרה</label>
-              <textarea name="statement_text" rows="3">{{ payload.statement_text or '' }}</textarea>
-            </div>
-            <div>
-              <label>התשובה הנכונה</label>
-              <select name="correct_answer">
-                <option value="true" {{ 'selected' if payload.correct_answer != false }}>נכון</option>
-                <option value="false" {{ 'selected' if payload.correct_answer == false }}>לא נכון</option>
-              </select>
-            </div>
-          </div>
-
-          <div style="margin-top:1rem;">
-            <label>הסבר</label>
-            <textarea name="explanation" rows="3">{{ payload.explanation or selected.explanation or '' }}</textarea>
-          </div>
         </div>
+
+        {% include "admin/_question_card.html" %}
 
         <div class="grid grid-3">
           <div>
@@ -182,76 +121,9 @@
         </div>
       </form>
 
-      <script>
-        // For opinions, the question text field name differs; sync it before submit.
-        const form = document.getElementById("vform");
-        const qtypeSel = document.getElementById("qtype");
-        function refreshType() {
-          const t = qtypeSel.value;
-          document.querySelectorAll(".type-block").forEach((b) => {
-            b.style.display = b.dataset.type.split(" ").includes(t) ? "" : "none";
-          });
-        }
-        qtypeSel.addEventListener("change", refreshType);
-        refreshType();
-
-        form.addEventListener("submit", () => {
-          // map opinions question text into the shared question_text field
-          if (qtypeSel.value === "multiple_opinions_dropdown") {
-            const op = form.querySelector("[name=question_text_op]");
-            let qt = form.querySelector("[name=question_text]");
-            if (qt && op) qt.value = op.value;
-          }
-        });
-
-        function addChoice() {
-          const div = document.createElement("div");
-          div.className = "row gap-2"; div.style.marginBottom = "0.5rem";
-          div.innerHTML = '<input name="dropdown_choice" class="flex-1" placeholder="לדוגמה: מותר" /><button type="button" class="btn btn-outline" onclick="this.parentNode.remove()">🗑</button>';
-          document.getElementById("choices").appendChild(div);
-        }
-        function addDecisor() {
-          const div = document.createElement("div");
-          div.className = "row gap-2"; div.style.marginBottom = "0.5rem";
-          div.innerHTML = '<input name="decisor_id" value="dec_' + (document.querySelectorAll("[name=decisor_id]").length + 1) + '" style="width:6rem;" /><input name="decisor_name" class="flex-1" placeholder="שם הפוסק" /><input name="decisor_correct" class="flex-1" placeholder="עמדה נכונה" /><button type="button" class="btn btn-outline" onclick="this.parentNode.remove()">🗑</button>';
-          document.getElementById("decisors").appendChild(div);
-        }
-      </script>
+      <script src="{{ url_for('static', filename='js/admin-question-editor.js') }}"></script>
     {% endif %}
   </section>
 </div>
-<script>
-(function(){
-  var tabBar = document.querySelector('.admin-tab-bar');
-  if (!tabBar) return;
-  var listPanel = document.querySelector('[data-panel="list"]');
-  var editorPanel = document.querySelector('[data-panel="editor"]');
-  var isMobile = window.innerWidth <= 768;
-  function showPanel(name) {
-    if (!isMobile) return;
-    var isEditor = name === 'editor';
-    listPanel.classList.toggle('panel-hidden', isEditor);
-    editorPanel.classList.toggle('panel-hidden', !isEditor);
-    tabBar.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.target === name); });
-  }
-  var hasSelection = tabBar.dataset.hasSelection === 'true';
-  if (isMobile) {
-    if (hasSelection) {
-      listPanel.classList.add('panel-hidden');
-      tabBar.querySelector('[data-target="list"]').classList.remove('active');
-      tabBar.querySelector('[data-target="editor"]').classList.add('active');
-    } else {
-      editorPanel.classList.add('panel-hidden');
-      tabBar.querySelector('[data-target="list"]').classList.add('active');
-      tabBar.querySelector('[data-target="editor"]').classList.remove('active');
-    }
-  }
-  tabBar.querySelectorAll('.tab-btn').forEach(function(b){
-    b.addEventListener('click', function(){ showPanel(b.dataset.target); });
-  });
-  listPanel.querySelectorAll('a').forEach(function(a){
-    a.addEventListener('click', function(){ if (isMobile) showPanel('editor'); });
-  });
-})();
-</script>
+<script src="{{ url_for('static', filename='js/admin-tab-bar.js') }}"></script>
 {% endblock %}
