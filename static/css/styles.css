@@ -1570,3 +1570,29 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
     font-size: var(--text-xl);
   }
 }
+
+/* ---- Bandeau de mise à jour (service worker) ---- */
+.sw-update-banner {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2) calc(var(--space-1) + env(safe-area-inset-bottom));
+  background: var(--fg);
+  color: var(--bg);
+  font-size: var(--text-sm);
+}
+.sw-update-banner[hidden] { display: none; }
+.sw-update-banner button {
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 0.4rem 1rem;
+  background: var(--accent);
+  color: #FFFFFF;
+  font-weight: 700;
+  cursor: pointer;
+}
