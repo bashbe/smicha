@@ -6,11 +6,29 @@
 
   const qtypeSel = document.getElementById("qtype");
 
+  // ── Auto-growing textareas: option text, dropdown choices, decisor name/answer ──
+  // These look like single-line fields but must never hide overflow text the way a
+  // real <input> would on a narrow screen — grow to fit their content instead.
+  // Elements inside a display:none ancestor always report scrollHeight 0, so this
+  // must run AFTER refreshType() has made the active type-block visible, and again
+  // whenever the type changes (a field hidden at load time was never sized).
+  function autoGrow(el) {
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  }
+  function autoGrowAll() {
+    form.querySelectorAll("textarea.auto-grow").forEach(autoGrow);
+  }
+  form.addEventListener("input", (e) => {
+    if (e.target.classList && e.target.classList.contains("auto-grow")) autoGrow(e.target);
+  });
+
   function refreshType() {
     const t = qtypeSel.value;
     document.querySelectorAll(".type-block").forEach((b) => {
       b.style.display = b.dataset.type.split(" ").includes(t) ? "" : "none";
     });
+    autoGrowAll();
   }
   qtypeSel.addEventListener("change", refreshType);
   refreshType();
@@ -37,7 +55,7 @@
     const div = document.createElement("div");
     div.className = "choice option-row";
     div.innerHTML = '<input type="checkbox" class="option-correct-checkbox" style="width:1.1rem;height:1.1rem;flex-shrink:0;" />' +
-      '<input name="option_text" class="flex-1 choice-text-input" placeholder="תשובה" />' +
+      '<textarea name="option_text" rows="1" class="flex-1 choice-text-input auto-grow" placeholder="תשובה"></textarea>' +
       '<span class="key">' + (document.querySelectorAll("#options .option-row").length + 1) + '</span>' +
       '<button type="button" class="btn btn-outline" onclick="this.closest(\'.option-row\').remove()">🗑</button>';
     document.getElementById("options").appendChild(div);
@@ -45,18 +63,22 @@
 
   function addChoice() {
     const div = document.createElement("div");
-    div.className = "row gap-2";
+    div.className = "row gap-2 opinions-field-row";
     div.style.marginBottom = "0.5rem";
-    div.innerHTML = '<input name="dropdown_choice" class="flex-1" placeholder="לדוגמה: מותר" /><button type="button" class="btn btn-outline" onclick="this.parentNode.remove()">🗑</button>';
+    div.innerHTML = '<textarea name="dropdown_choice" rows="1" class="flex-1 auto-grow" placeholder="לדוגמה: מותר"></textarea><button type="button" class="btn btn-outline" onclick="this.parentNode.remove()">🗑</button>';
     document.getElementById("choices").appendChild(div);
   }
 
   function addDecisor() {
     const n = document.querySelectorAll("[name=decisor_id]").length + 1;
     const div = document.createElement("div");
-    div.className = "row gap-2";
-    div.style.marginBottom = "0.5rem";
-    div.innerHTML = '<input name="decisor_id" value="dec_' + n + '" style="width:6rem;" /><input name="decisor_name" class="flex-1" placeholder="שם הפוסק" /><input name="decisor_correct" class="flex-1" placeholder="עמדה נכונה" /><button type="button" class="btn btn-outline" onclick="this.parentNode.remove()">🗑</button>';
+    div.className = "decisor-row";
+    div.innerHTML = '<div class="row between decisor-row-head">' +
+      '<input name="decisor_id" value="dec_' + n + '" class="decisor-id-input" />' +
+      '<button type="button" class="btn btn-outline" onclick="this.closest(\'.decisor-row\').remove()">🗑</button>' +
+      '</div>' +
+      '<textarea name="decisor_name" rows="1" class="auto-grow" placeholder="שם הפוסק"></textarea>' +
+      '<textarea name="decisor_correct" rows="1" class="auto-grow" placeholder="עמדה נכונה"></textarea>';
     document.getElementById("decisors").appendChild(div);
   }
   // exposed for the inline onclick="addOption()" / addChoice() / addDecisor() handlers

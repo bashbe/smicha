@@ -438,6 +438,31 @@ label.choice { cursor: pointer; }
 }
 .choice-text-input:focus { outline: none; }
 
+/* Auto-growing single-line-looking textareas: never hide overflow text behind a
+   fixed-width scroll like a real single-line <input> would — they wrap and grow
+   instead (height is set in JS on input/load, see admin-question-editor.js). */
+.auto-grow { resize: none; overflow: hidden; line-height: 1.4; }
+.opinions-field-row { align-items: flex-start; }
+
+/* Opinions decisor row: a bordered card of borderless fields, so a long name or
+   correct-answer phrase wraps to multiple lines instead of being clipped. */
+.decisor-row {
+  display: flex; flex-direction: column; gap: 0.35rem;
+  border: 1px solid var(--border); border-radius: var(--radius-btn);
+  background: var(--surface); padding: var(--space-2); margin-bottom: 0.5rem;
+}
+.decisor-row-head { align-items: center; }
+.decisor-id-input {
+  width: 6rem; border: none; background: transparent; padding: 0;
+  font-size: var(--text-sm); color: var(--muted); font-family: inherit;
+}
+.decisor-id-input:focus { outline: none; }
+.decisor-row textarea {
+  width: 100%; border: none; background: transparent; padding: 0;
+  font-size: var(--text-base); color: inherit; font-family: inherit;
+}
+.decisor-row textarea:focus { outline: none; }
+
 /* ---- Points de progression ---- */
 .dot { height: 8px; width: 8px; border-radius: var(--radius-pill); background: var(--border); transition: all 0.2s; flex-shrink: 0; }
 .dot.correct    { background: var(--success); }
