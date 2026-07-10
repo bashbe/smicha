@@ -746,6 +746,29 @@ label.choice { cursor: pointer; }
 .card-meta      { font-size: var(--text-sm); font-weight: 700; color: var(--muted); margin-bottom: var(--space-1); }
 .card-tags      { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-top: var(--space-2); }
 .card-tag       { display: inline-block; border-radius: var(--radius-pill); background: var(--accent-dim); color: var(--accent); padding: 0.2rem 0.5625rem; font-size: var(--text-xs); font-weight: 600; }
+
+/* ---- Éditeur admin : siman/seif/tags édités directement dans la carte ---- */
+.card-meta-editable { display: flex; align-items: center; flex-wrap: wrap; }
+.card-meta-input {
+  width: 3.5rem; border: none; border-bottom: 1px dashed var(--muted);
+  background: transparent; padding: 0 0.125rem; font-size: var(--text-sm);
+  font-weight: 700; color: var(--muted); text-align: center;
+}
+.card-meta-input:focus { outline: none; border-bottom-color: var(--accent); color: var(--fg); }
+.card-meta-input::-webkit-outer-spin-button,
+.card-meta-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.card-meta-input { -moz-appearance: textfield; }
+.card-tag-editable { display: inline-flex; align-items: center; gap: 0.3rem; }
+.card-tag-remove {
+  border: none; background: none; cursor: pointer; padding: 0; line-height: 1;
+  color: var(--accent); font-size: var(--text-sm); font-weight: 700;
+}
+.card-tag-remove:hover { color: var(--danger); }
+.card-tag-input {
+  border: none; border-bottom: 1px dashed var(--muted); background: transparent;
+  padding: 0.2rem 0.125rem; font-size: var(--text-xs); color: var(--fg); width: 6rem;
+}
+.card-tag-input:focus { outline: none; border-bottom-color: var(--accent); }
 .player-exp {
   position: fixed;
   inset-inline: 0;

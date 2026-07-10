@@ -64,51 +64,83 @@
   window.addChoice = addChoice;
   window.addDecisor = addDecisor;
 
-  // ── Question card preview (mirrors the student player card: meta line + tags) ──
+  // ── Parcours/sujet preview text (siman, seif and tags are edited directly in the card) ──
   const PARCOURS_LABELS = { bassar_bechalav: "בשר בחלב" };
-  function toHebNum(n) {
-    if (!n || n <= 0) return String(n);
-    const h = ["", "ק", "ר", "ש", "ת", "תק", "תר", "תש", "תת", "תתק"];
-    const t = ["", "י", "כ", "ל", "מ", "נ", "ס", "ע", "פ", "צ"];
-    const o = ["", "א", "ב", "ג", "ד", "ה", "ו", "ז", "ח", "ט"];
-    let r = h[Math.floor(n / 100)];
-    const rem = n % 100;
-    if (rem === 15) return r + "טו";
-    if (rem === 16) return r + "טז";
-    r += t[Math.floor(rem / 10)] + o[rem % 10];
-    return r;
-  }
-  function updateCardPreview() {
-    const metaEl = document.getElementById("admin-card-meta");
-    const tagsEl = document.getElementById("admin-card-tags");
-    if (!metaEl || !tagsEl) return;
+  function updateParcoursSubject() {
+    const el = document.getElementById("admin-card-parcours-subject");
+    if (!el) return;
     const parcoursSel = form.querySelector("[name=parcours]");
     const subjectInput = form.querySelector("[name=subject]");
-    const simanInput = form.querySelector("[name=siman]");
-    const seifInput = form.querySelector("[name=seif]");
-    const tagsInput = form.querySelector("[name=tags]");
     const parts = [];
     if (parcoursSel && parcoursSel.value) parts.push(PARCOURS_LABELS[parcoursSel.value] || parcoursSel.value);
     if (subjectInput && subjectInput.value) parts.push(subjectInput.value);
-    if (simanInput && simanInput.value) parts.push("סימן " + toHebNum(Number(simanInput.value)));
-    if (seifInput && seifInput.value) parts.push("סעיף " + toHebNum(Number(seifInput.value)));
-    metaEl.textContent = parts.join(" · ");
-
-    tagsEl.innerHTML = "";
-    (tagsInput && tagsInput.value ? tagsInput.value.split(",") : [])
-      .map((t) => t.trim()).filter(Boolean)
-      .forEach((t) => {
-        const span = document.createElement("span");
-        span.className = "card-tag";
-        span.textContent = t;
-        tagsEl.appendChild(span);
-      });
+    el.textContent = parts.join(" · ");
   }
-  ["parcours", "subject", "siman", "seif", "tags"].forEach((name) => {
+  ["parcours", "subject"].forEach((name) => {
     const field = form.querySelector(`[name=${name}]`);
-    if (field) field.addEventListener("input", updateCardPreview);
+    if (field) field.addEventListener("input", updateParcoursSubject);
   });
-  updateCardPreview();
+  updateParcoursSubject();
+
+  // ── Editable tag pills in the card ──
+  const tagsHidden = document.getElementById("admin-tags-hidden");
+  const tagsWrap = document.getElementById("admin-card-tags");
+  const tagInput = document.getElementById("admin-tag-input");
+
+  function syncTagsHidden() {
+    if (!tagsHidden || !tagsWrap) return;
+    const tags = Array.from(tagsWrap.querySelectorAll(".card-tag-editable")).map((el) => el.dataset.tag);
+    tagsHidden.value = tags.join(",");
+  }
+
+  function addTagPill(text) {
+    const value = text.trim();
+    if (!value || !tagsWrap) return;
+    const existing = Array.from(tagsWrap.querySelectorAll(".card-tag-editable")).map((el) => el.dataset.tag);
+    if (existing.includes(value)) return;
+    const span = document.createElement("span");
+    span.className = "card-tag card-tag-editable";
+    span.dataset.tag = value;
+    span.textContent = value;
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "card-tag-remove";
+    removeBtn.textContent = "×";
+    removeBtn.addEventListener("click", () => removeTag(removeBtn));
+    span.appendChild(removeBtn);
+    tagsWrap.insertBefore(span, tagInput);
+    syncTagsHidden();
+  }
+
+  function removeTag(btn) {
+    const pill = btn.closest(".card-tag-editable");
+    if (pill) pill.remove();
+    syncTagsHidden();
+  }
+  window.removeTag = removeTag;
+
+  if (tagsWrap) {
+    tagsWrap.querySelectorAll(".card-tag-editable").forEach((pill) => {
+      pill.dataset.tag = pill.dataset.tag || pill.textContent.replace("×", "").trim();
+      const btn = pill.querySelector(".card-tag-remove");
+      if (btn) btn.addEventListener("click", () => removeTag(btn));
+    });
+  }
+  if (tagInput) {
+    tagInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === ",") {
+        e.preventDefault();
+        addTagPill(tagInput.value);
+        tagInput.value = "";
+      } else if (e.key === "Backspace" && !tagInput.value && tagsWrap) {
+        const pills = tagsWrap.querySelectorAll(".card-tag-editable");
+        if (pills.length) removeTag(pills[pills.length - 1].querySelector(".card-tag-remove"));
+      }
+    });
+    tagInput.addEventListener("blur", () => {
+      if (tagInput.value.trim()) { addTagPill(tagInput.value); tagInput.value = ""; }
+    });
+  }
 
   // ── Highlight the correct answer(s) like the revealed state of the player card ──
   function refreshOptionCorrect() {

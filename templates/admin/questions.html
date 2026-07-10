@@ -92,7 +92,6 @@
       {% set qtype = payload.get('type') or selected.question_type or 'multiple_choice' %}
       {% set options_list = payload.get('options') or [{}, {}, {}, {}] %}
       {% set cur_sections = (payload.exam_section if payload.exam_section is iterable and payload.exam_section is not string else [payload.exam_section]) if payload.exam_section else selected.section_list() %}
-      {% set cur_tags = (selected.tags or []) | join(', ') %}
 
       <form method="post" action="{{ url_for('admin.edit_question', qid=selected.id) }}" id="qform" class="stack-sm">
         {# preserve filters for redirect #}
@@ -146,17 +145,6 @@
               <input name="subject" value="{{ selected.subject or '' }}" placeholder="לדוגמה: בשר בחלב" />
             </div>
             <div>
-              <label>סימן <span class="destructive">*</span></label>
-              <input type="number" name="siman" value="{{ selected.siman if selected.siman is not none else '' }}" min="1" />
-            </div>
-            <div>
-              <label>סעיף <span class="destructive">*</span></label>
-              <input type="number" name="seif" value="{{ selected.seif if selected.seif is not none else '' }}" min="1" />
-            </div>
-          </div>
-
-          <div class="grid grid-3" style="margin-top:0.75rem;">
-            <div>
               <label>חלק הבחינה</label>
               <select name="section" multiple size="4" style="height:auto;">
                 {% for val, lbl in [('shulchan_aruch','שו"ע'),('tur','טור'),('psikei_admur','פסקי אדה"ז'),('ptei_teshuva','פתחי תשובה')] %}
@@ -165,14 +153,11 @@
               </select>
             </div>
             <div>
-              <label>תגיות (פסיק כמפריד)</label>
-              <input name="tags" value="{{ cur_tags }}" placeholder="לדוגמה: המתנה, מחלוקת" />
-            </div>
-            <div>
               <label>מקור</label>
               <input name="source_ref" value="{{ selected.source_ref or '' }}" placeholder="מזהה מקור" />
             </div>
           </div>
+          <p class="text-xs muted" style="margin-top:0.5rem;">סימן, סעיף ותגיות נערכים ישירות בכרטיס השאלה למטה.</p>
 
           <div style="margin-top:0.75rem;">
             <label>רמז (אופציונלי)</label>
