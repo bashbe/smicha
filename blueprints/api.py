@@ -279,7 +279,7 @@ def answer():
 @bp.post("/report")
 def report():
     """Un étudiant signale une question douteuse : elle repasse en "pending"
-    pour qu'un validateur la retraite dans /admin/validate."""
+    pour qu'un validateur la retraite dans /admin/questions."""
     user = current_user()
     if user is None:
         return jsonify({"error": "unauthorized"}), 401

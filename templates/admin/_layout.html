@@ -6,7 +6,7 @@
       <div class="row gap-4">
         <a href="{{ url_for('admin.dashboard') }}" class="row gap-1 bold"><span class="primary">🛡️</span> ניהול סמיכה</a>
         <nav class="row gap-1 admin-nav-items">
-          {% set items = [('admin.dashboard','לוח בקרה'),('admin.questions','שאלות'),('admin.import_questions','ייבוא שאלות'),('admin.validate','אימות שאלות'),('admin.topics','נושאי סימנים'),('admin.users','משתמשים')] %}
+          {% set items = [('admin.dashboard','לוח בקרה'),('admin.questions','שאלות'),('admin.import_questions','ייבוא שאלות'),('admin.topics','נושאי סימנים'),('admin.users','משתמשים')] %}
           {% for ep, label in items %}
           <a href="{{ url_for(ep) }}" class="btn {{ 'btn-primary' if request.endpoint == ep else '' }}" style="{{ '' if request.endpoint == ep else 'background:none;color:var(--muted-foreground);' }}">{{ label }}</a>
           {% endfor %}
@@ -23,7 +23,7 @@
     <div class="drawer-panel">
       <div style="padding:1rem;border-bottom:1px solid var(--border);font-weight:600;">תפריט ניהול</div>
       <nav style="display:flex;flex-direction:column;padding:0.5rem 0;">
-        {% set items = [('admin.dashboard','🏠 לוח בקרה'),('admin.questions','📋 שאלות'),('admin.import_questions','⬆️ ייבוא שאלות'),('admin.validate','✅ אימות שאלות'),('admin.topics','🏷️ נושאי סימנים'),('admin.users','👥 משתמשים')] %}
+        {% set items = [('admin.dashboard','🏠 לוח בקרה'),('admin.questions','📋 שאלות'),('admin.import_questions','⬆️ ייבוא שאלות'),('admin.topics','🏷️ נושאי סימנים'),('admin.users','👥 משתמשים')] %}
         {% for ep, label in items %}
         <a href="{{ url_for(ep) }}" style="padding:0.75rem 1rem;color:var(--foreground);text-decoration:none;{{ 'font-weight:600;background:var(--accent-dim);' if request.endpoint == ep else '' }}">{{ label }}</a>
         {% endfor %}

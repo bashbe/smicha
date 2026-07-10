@@ -98,7 +98,7 @@ class Question(db.Model):
     tags = db.Column(db.JSON, default=list)
     # Toute question est acceptée par défaut ("approved"). Elle ne repasse en
     # "pending" que si un étudiant la signale (bouton "signaler" côté player) ;
-    # l'admin la traite alors dans /admin/validate comme un import classique.
+    # l'admin la traite alors dans /admin/questions (filtre statut "pending").
     status = db.Column(db.String(16), default="approved", nullable=False, index=True)
     created_by = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"))
     validated_by = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"))

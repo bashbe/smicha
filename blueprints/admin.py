@@ -249,103 +249,11 @@ def _payload_from_form(form, question_type: str) -> dict:
     return payload
 
 
-@bp.route("/validate", methods=["GET", "POST"])
+@bp.route("/validate")
 @staff_required
-def validate():
-    if request.method == "POST":
-        user = current_user()
-        action = request.form.get("action")
-        qid = request.form.get("question_id")
-        note = (request.form.get("note") or "").strip()
-        q = Question.query.get(qid)
-        if q is None:
-            flash("השאלה לא נמצאה", "error")
-            return redirect(url_for("admin.validate"))
-
-        previous = q.as_dict()
-
-        if action == "reject":
-            if not note:
-                flash("הערה דרושה לדחייה", "error")
-                return redirect(url_for("admin.validate", status="pending", q=qid))
-            q.status = "rejected"
-            q.validated_by = user.id
-            q.validator_note = note
-            db.session.add(
-                QuestionEdit(question_id=q.id, editor_id=user.id, action="rejected", note=note,
-                             previous_content=previous)
-            )
-            db.session.commit()
-            flash("נדחתה", "success")
-            return redirect(url_for("admin.validate", status="pending"))
-
-        if action == "approve":
-            question_type = request.form.get("question_type") or q.question_type
-            payload = _payload_from_form(request.form, question_type)
-            draft = {
-                "payload": payload,
-                "question_type": question_type,
-                "difficulty": payload["difficulty_level"],
-                "section": payload["exam_section"],
-                "explanation": payload["explanation"],
-                "tags": payload["tags"],
-                "subject": (request.form.get("subject") or "").strip() or None,
-                "siman": request.form.get("siman"),
-                "seif": request.form.get("seif"),
-                "parcours": (request.form.get("parcours") or "").strip() or q.parcours,
-                "hint": request.form.get("hint"),
-                "source_ref": q.source_ref,
-            }
-            synced = sync_question_row_from_payload(draft)
-            if synced["error"]:
-                flash(synced["error"], "error")
-                return redirect(url_for("admin.validate", status="pending", q=qid))
-            row = synced["row"]
-
-            q.text = row["text"]
-            q.question_type = row["question_type"]
-            q.payload = row["payload"]
-            q.choices = row["choices"]
-            q.correct_answer = row["correct_answer"]
-            q.explanation = row.get("explanation")
-            q.hint = draft["hint"] or None
-            q.subject = row.get("subject")
-            q.siman = row.get("siman")
-            q.seif = row.get("seif")
-            q.parcours = row.get("parcours")
-            q.difficulty = int(row.get("difficulty") or 2)
-            q.section = row.get("section") or ["shulchan_aruch"]
-            q.tags = row.get("tags") or []
-            q.status = "approved"
-            q.validated_by = user.id
-            q.validator_note = note or None
-            db.session.add(
-                QuestionEdit(
-                    question_id=q.id, editor_id=user.id, action="approved",
-                    previous_content=previous, new_content=q.as_dict(), note=note or None,
-                )
-            )
-            db.session.commit()
-            flash("השאלה אושרה", "success")
-            return redirect(url_for("admin.validate", status="pending"))
-
-    status = request.args.get("status", "pending")
-    selected_id = request.args.get("q")
-    questions = (
-        Question.query.filter_by(status=status).order_by(Question.created_at.asc()).all()
-    )
-    selected = None
-    if questions:
-        selected = next((q for q in questions if q.id == selected_id), questions[0])
-
-    return render_template(
-        "admin/validate.html",
-        questions=questions,
-        selected=selected,
-        status=status,
-        question_types=QUESTION_TYPES,
-        type_label=TYPE_LABEL,
-    )
+def validate_redirect():
+    """Legacy bookmarks/links: /admin/validate now lives in the unified /admin/questions tab."""
+    return redirect(url_for("admin.questions", status=request.args.get("status", "pending")))
 
 
 @bp.route("/validate/approve-all", methods=["POST"])
@@ -366,7 +274,7 @@ def approve_all_pending():
         )
     db.session.commit()
     flash(f"{len(pending)} שאלות אושרו", "success")
-    return redirect(url_for("admin.validate", status="pending"))
+    return redirect(url_for("admin.questions", status="pending"))
 
 
 @bp.route("/export/rejected")
@@ -396,6 +304,8 @@ def questions():
     parcours_filter = request.args.get("parcours", "")
     search = request.args.get("q", "").strip()
     siman_filter = request.args.get("siman", "").strip()
+    seif_filter = request.args.get("seif", "").strip()
+    tag_filter = request.args.get("tag", "").strip()
     selected_id = request.args.get("id", "")
 
     query = Question.query
@@ -411,6 +321,12 @@ def questions():
         except ValueError:
             flash("סימן חייב להיות מספר", "error")
             siman_filter = ""
+    if seif_filter:
+        try:
+            query = query.filter_by(seif=int(seif_filter))
+        except ValueError:
+            flash("סעיף חייב להיות מספר", "error")
+            seif_filter = ""
     if search:
         query = query.filter(
             or_(
@@ -420,11 +336,18 @@ def questions():
         )
     all_questions = query.order_by(Question.created_at.desc()).all()
 
+    if tag_filter:
+        needle = tag_filter.lower()
+        all_questions = [q for q in all_questions if any(needle in (t or "").lower() for t in (q.tags or []))]
+
     selected = None
     if all_questions:
         selected = next((q for q in all_questions if q.id == selected_id), all_questions[0])
 
-    filters = {"status": status, "type": qtype, "parcours": parcours_filter, "q": search, "siman": siman_filter}
+    filters = {
+        "status": status, "type": qtype, "parcours": parcours_filter,
+        "q": search, "siman": siman_filter, "seif": seif_filter, "tag": tag_filter,
+    }
     return render_template(
         "admin/questions.html",
         questions=all_questions,
@@ -450,6 +373,8 @@ def edit_question(qid):
         "parcours": request.form.get("filter_parcours", ""),
         "q": request.form.get("filter_q", ""),
         "siman": request.form.get("filter_siman", ""),
+        "seif": request.form.get("filter_seif", ""),
+        "tag": request.form.get("filter_tag", ""),
         "id": qid,
     }
 
