@@ -3,53 +3,102 @@
 
 {% block body %}
 <div class="landing">
-
-  <div class="landing-hero-frame animate-slide-up">
-
-    <div class="landing-cover">
-      <div class="landing-tabs">
-        <span class="landing-tab landing-tab-1">א</span>
-        <span class="landing-tab landing-tab-2">ב</span>
-        <span class="landing-tab landing-tab-3">ג</span>
-        <span class="landing-tab landing-tab-4">ד</span>
+  <main class="landing-shell animate-slide-up">
+    <section class="landing-hero" aria-label="סמיכה">
+      <div class="landing-heading">
+        <h1 class="landing-title">סמיכה</h1>
       </div>
-      <div class="landing-mark">שולחן ערוך · יורה דעה</div>
-      <h1 class="landing-cover-title">סמיכה</h1>
-      <p class="landing-cover-tag">לימוד יורה דעה בקצב שלך, עם חזרה בדיוק כשצריך.</p>
-      <a href="{{ url_for('auth.login') }}" class="btn btn-primary landing-cover-cta">התחל ללמוד ←</a>
-      <a href="{{ url_for('admin.login') }}" class="landing-admin-link">כניסת מנהל ←</a>
-    </div>
 
-    <div class="landing-fold-shadow"></div>
+      <div class="landing-carousel" data-landing-carousel>
+        <div class="landing-track" data-landing-track>
+          <article class="landing-slide landing-slide--book is-active" data-landing-slide>
+            <div class="landing-slide-image">
+              <img src="{{ url_for('static', filename='images/landing1.png') }}" alt="">
+            </div>
+            <div class="landing-slide-copy">
+              <h2>לימוד</h2>
+              <p>תוך כדי הלימוד עונים על שאלות, כדי לברר שהדברים הובנו ולחזק את הידיעה.</p>
+            </div>
+          </article>
 
-    <div class="landing-stack-wrap">
-      <div class="landing-stack-card">
-        <div class="landing-stack-eyebrow">איך זה עובד</div>
-        <div class="landing-stack-entry">
-          <span class="landing-stack-mark">א׳</span>
-          <div>
-            <div class="landing-stack-title">מסלול מובנה</div>
-            <div class="landing-stack-sub">שולחן ערוך, סימן אחר סימן, סעיף אחר סעיף — או בבחירה חופשית.</div>
-          </div>
+          <article class="landing-slide landing-slide--hourglass" data-landing-slide>
+            <div class="landing-slide-image">
+              <img src="{{ url_for('static', filename='images/landing2.png') }}" alt="">
+            </div>
+            <div class="landing-slide-copy">
+              <h2>חזרה</h2>
+              <p>בכל יום האלגוריתם מציע שאלות לחזרה, בהתאם לחזרות שכבר נעשו, כדי שהדברים יישארו בזיכרון.</p>
+            </div>
+          </article>
+
+          <article class="landing-slide landing-slide--certificate" data-landing-slide>
+            <div class="landing-slide-image">
+              <img src="{{ url_for('static', filename='images/Landing3.png') }}" alt="">
+            </div>
+            <div class="landing-slide-copy">
+              <h2>לקראת הבחינה</h2>
+              <p>ביום הבחינה ניגשים אליה ברוגע, לאחר הכנה מסודרת וחזרות שנעשו לאורך הדרך.</p>
+            </div>
+          </article>
         </div>
-        <div class="landing-stack-entry">
-          <span class="landing-stack-mark">ב׳</span>
-          <div>
-            <div class="landing-stack-title">חזרה חכמה</div>
-            <div class="landing-stack-sub">האלגוריתם קובע בדיוק מתי לחזור על כל שאלה, לפני שהיא נשכחת.</div>
-          </div>
+
+        <div class="landing-dots" aria-hidden="true">
+          <span class="landing-dot is-active" data-landing-dot></span>
+          <span class="landing-dot" data-landing-dot></span>
+          <span class="landing-dot" data-landing-dot></span>
         </div>
-        <div class="landing-stack-entry">
-          <span class="landing-stack-mark">ג׳</span>
-          <div>
-            <div class="landing-stack-title">בקצב שלך</div>
-            <div class="landing-stack-sub">קובעים תאריך בחינה, והמערכת מתאימה את הקצב.</div>
-          </div>
+
+        <div class="landing-start">
+          <a href="{{ url_for('auth.login') }}" class="landing-start-button">להתחיל</a>
         </div>
       </div>
-    </div>
-
-  </div>
-
+    </section>
+  </main>
 </div>
+
+<script>
+  (function () {
+    var root = document.querySelector("[data-landing-carousel]");
+    if (!root) return;
+
+    var slides = Array.prototype.slice.call(root.querySelectorAll("[data-landing-slide]"));
+    var dots = Array.prototype.slice.call(root.querySelectorAll("[data-landing-dot]"));
+    var current = 0;
+    var timer = null;
+    var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    function show(index) {
+      current = (index + slides.length) % slides.length;
+      slides.forEach(function (slide, i) {
+        slide.classList.toggle("is-active", i === current);
+      });
+      dots.forEach(function (dot, i) {
+        dot.classList.toggle("is-active", i === current);
+        dot.setAttribute("aria-current", i === current ? "true" : "false");
+      });
+    }
+
+    function stopAutoplay() {
+      if (timer) window.clearInterval(timer);
+      timer = null;
+    }
+
+    function startAutoplay() {
+      if (timer || reducedMotion.matches) return;
+      timer = window.setInterval(function () { show(current + 1); }, 6200);
+    }
+
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) stopAutoplay();
+      else startAutoplay();
+    });
+
+    reducedMotion.addEventListener("change", function () {
+      stopAutoplay();
+      startAutoplay();
+    });
+
+    startAutoplay();
+  })();
+</script>
 {% endblock %}
