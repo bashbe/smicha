@@ -16,6 +16,9 @@ QUESTION_TYPES = [
 
 VALID_SECTIONS = ("shulchan_aruch", "tur", "psikei_admur", "ptei_teshuva")
 VALID_PARCOURS = ("bassar_bechalav",)
+# Hebrew display labels — keep in sync with PARCOURS_LABELS in static/js/chapitre.js
+# and static/js/admin-question-editor.js.
+PARCOURS_LABELS = {"bassar_bechalav": "בשר בחלב"}
 
 HEBREW_RE = re.compile(r"[֐-׿]")
 LATIN_RE = re.compile(r"[A-Za-zÀ-ÖØ-öø-ÿ]")

@@ -12,7 +12,7 @@ L'app est entièrement en hébreu (RTL), thème sombre navy/indigo/ambre.
 >
 > **Toute modification du code** — vérifier manuellement les interfaces concernées avant de considérer la tâche terminée :
 > - Parcours étudiant : `/app/home`, `/app/parcours`, `/app/chapitre/…`, `/app/revision`
-> - Back-office : `/admin/dashboard`, `/admin/import`, `/admin/validate`
+> - Back-office : `/admin/dashboard`, `/admin/import`, `/admin/questions`
 > - Flux d'inscription/connexion : `/auth`, onboarding
 > - RTL/hébreu : s'assurer que l'alignement et la numérotation hébraïque restent corrects
 >
@@ -41,7 +41,7 @@ L'app est entièrement en hébreu (RTL), thème sombre navy/indigo/ambre.
 
 Les étudiants préparent un examen de Halakha (loi juive) structuré autour de :
 
-- **Parcours** (`parcours`) → **Sujets** (`sujet`) → **Simanim** (chapitres) → **Seifim** (sous-sections)
+- **Parcours** (`parcours`) → **Simanim** (chapitres) → **Sujets** (`sujet` : thème traité dans le siman, pouvant couvrir plusieurs seifim). Le **seif** de chaque question est conservé à titre indicatif.
 - Chaque question appartient à un ou plusieurs **sections de révision** (`exam_section` : `shulchan_aruch`, `tur`, etc.)
 - La répétition espacée (algorithme FSRS-6 + calibration collective) adapte le calendrier de révision à chaque étudiant
 - Un système de **points / combos / séries** (streak) gamifie la progression
@@ -140,7 +140,7 @@ smiha-flask/
 │   ├── landing.html
 │   ├── auth.html
 │   ├── student/            # onboarding, home, parcours, chapitre, revision, profil, settings
-│   └── admin/              # login, denied, dashboard, users, user_detail, import, validate
+│   └── admin/              # login, denied, dashboard, users, user_detail, import, questions, topics
 │
 ├── static/
 │   ├── css/styles.css      # Thème navy/indigo/ambre, utilitaires RTL
@@ -216,7 +216,7 @@ Contrainte unique `(user_id, role)`. Valeurs de `role` : `"super_admin"`, `"impo
 | `payload` | JSON | Structure spécifique au type |
 | `status` | String | `"pending"` / `"approved"` / `"rejected"` — défaut `"approved"` (voir [règle de statut](#règle-métier--acceptation-par-défaut-et-signalement)) |
 | `parcours` | String | Parcours d'apprentissage — valeurs dans `VALID_PARCOURS` (ex : `"bassar_bechalav"`) |
-| `subject` | String | Sujet Halakhique en hébreu (ex : `"בשר בחלב"`) — champ JSON `sujet` à l'import |
+| `subject` | String | Sujet traité **dans le siman** (thème en hébreu pouvant couvrir plusieurs seifim, ex : `"משך ההמתנה בין בשר לחלב"`) — champ JSON `sujet` à l'import |
 | `siman` | Integer | Numéro de chapitre (entier positif, obligatoire) |
 | `seif` | Integer | Numéro de sous-section (entier positif, obligatoire) |
 | `hint` | Text | Indice (optionnel) |
@@ -288,7 +288,7 @@ Champs de calibration collective (Phase 2) : `z_item` (`(log rt − μ_item)/σ_
 ---
 
 ### `progression`
-Avancement par `(user_id, subject, siman)`. Marqué `"completed"` quand toutes les questions du chapitre sont répondues correctement.
+Avancement par `(user_id, subject, siman)` — c'est-à-dire par **sujet dans le siman**. Marqué `"completed"` quand toutes les questions du sujet sont répondues correctement.
 
 ---
 
@@ -307,7 +307,7 @@ Journal d'audit : chaque action d'un validateur (approve / correct / reject) est
 |---|---|---|---|
 | `type` | string | `multiple_choice`, `true_false`, `multiple_opinions_dropdown`, `practical_scenario` | `question_type` |
 | `parcours` | string | `"bassar_bechalav"` (liste dans `VALID_PARCOURS`) | `parcours` |
-| `sujet` | string | texte hébreu non vide | `subject` |
+| `sujet` | string | texte hébreu non vide — thème traité **dans le siman** (peut couvrir plusieurs seifim ; sert au regroupement des cartes dans le sélecteur) | `subject` |
 | `siman` | integer | > 0 | `siman` |
 | `seif` | integer | > 0 | `seif` |
 | `difficulty_level` | integer | 1, 2, 3 | `difficulty` |
@@ -326,7 +326,7 @@ Journal d'audit : chaque action d'un validateur (approve / correct / reject) est
 {
   "type": "multiple_choice",
   "parcours": "bassar_bechalav",
-  "sujet": "בשר בחלב",
+  "sujet": "משך ההמתנה בין בשר לחלב",
   "siman": 89,
   "seif": 1,
   "difficulty_level": 1,
@@ -349,7 +349,7 @@ Règles : au moins 2 options, numérotées en séquence à partir de 1 (1, 2, 3,
 {
   "type": "true_false",
   "parcours": "bassar_bechalav",
-  "sujet": "בשר בחלב",
+  "sujet": "איסור חלב מיד לאחר בשר",
   "siman": 89,
   "seif": 2,
   "difficulty_level": 2,
@@ -365,7 +365,7 @@ Règles : au moins 2 options, numérotées en séquence à partir de 1 (1, 2, 3,
 {
   "type": "multiple_opinions_dropdown",
   "parcours": "bassar_bechalav",
-  "sujet": "בשר בחלב",
+  "sujet": "דין תבשיל שטעמו בשר לענין ההמתנה",
   "siman": 89,
   "seif": 3,
   "difficulty_level": 3,
@@ -406,10 +406,14 @@ Contraintes impératives :
   (ex : une question qui couvre aussi le Tur → ["shulchan_aruch", "tur"])
 - "siman" et "seif" sont des entiers > 0
 - "difficulty_level" : 1 (facile), 2 (moyen), 3 (difficile)
+- "sujet" est le thème traité DANS le siman (en hébreu, il peut couvrir plusieurs
+  seifim) — pas le nom du parcours. Les questions d'un même thème doivent porter
+  exactement le même "sujet" (il sert au regroupement des cartes dans l'app).
 - Tous les textes de questions, options et explications en hébreu
 
-Sujet : [SUJET EN HÉBREU, ex. בשר בחלב]
+Parcours : [ex. bassar_bechalav]
 Siman : [N]
+Sujets à couvrir : [LISTE DE THÈMES EN HÉBREU, ex. משך ההמתנה בין בשר לחלב]
 Types à générer : [multiple_choice | true_false | multiple_opinions_dropdown]
 
 Retourne uniquement un tableau JSON valide, sans texte avant ou après.
@@ -422,7 +426,7 @@ Retourne uniquement un tableau JSON valide, sans texte avant ou après.
   {
     "type": "multiple_choice",
     "parcours": "bassar_bechalav",
-    "sujet": "בשר בחלב",
+    "sujet": "משך ההמתנה בין בשר לחלב",
     "siman": 89,
     "seif": 1,
     "difficulty_level": 1,
@@ -439,7 +443,7 @@ Retourne uniquement un tableau JSON valide, sans texte avant ou après.
   {
     "type": "true_false",
     "parcours": "bassar_bechalav",
-    "sujet": "בשר בחלב",
+    "sujet": "איסור חלב מיד לאחר בשר",
     "siman": 89,
     "seif": 2,
     "difficulty_level": 2,
@@ -451,7 +455,7 @@ Retourne uniquement un tableau JSON valide, sans texte avant ou après.
   {
     "type": "multiple_opinions_dropdown",
     "parcours": "bassar_bechalav",
-    "sujet": "בשר בחלב",
+    "sujet": "דין תבשיל שטעמו בשר לענין ההמתנה",
     "siman": 89,
     "seif": 3,
     "difficulty_level": 3,
@@ -494,12 +498,12 @@ Retourne uniquement un tableau JSON valide, sans texte avant ou après.
 | GET | `/app/` | Redirige vers onboarding ou home |
 | GET/POST | `/app/onboarding` | Choix de l'objectif, date d'examen, sections |
 | GET | `/app/home` | Dashboard : compte à rebours, cartes dues, streak, % préparation |
-| GET | `/app/parcours` | Table des matières : sujet → simanim rétractables → seifim en chips hébraïques |
-| GET | `/app/chapitre/<subject>/<siman>[/<seif>]` | Lecture d'un chapitre |
+| GET | `/app/parcours` | Table des matières : parcours → simanim rétractables → cartes par sujet (plage de seifim indicative) |
+| GET | `/app/chapitre/<subject>/<siman>[/<seif>]` | Session d'étude sur un sujet du siman (la variante `/<seif>` reste supportée mais n'est plus liée depuis le sélecteur) |
 | GET | `/app/revision` | Hub de révision : 4 cartes (jour / siman / sujet / aléatoire) avec compteurs |
 | GET | `/app/revision/jour` | Révision du jour : cartes dues (répétition espacée FSRS) |
-| GET | `/app/revision/siman` | Liste des simanim déjà appris, groupés par sujet |
-| GET | `/app/revision/siman/<subject>/<siman>` | Session de révision sur un siman déjà appris |
+| GET | `/app/revision/siman` | Liste des simanim déjà appris (parcours → siman → cartes par sujet) |
+| GET | `/app/revision/siman/<subject>/<siman>` | Session de révision sur un sujet déjà appris d'un siman |
 | GET | `/app/revision/sujet` | Liste des tags (`Question.tags`) ayant ≥ 3 cartes déjà apprises |
 | GET | `/app/revision/sujet/<tag>` | Session de révision sur toutes les cartes déjà apprises portant ce tag |
 | GET | `/app/revision/aleatoire` | Session de révision aléatoire (max 10 cartes déjà apprises, retirée à chaque visite) |
@@ -520,8 +524,8 @@ Retourne uniquement un tableau JSON valide, sans texte avant ou après.
 | GET | `/admin/users` | Liste étudiants + nombre de cartes |
 | GET | `/admin/users/<user_id>` | Détail étudiant (progression, stabilité, réponses) |
 | GET/POST | `/admin/import` | Import JSON (prévisualisation → confirmation) |
-| GET/POST | `/admin/validate` | File de questions `pending` (incluant les questions signalées) : approuver / rejeter |
-| POST | `/admin/validate/approve-all` | Approuve en un clic toutes les questions `pending` (bouton « אשר הכל » de la file) |
+| GET | `/admin/validate` | Redirection héritée vers `/admin/questions?status=pending` (l'onglet unifié) |
+| POST | `/admin/validate/approve-all` | Approuve en un clic toutes les questions `pending` (bouton « אשר הכל » de `/admin/questions` filtré sur `pending`) |
 | GET | `/admin/questions` | Recherche/édition de toutes les questions — filtres `status`, `type`, `parcours`, `siman`, `q` (texte libre) |
 | POST | `/admin/questions/<qid>/edit` | Sauvegarde / approuve / rejette une question depuis `/admin/questions` |
 | POST | `/admin/reset-db` | **super_admin uniquement** — efface et recrée toutes les tables (confirmation texte `"RESET"` requise) |
@@ -595,7 +599,7 @@ Corps JSON attendu :
 
 Réponse JSON : `{"ok": true}`. Effet de bord : `Question.status` repasse à `"pending"` et une
 `QuestionEdit` (`action="reported"`, `note=reason`) est journalisée. La question redevient
-invisible pour tous les étudiants tant qu'un validateur ne l'a pas retraitée dans `/admin/validate`.
+invisible pour tous les étudiants tant qu'un validateur ne l'a pas retraitée dans `/admin/questions` (filtre `pending`).
 
 ---
 
@@ -718,10 +722,11 @@ Convertit un entier en notation hébraïque (gematria) avec geresh/gershayim :
 
 ### Page Parcours (`/app/parcours`)
 
-- En-tête par **sujet** (ex : `בשר בחלב`) avec compteur de simanim et questions
-- Chaque **siman** est un `<details>` rétractable avec son numéro en hébreu (פ״ט, צ׳, …)
-- À l'intérieur : **seifim** en chips cliquables avec indicateur ✓ si complété et barre de progression
-- Aucun siman n'est verrouillé — l'étudiant accède librement à n'importe quel seif
+- En-tête par **parcours** (ex : `בשר בחלב`, libellé dans `PARCOURS_LABELS` de `question_types.py`)
+- Chaque **siman** est un `<details>` rétractable avec son numéro en hébreu (פ״ט, צ׳, …) et son titre (édité dans `/admin/topics`, indexé par parcours dans `siman_seif_topics.json`)
+- À l'intérieur : **cartes par sujet** (`Question.subject`) cliquables avec indicateur ✓ si complété, compteur de questions et plage indicative des seifim couverts (ex : `א–ג`)
+- Cliquer une carte ouvre une session sur toutes les questions du sujet dans le siman (`/app/chapitre/<sujet>/<siman>`)
+- Aucun siman n'est verrouillé — l'étudiant accède librement à n'importe quel sujet
 
 ### Sections d'examen
 
@@ -760,7 +765,7 @@ Implémenté dans `allowed_sections()` + `question_in_sections()` (`blueprints/s
 Toute question est **acceptée par défaut** (`status="approved"` dès sa création — import ou seed), et donc immédiatement proposée aux étudiants. Il n'y a plus de file d'attente systématique avant mise en ligne.
 
 - **Signalement étudiant** — dans le lecteur de questions (`chapitre.js`), un bouton 🚩 (icône drapeau) permet à l'étudiant de signaler une question douteuse, avec un motif optionnel. Cela appelle `POST /api/report` (`blueprints/api.py`) qui repasse la question en `status="pending"` et journalise l'action dans `question_edits` (`action="reported"`, `note` = motif). La question disparaît alors du parcours de tous les étudiants jusqu'à décision.
-- **Décision de l'admin** — la question signalée réapparaît dans la file `/admin/validate` (statut `pending`, la vue par défaut) exactement comme une question nouvellement importée ; le validateur l'approuve ou la rejette normalement.
+- **Décision de l'admin** — la question signalée réapparaît dans `/admin/questions` (filtre statut `pending`) exactement comme une question nouvellement importée ; le validateur l'approuve ou la rejette normalement.
 - **Base existante** — `scripts/migrate_approve_pending.py` bascule en `approved` les questions `pending` d'une base existante (celles jamais explicitement rejetées) pour aligner les anciennes données sur ce nouveau défaut.
 
 ---
@@ -774,7 +779,7 @@ Importer (JSON) → Prévisualisation (normalize_imported_question) → Sauvegar
                                                                           ↓
                                         Étudiant signale (🚩) → status="pending"
                                                                           ↓
-Validateur → /admin/validate → Édite métadonnées (subject/siman/seif/parcours, difficulté, tags)
+Validateur → /admin/questions → Édite métadonnées (subject/siman/seif/parcours, difficulté, tags)
                                     ↓                        ↓
                               Approuve → status="approved"   Rejette → status="rejected" + note
                                     ↓

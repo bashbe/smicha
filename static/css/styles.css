@@ -1157,6 +1157,7 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   font-size: var(--text-sm);
   color: var(--fg);
   min-height: 32px;
+  max-width: 100%;
   transition: background 0.12s, border-color 0.12s;
 }
 .seif-chip:hover {
@@ -1167,17 +1168,21 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   font-family: 'Secular One', sans-serif;
   color: var(--accent);
   font-size: var(--text-base);
+  flex-shrink: 0;
 }
 .seif-chip-done .seif-chip-num { color: var(--success); }
+/* Nom du sujet — contenu principal de la carte : peut s'étendre sur plusieurs lignes */
 .seif-chip-topic {
-  font-size: 0.75rem;
-  color: var(--muted);
+  font-size: var(--text-sm);
+  color: var(--fg);
   font-family: 'Noto Sans Hebrew', sans-serif;
-  white-space: nowrap;
+  line-height: 1.35;
+  min-width: 0;
 }
 .seif-chip-count {
   font-size: 0.75rem;
   color: var(--muted);
+  flex-shrink: 0;
 }
 
 /* ---- Bottom nav labels toujours visibles sur mobile ---- */

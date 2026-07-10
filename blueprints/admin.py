@@ -13,6 +13,7 @@ from chapter_topics import seif_topic as get_seif_topic
 from chapter_topics import siman_topic as get_siman_topic
 from models import FsrsCard, Question, QuestionEdit, StudentProfile, User, UserAnswer, db
 from question_types import (
+    PARCOURS_LABELS,
     QUESTION_TYPES,
     normalize_imported_question,
     sync_question_row_from_payload,
@@ -458,12 +459,12 @@ def edit_question(qid):
 def topics():
     if request.method == "POST":
         siman_rows = list(zip(
-            request.form.getlist("siman_subject"),
+            request.form.getlist("siman_parcours"),
             request.form.getlist("siman_num"),
             request.form.getlist("siman_topic"),
         ))
         seif_rows = list(zip(
-            request.form.getlist("seif_subject"),
+            request.form.getlist("seif_parcours"),
             request.form.getlist("seif_siman"),
             request.form.getlist("seif_num"),
             request.form.getlist("seif_topic"),
@@ -473,31 +474,35 @@ def topics():
         return redirect(url_for("admin.topics"))
 
     rows = (
-        Question.query.with_entities(Question.subject, Question.siman, Question.seif)
-        .filter(Question.subject.isnot(None), Question.siman.isnot(None))
+        Question.query.with_entities(Question.parcours, Question.siman, Question.seif)
+        .filter(Question.parcours.isnot(None), Question.siman.isnot(None))
         .distinct()
         .all()
     )
-    by_subject: dict[str, dict[int, set]] = {}
-    for subject, siman, seif in rows:
-        by_subject.setdefault(subject, {}).setdefault(siman, set())
+    by_parcours: dict[str, dict[int, set]] = {}
+    for parcours, siman, seif in rows:
+        by_parcours.setdefault(parcours, {}).setdefault(siman, set())
         if seif is not None:
-            by_subject[subject][siman].add(seif)
+            by_parcours[parcours][siman].add(seif)
 
     groups = []
-    for subject in sorted(by_subject.keys()):
+    for parcours in sorted(by_parcours.keys()):
         simanim = []
-        for siman in sorted(by_subject[subject].keys()):
+        for siman in sorted(by_parcours[parcours].keys()):
             seifim = [
-                {"seif": seif, "topic": get_seif_topic(subject, siman, seif) or ""}
-                for seif in sorted(by_subject[subject][siman])
+                {"seif": seif, "topic": get_seif_topic(parcours, siman, seif) or ""}
+                for seif in sorted(by_parcours[parcours][siman])
             ]
             simanim.append({
                 "siman": siman,
-                "topic": get_siman_topic(subject, siman) or "",
+                "topic": get_siman_topic(parcours, siman) or "",
                 "seifim": seifim,
             })
-        groups.append({"subject": subject, "simanim": simanim})
+        groups.append({
+            "parcours": parcours,
+            "label": PARCOURS_LABELS.get(parcours, parcours),
+            "simanim": simanim,
+        })
 
     return render_template("admin/topics.html", groups=groups)
 

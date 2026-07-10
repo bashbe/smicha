@@ -193,9 +193,9 @@ def answer():
     )
     user_speed.log_rt_mean, user_speed.log_rt_sd, user_speed.n_responses = us_mean, us_sd, us_n
 
-    # 3. progression upsert — a question only counts as "validated" once it has
-    # been answered correctly at least once. A wrong answer never advances
-    # progress, and re-answering the same question is not double-counted.
+    # 3. progression upsert — keyed by (sujet, siman) : a question only counts as
+    # "validated" once it has been answered correctly at least once. A wrong
+    # answer never advances progress, and re-answering is not double-counted.
     prog = Progression.query.filter_by(user_id=user.id, subject=q.subject, siman=q.siman).first()
     total_in_siman = Question.query.filter_by(subject=q.subject, siman=q.siman, status="approved").count()
     validated = (

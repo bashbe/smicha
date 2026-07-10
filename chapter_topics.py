@@ -1,10 +1,13 @@
 """Lookup for siman/seif topic labels shown on the /app/parcours page.
 
-Sujet du parcours, sujet du siman et sujet du seif sont trois niveaux distincts :
-- le sujet du parcours (`Question.subject`) reste la clé de groupement existante
-- le sujet du siman et le sujet du seif sont des libellés courts, non stockés en base,
-  maintenus dans siman_seif_topics.json (générés pour les simanim/seifim ayant déjà
-  des questions).
+La hiérarchie de contenu est parcours → simanim → sujets (Question.subject est le
+thème traité DANS le siman, il peut couvrir plusieurs seifim ; le seif reste
+indicatif). Les libellés gérés ici sont distincts des sujets des questions :
+- le titre du siman (affiché dans le sélecteur de simanim)
+- le titre du seif (indicatif, édité dans /admin/topics mais plus affiché
+  dans le sélecteur)
+Ils ne sont pas stockés en base : maintenus dans siman_seif_topics.json,
+indexé par code parcours (ex. "bassar_bechalav").
 """
 
 from __future__ import annotations
@@ -27,12 +30,12 @@ def _load() -> dict:
     return _cache
 
 
-def siman_topic(subject: str, siman: int) -> str | None:
-    return _load().get(subject, {}).get("siman_topics", {}).get(str(siman))
+def siman_topic(parcours: str, siman: int) -> str | None:
+    return _load().get(parcours, {}).get("siman_topics", {}).get(str(siman))
 
 
-def seif_topic(subject: str, siman: int, seif: int) -> str | None:
-    return _load().get(subject, {}).get("seif_topics", {}).get(str(siman), {}).get(str(seif))
+def seif_topic(parcours: str, siman: int, seif: int) -> str | None:
+    return _load().get(parcours, {}).get("seif_topics", {}).get(str(siman), {}).get(str(seif))
 
 
 def _write(data: dict) -> None:
@@ -46,8 +49,8 @@ def _write(data: dict) -> None:
 def save_topics(siman_rows, seif_rows) -> None:
     """Persist edits from the admin /admin/topics form.
 
-    siman_rows: iterable of (subject, siman, text)
-    seif_rows: iterable of (subject, siman, seif, text)
+    siman_rows: iterable of (parcours, siman, text)
+    seif_rows: iterable of (parcours, siman, seif, text)
     """
     try:
         with open(_PATH, encoding="utf-8") as f:
@@ -55,17 +58,17 @@ def save_topics(siman_rows, seif_rows) -> None:
     except (OSError, json.JSONDecodeError):
         data = {}
 
-    for subject, siman, text in siman_rows:
+    for parcours, siman, text in siman_rows:
         text = text.strip()
-        bucket = data.setdefault(subject, {}).setdefault("siman_topics", {})
+        bucket = data.setdefault(parcours, {}).setdefault("siman_topics", {})
         if text:
             bucket[str(siman)] = text
         else:
             bucket.pop(str(siman), None)
 
-    for subject, siman, seif, text in seif_rows:
+    for parcours, siman, seif, text in seif_rows:
         text = text.strip()
-        bucket = data.setdefault(subject, {}).setdefault("seif_topics", {}).setdefault(str(siman), {})
+        bucket = data.setdefault(parcours, {}).setdefault("seif_topics", {}).setdefault(str(siman), {})
         if text:
             bucket[str(seif)] = text
         else:

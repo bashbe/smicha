@@ -25,8 +25,8 @@
     </div>
   {% else %}
     {% for g in groups %}
-    <!-- Zone 1 : sujet du פרשה/parcours, une fois par groupe -->
-    <div class="toc-group-subject">{{ g.subject }}</div>
+    <!-- Zone 1 : nom du parcours, une fois par groupe -->
+    <div class="toc-group-subject">{{ g.label }}</div>
 
     {% for s in g.simanim %}
     <details class="siman-item" {{ 'open' if loop.first and loop.index0 == 0 }}>
@@ -38,26 +38,27 @@
           <span class="toc-marker-rule"></span>
           <span class="toc-chapter-toggle">{{ icon_chevron_left(16) }}</span>
         </div>
-        <!-- Zone 2 : sujet du siman uniquement, sur sa propre ligne -->
+        <!-- Zone 2 : titre du siman uniquement, sur sa propre ligne -->
         <div class="toc-chapter-subject">
-          {{ s.topic or g.subject }}{% if s.completed %}<span class="toc-chapter-check"> ✓</span>{% endif %}
+          {{ s.topic or g.label }}{% if s.completed %}<span class="toc-chapter-check"> ✓</span>{% endif %}
         </div>
       </summary>
 
-      <!-- Seifim : pilules avec sujet propre à chaque seif entre le numéro et le compte -->
+      <!-- Sujets du siman : une carte par sujet (les seifim couverts restent indicatifs) -->
       <div class="seif-chips">
-        {% if s.seifim %}
-          {% for sf in s.seifim %}
-          <a href="{{ url_for('student.chapitre_seif', subject=g.subject, siman=s.siman, seif=sf.seif) }}"
-             class="seif-chip {{ 'seif-chip-done' if sf.completed }}">
-            <span class="seif-chip-num">{{ sf.seif | to_hebrew }}</span>
-            <!-- Zone 3 : sujet du seif, dans la bulle -->
-            {% if sf.topic %}<span class="seif-chip-topic">{{ sf.topic }}</span>{% endif %}
-            <span class="seif-chip-count">{% if sf.completed %}✓{% else %}{{ sf.count }}{% endif %}</span>
+        {% if s.sujets %}
+          {% for sj in s.sujets %}
+          <a href="{{ url_for('student.chapitre', subject=sj.subject, siman=s.siman) }}"
+             class="seif-chip {{ 'seif-chip-done' if sj.completed }}">
+            {% if sj.seif_min is not none %}
+            <span class="seif-chip-num">{% if sj.seif_min == sj.seif_max %}{{ sj.seif_min | to_hebrew }}{% else %}{{ sj.seif_min | to_hebrew }}–{{ sj.seif_max | to_hebrew }}{% endif %}</span>
+            {% endif %}
+            <span class="seif-chip-topic">{{ sj.subject }}</span>
+            <span class="seif-chip-count">{% if sj.completed %}✓{% else %}{{ sj.count }}{% endif %}</span>
           </a>
           {% endfor %}
         {% else %}
-          <p style="font-size:var(--text-sm);color:var(--muted);">אין סעיפים</p>
+          <p style="font-size:var(--text-sm);color:var(--muted);">אין נושאים</p>
         {% endif %}
       </div>
     </details>

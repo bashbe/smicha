@@ -9,9 +9,9 @@ from flask import Blueprint, flash, jsonify, redirect, render_template, request,
 from sqlalchemy import distinct, func
 
 from auth_helpers import current_user, login_required
-from chapter_topics import seif_topic, siman_topic
+from chapter_topics import siman_topic
 from models import FsrsCard, Progression, Question, StudentProfile, UserAnswer, db
-from question_types import normalize_db_question
+from question_types import PARCOURS_LABELS, normalize_db_question
 
 bp = Blueprint("student", __name__, url_prefix="/app")
 
@@ -194,67 +194,70 @@ def parcours():
         Question.status == "approved",
     ).all() if question_in_sections(q, allowed)]
 
-    # subject → siman → seif → count
-    by_subject: dict[str, dict[int, dict]] = {}
+    # Hiérarchie de contenu : parcours → siman → sujet (le sujet regroupe les
+    # questions à l'intérieur du siman ; le seif reste indicatif).
+    # by_parcours[parcours][siman][subject] = {"count", "seifim"}
+    by_parcours: dict[str, dict[int, dict[str, dict]]] = {}
     for q in qs:
-        if not q.subject or q.siman is None:
+        if not q.parcours or not q.subject or q.siman is None:
             continue
-        by_subject.setdefault(q.subject, {})
-        by_subject[q.subject].setdefault(q.siman, {})
-        by_subject[q.subject][q.siman][q.seif] = by_subject[q.subject][q.siman].get(q.seif, 0) + 1
+        bucket = (
+            by_parcours.setdefault(q.parcours, {})
+            .setdefault(q.siman, {})
+            .setdefault(q.subject, {"count": 0, "seifim": set()})
+        )
+        bucket["count"] += 1
+        if q.seif is not None:
+            bucket["seifim"].add(q.seif)
 
-    _correct_filters = [
-        UserAnswer.is_correct == True,
-    ]
     # IDs of questions in allowed sections (Python-side filter for JSON column)
     allowed_q_ids = [q.id for q in qs]
     correct_rows = (
-        db.session.query(Question.subject, Question.siman,
+        db.session.query(Question.parcours, Question.siman, Question.subject,
                          func.count(distinct(UserAnswer.question_id)))
         .join(UserAnswer, UserAnswer.question_id == Question.id)
-        .filter(UserAnswer.user_id == sp.id, Question.id.in_(allowed_q_ids), *_correct_filters)
-        .group_by(Question.subject, Question.siman)
+        .filter(UserAnswer.user_id == sp.id, Question.id.in_(allowed_q_ids),
+                UserAnswer.is_correct == True)
+        .group_by(Question.parcours, Question.siman, Question.subject)
         .all()
     )
-    correct_map = {f"{r[0]}|{r[1]}": r[2] for r in correct_rows}
-
-    correct_seif_rows = (
-        db.session.query(Question.subject, Question.siman, Question.seif,
-                         func.count(distinct(UserAnswer.question_id)))
-        .join(UserAnswer, UserAnswer.question_id == Question.id)
-        .filter(UserAnswer.user_id == sp.id, Question.id.in_(allowed_q_ids), *_correct_filters)
-        .group_by(Question.subject, Question.siman, Question.seif)
-        .all()
-    )
-    correct_seif_map = {f"{r[0]}|{r[1]}|{r[2]}": r[3] for r in correct_seif_rows}
+    correct_map = {f"{r[0]}|{r[1]}|{r[2]}": r[3] for r in correct_rows}
 
     groups = []
-    for subject in sorted(by_subject.keys()):
-        simanim_map = by_subject[subject]
+    for parcours_code in sorted(by_parcours.keys()):
         simanim = []
-        ordered = sorted(simanim_map.items())
-        for idx, (siman, seif_counts) in enumerate(ordered):
-            count = sum(seif_counts.values())
-            correct = correct_map.get(f"{subject}|{siman}", 0)
-            completed = correct >= count and count > 0
-            pct = min(100, round((correct / count) * 100)) if count > 0 else 0
-            locked = False
-            seifim = [
-                {
-                    "seif": seif,
-                    "count": sc,
-                    "answered": correct_seif_map.get(f"{subject}|{siman}|{seif}", 0),
-                    "completed": correct_seif_map.get(f"{subject}|{siman}|{seif}", 0) >= sc and sc > 0,
-                    "topic": seif_topic(subject, siman, seif),
-                }
-                for seif, sc in sorted((k, v) for k, v in seif_counts.items() if k is not None)
-            ]
+        for siman, subjects_map in sorted(by_parcours[parcours_code].items()):
+            # sujets ordonnés selon le texte : par premier seif croissant
+            ordered_subjects = sorted(
+                subjects_map.items(),
+                key=lambda kv: (min(kv[1]["seifim"]) if kv[1]["seifim"] else 10**6, kv[0]),
+            )
+            sujets = []
+            for subject, data in ordered_subjects:
+                answered = correct_map.get(f"{parcours_code}|{siman}|{subject}", 0)
+                seifim_sorted = sorted(data["seifim"])
+                sujets.append({
+                    "subject": subject,
+                    "count": data["count"],
+                    "answered": answered,
+                    "completed": answered >= data["count"] and data["count"] > 0,
+                    "seif_min": seifim_sorted[0] if seifim_sorted else None,
+                    "seif_max": seifim_sorted[-1] if seifim_sorted else None,
+                })
+            count = sum(s["count"] for s in sujets)
+            correct = sum(s["answered"] for s in sujets)
             simanim.append({
                 "siman": siman, "count": count, "answered": correct,
-                "locked": locked, "pct": pct, "completed": completed,
-                "seifim": seifim, "topic": siman_topic(subject, siman),
+                "pct": min(100, round((correct / count) * 100)) if count > 0 else 0,
+                "completed": correct >= count and count > 0,
+                "sujets": sujets, "topic": siman_topic(parcours_code, siman),
             })
-        groups.append({"subject": subject, "simanim": simanim, "total": sum(s["count"] for s in simanim)})
+        groups.append({
+            "parcours": parcours_code,
+            "label": PARCOURS_LABELS.get(parcours_code, parcours_code),
+            "simanim": simanim,
+            "total": sum(s["count"] for s in simanim),
+        })
 
     return render_template("student/parcours.html", groups=groups, profile=sp)
 
@@ -428,23 +431,47 @@ def revision_siman():
             Question.status == "approved", Question.id.in_(learned_ids),
         ).all() if question_in_sections(q, allowed)]
 
-        by_subject: dict[str, dict[int, dict]] = {}
+        # Même regroupement que le sélecteur : parcours → siman → sujet
+        by_parcours: dict[str, dict[int, dict[str, dict]]] = {}
         for q in qs:
-            if not q.subject or q.siman is None:
+            if not q.parcours or not q.subject or q.siman is None:
                 continue
-            by_subject.setdefault(q.subject, {})
-            by_subject[q.subject].setdefault(q.siman, {})
-            by_subject[q.subject][q.siman][q.seif] = by_subject[q.subject][q.siman].get(q.seif, 0) + 1
+            bucket = (
+                by_parcours.setdefault(q.parcours, {})
+                .setdefault(q.siman, {})
+                .setdefault(q.subject, {"count": 0, "seifim": set()})
+            )
+            bucket["count"] += 1
+            if q.seif is not None:
+                bucket["seifim"].add(q.seif)
 
-        for subject in sorted(by_subject.keys()):
+        for parcours_code in sorted(by_parcours.keys()):
             simanim = []
-            for siman, seif_counts in sorted(by_subject[subject].items()):
-                seifim = [
-                    {"seif": seif, "count": sc}
-                    for seif, sc in sorted((k, v) for k, v in seif_counts.items() if k is not None)
-                ]
-                simanim.append({"siman": siman, "count": sum(seif_counts.values()), "seifim": seifim})
-            groups.append({"subject": subject, "simanim": simanim})
+            for siman, subjects_map in sorted(by_parcours[parcours_code].items()):
+                ordered_subjects = sorted(
+                    subjects_map.items(),
+                    key=lambda kv: (min(kv[1]["seifim"]) if kv[1]["seifim"] else 10**6, kv[0]),
+                )
+                sujets = []
+                for subject, data in ordered_subjects:
+                    seifim_sorted = sorted(data["seifim"])
+                    sujets.append({
+                        "subject": subject,
+                        "count": data["count"],
+                        "seif_min": seifim_sorted[0] if seifim_sorted else None,
+                        "seif_max": seifim_sorted[-1] if seifim_sorted else None,
+                    })
+                simanim.append({
+                    "siman": siman,
+                    "count": sum(s["count"] for s in sujets),
+                    "sujets": sujets,
+                    "topic": siman_topic(parcours_code, siman),
+                })
+            groups.append({
+                "parcours": parcours_code,
+                "label": PARCOURS_LABELS.get(parcours_code, parcours_code),
+                "simanim": simanim,
+            })
 
     return render_template("student/revision_siman_list.html", groups=groups, profile=sp)
 
