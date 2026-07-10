@@ -49,6 +49,16 @@
     const existing = document.querySelector("body > .player-exp");
     if (existing) existing.remove();
     document.body.classList.remove("has-player-exp");
+    document.body.style.removeProperty("--player-exp-height");
+  }
+
+  // Reserve exactly as much scroll space as the fixed bottom panel actually takes,
+  // so revealed content (e.g. the correct answer on a wrong opinions row) never
+  // renders hidden behind it — see body.has-player-exp .container in styles.css.
+  function updateExpHeight() {
+    const exp = document.querySelector("body > .player-exp");
+    if (!exp) return;
+    document.body.style.setProperty("--player-exp-height", exp.offsetHeight + "px");
   }
 
   // ── helpers ────────────────────────────────────────────────────────────────
@@ -199,7 +209,7 @@
     setTimeout(() => {
       if (!state.feedback || state.idx !== turn || state.showNext) return;
       state.showNext = true;
-      if (refs.exp) refs.exp.appendChild(nextButton());
+      if (refs.exp) { refs.exp.appendChild(nextButton()); updateExpHeight(); }
     }, 800);
   }
 
@@ -626,6 +636,7 @@
       refs.exp = inner;
       document.body.appendChild(exp);
       document.body.classList.add("has-player-exp");
+      updateExpHeight();
     }
   }
 

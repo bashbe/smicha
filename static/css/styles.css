@@ -785,7 +785,7 @@ label.choice { cursor: pointer; }
   overflow-y: auto;
   padding: var(--space-2) var(--space-2) calc(var(--space-2) + env(safe-area-inset-bottom));
 }
-body.has-player-exp .container { padding-bottom: 50vh; }
+body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 45vh) + var(--space-3)); }
 .player-complete { min-height: 70vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
 .player-complete-actions { margin-top: var(--space-4); width: 100%; max-width: 20rem; }
 .player-complete-stats   { margin-top: var(--space-3); }
