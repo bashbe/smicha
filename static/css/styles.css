@@ -1283,6 +1283,18 @@ body.has-player-exp .container { padding-bottom: 50vh; }
 /* Admin two-column layout — collapses to 1 col on mobile */
 .admin-two-col { grid-template-columns: 300px 1fr; }
 
+/* Questions tab filter bar — fixed widths on desktop, full-width stack on mobile */
+.admin-filter-header  { display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); align-items: flex-end; margin-bottom: var(--space-3); }
+.admin-filter-actions { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+.admin-filter-form    { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+.admin-filter-status    { width: 9rem; }
+.admin-filter-type      { width: 12rem; }
+.admin-filter-parcours  { width: 10rem; }
+.admin-filter-num       { width: 6rem; }
+.admin-filter-tag       { width: 9rem; }
+.admin-filter-search    { width: 13rem; }
+.admin-filter-clear     { background: none; color: var(--muted-foreground); }
+
 /* Admin tab switcher — hidden on desktop, shown on mobile */
 .admin-tab-bar { display: none; }
 .admin-tab-bar .tab-btn {
@@ -1326,6 +1338,18 @@ body.has-player-exp .container { padding-bottom: 50vh; }
 
   /* Parcours header: allow wrapping */
   .parcours-header-row { flex-wrap: wrap; gap: var(--space-1); }
+
+  /* Questions filter bar: stack full-width instead of wrapping fixed-width fields */
+  .admin-filter-header, .admin-filter-actions, .admin-filter-form, .admin-approve-all-form {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+  .admin-filter-status, .admin-filter-type, .admin-filter-parcours,
+  .admin-filter-num, .admin-filter-tag, .admin-filter-search,
+  .admin-filter-form button, .admin-filter-clear, .admin-approve-all-form button {
+    width: 100%;
+  }
 }
 
 /* Choice grid: 1 column on very small phones */

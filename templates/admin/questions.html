@@ -3,40 +3,40 @@
 {% block content %}
 
 {# ── Filter bar ── #}
-<div class="row between" style="margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem;align-items:flex-end;">
+<div class="admin-filter-header">
   <div>
     <h1 class="text-2xl bold">שאלות</h1>
     <p class="text-sm muted">{{ questions|length }} שאלות תואמות</p>
   </div>
-  <div class="row gap-2" style="width:auto;align-items:center;flex-wrap:wrap;">
-    <form method="get" class="row gap-2" style="flex-wrap:wrap;align-items:center;width:auto;">
-      <select name="status" onchange="this.form.submit()" style="width:9rem;">
+  <div class="admin-filter-actions">
+    <form method="get" class="admin-filter-form">
+      <select name="status" onchange="this.form.submit()" class="admin-filter-status">
         <option value="" {{ 'selected' if not filters.status }}>כל הסטטוסים</option>
         {% for v,l in [('pending','ממתינות'),('approved','מאושרות'),('rejected','נדחו')] %}
         <option value="{{ v }}" {{ 'selected' if filters.status == v }}>{{ l }}</option>
         {% endfor %}
       </select>
-      <select name="type" onchange="this.form.submit()" style="width:12rem;">
+      <select name="type" onchange="this.form.submit()" class="admin-filter-type">
         <option value="" {{ 'selected' if not filters.type }}>כל הסוגים</option>
         {% for t in question_types %}
         <option value="{{ t }}" {{ 'selected' if filters.type == t }}>{{ type_label.get(t, t) }}</option>
         {% endfor %}
       </select>
-      <select name="parcours" onchange="this.form.submit()" style="width:10rem;">
+      <select name="parcours" onchange="this.form.submit()" class="admin-filter-parcours">
         <option value="" {{ 'selected' if not filters.parcours }}>כל הפרוסים</option>
         <option value="bassar_bechalav" {{ 'selected' if filters.parcours == 'bassar_bechalav' }}>בשר בחלב</option>
       </select>
-      <input name="siman" type="number" min="1" value="{{ filters.siman }}" placeholder="סימן…" style="width:6rem;" />
-      <input name="seif" type="number" min="1" value="{{ filters.seif }}" placeholder="סעיף…" style="width:6rem;" />
-      <input name="tag" value="{{ filters.tag }}" placeholder="תגית…" style="width:9rem;" />
-      <input name="q" value="{{ filters.q }}" placeholder="חיפוש נושא / טקסט…" style="width:13rem;" />
+      <input name="siman" type="number" min="1" value="{{ filters.siman }}" placeholder="סימן…" class="admin-filter-num" />
+      <input name="seif" type="number" min="1" value="{{ filters.seif }}" placeholder="סעיף…" class="admin-filter-num" />
+      <input name="tag" value="{{ filters.tag }}" placeholder="תגית…" class="admin-filter-tag" />
+      <input name="q" value="{{ filters.q }}" placeholder="חיפוש נושא / טקסט…" class="admin-filter-search" />
       <button type="submit" class="btn btn-outline">חפש</button>
       {% if filters.status or filters.type or filters.parcours or filters.q or filters.siman or filters.seif or filters.tag %}
-      <a href="{{ url_for('admin.questions') }}" class="btn" style="background:none;color:var(--muted-foreground);">× נקה</a>
+      <a href="{{ url_for('admin.questions') }}" class="btn admin-filter-clear">× נקה</a>
       {% endif %}
     </form>
     {% if filters.status == 'pending' and questions %}
-    <form method="post" action="{{ url_for('admin.approve_all_pending') }}"
+    <form method="post" action="{{ url_for('admin.approve_all_pending') }}" class="admin-approve-all-form"
           onsubmit="return confirm('לאשר את כל {{ questions|length }} השאלות הממתינות?');">
       <button type="submit" class="btn btn-success">✓ אשר הכל ({{ questions|length }})</button>
     </form>
