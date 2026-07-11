@@ -617,19 +617,7 @@ label.choice { cursor: pointer; }
 .siman-summary { padding: var(--space-2); cursor: pointer; list-style: none; }
 .siman-summary::-webkit-details-marker { display: none; }
 .siman-body { border-top: 1px solid var(--border); padding: var(--space-2); }
-.seif-grid { display: flex; flex-wrap: wrap; gap: var(--space-1); }
-.seif-chip {
-  display: inline-flex; align-items: center; justify-content: center;
-  height: 2rem; min-width: 2.25rem; padding: 0 0.5rem;
-  border-radius: var(--radius-btn);
-  font-size: var(--text-sm); font-weight: 700;
-  border: 1px solid var(--border);
-  transition: border-color 0.12s;
-}
-.seif-chip-active { color: var(--accent); border-color: var(--accent-dim); background: var(--accent-dim); }
-.seif-chip-active:hover { border-color: var(--accent); }
 .seif-chip-done   { background: var(--success-dim); color: var(--success); border-color: var(--success-dim); }
-.seif-chip-locked { background: var(--surface); color: var(--muted); cursor: not-allowed; }
 
 /* ---- Opinions (quiz matching) ---- */
 .opinions-match {
@@ -1171,13 +1159,17 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   flex-shrink: 0;
 }
 .seif-chip-done .seif-chip-num { color: var(--success); }
-/* Nom du sujet — contenu principal de la carte : peut s'étendre sur plusieurs lignes */
+/* Nom du sujet — contenu principal de la carte : peut s'étendre sur plusieurs lignes.
+   overflow-wrap: anywhere garde les coupures entre mots quand c'est possible, et ne coupe
+   au milieu d'un mot que si un mot seul dépasse déjà la largeur de la carte (sinon le texte
+   dépasse le cadre arrondi de la pilule). */
 .seif-chip-topic {
   font-size: var(--text-sm);
   color: var(--fg);
   font-family: 'Noto Sans Hebrew', sans-serif;
   line-height: 1.35;
   min-width: 0;
+  overflow-wrap: anywhere;
 }
 .seif-chip-count {
   font-size: 0.75rem;
