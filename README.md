@@ -529,6 +529,7 @@ Retourne uniquement un tableau JSON valide, sans texte avant ou après.
 | POST | `/admin/validate/approve-all` | Approuve en un clic toutes les questions `pending` (bouton « אשר הכל » de `/admin/questions` filtré sur `pending`) |
 | GET | `/admin/questions` | Recherche/édition de toutes les questions — filtres `status`, `type`, `parcours`, `siman`, `q` (texte libre) |
 | POST | `/admin/questions/<qid>/edit` | Sauvegarde / approuve / rejette une question depuis `/admin/questions` |
+| POST | `/admin/subjects/rename` | Renomme un `sujet` (recherche/remplace exact) sur toutes les cartes qui le partagent, depuis `/admin/dashboard` (bloc « שאלות לפי נושא ») — met aussi à jour `Progression.subject` en parallèle pour ne pas casser la progression déjà enregistrée |
 | POST | `/admin/reset-db` | **super_admin uniquement** — efface et recrée toutes les tables (confirmation texte `"RESET"` requise) |
 
 ---
