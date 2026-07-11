@@ -1128,26 +1128,35 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   padding: var(--space-2) 0 var(--space-1);
 }
 
-/* Seifim : pilules flexbox avec sujet propre à chaque seif */
+/* Seifim : pilules « surligneur » — le sujet coule comme du texte et la pilule le suit,
+   ligne par ligne. Chaque sujet occupe sa propre rangée (.seif-chip-row = bloc pleine
+   largeur) ; la pilule elle-même est inline pour pouvoir se couper en fin de ligne et
+   reprendre au début de la ligne suivante. */
 .seif-chips {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start; /* chaque pilule garde sa hauteur — pas d'étirement sur la plus haute de la rangée */
-  gap: 6px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
   padding: var(--space-1) 0 var(--space-2);
 }
+.seif-chip-row {
+  max-width: 100%;
+}
 .seif-chip {
-  display: inline-flex;
-  align-items: center; /* contenu centré verticalement : capsule équilibrée même sur plusieurs lignes */
-  gap: 8px;
-  /* padding horizontal ≥ rayon du demi-cercle pour que texte/numéro ne mordent pas sur l'arrondi */
-  padding: 6px 16px;
+  display: inline;
+  /* box-decoration-break: clone → chaque fragment de ligne reçoit sa bordure complète
+     (demi-cercles aux deux bouts + bords haut/bas), donc la pilule « se termine » en fin
+     de ligne et « repart » au début de la suivante au lieu de s'étirer en un seul bloc. */
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  padding: 5px 15px;
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   font-size: var(--text-sm);
   color: var(--fg);
-  min-height: 32px;
-  max-width: 100%;
+  /* interligne aéré : les segments de pilule des lignes successives ne se chevauchent pas */
+  line-height: 2.35;
+  overflow-wrap: anywhere;
   transition: background 0.12s, border-color 0.12s;
 }
 .seif-chip:hover {
@@ -1158,25 +1167,17 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   font-family: 'Secular One', sans-serif;
   color: var(--accent);
   font-size: var(--text-base);
-  flex-shrink: 0;
 }
 .seif-chip-done .seif-chip-num { color: var(--success); }
-/* Nom du sujet — contenu principal de la carte : peut s'étendre sur plusieurs lignes.
-   overflow-wrap: anywhere garde les coupures entre mots quand c'est possible, et ne coupe
-   au milieu d'un mot que si un mot seul dépasse déjà la largeur de la carte (sinon le texte
-   dépasse le cadre arrondi de la pilule). */
+/* Nom du sujet — contenu principal de la pilule */
 .seif-chip-topic {
   font-size: var(--text-sm);
   color: var(--fg);
   font-family: 'Noto Sans Hebrew', sans-serif;
-  line-height: 1.35;
-  min-width: 0;
-  overflow-wrap: anywhere;
 }
 .seif-chip-count {
   font-size: 0.75rem;
   color: var(--muted);
-  flex-shrink: 0;
 }
 
 /* ---- Bottom nav labels toujours visibles sur mobile ---- */

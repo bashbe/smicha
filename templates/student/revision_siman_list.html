@@ -47,14 +47,10 @@
       <div class="seif-chips">
         {% if s.sujets %}
           {% for sj in s.sujets %}
-          <a href="{{ url_for('student.revision_siman_detail', subject=sj.subject, siman=s.siman) }}"
-             class="seif-chip">
-            {% if sj.seif_min is not none %}
-            <span class="seif-chip-num">{% if sj.seif_min == sj.seif_max %}{{ sj.seif_min | to_hebrew }}{% else %}{{ sj.seif_min | to_hebrew }}–{{ sj.seif_max | to_hebrew }}{% endif %}</span>
-            {% endif %}
-            <span class="seif-chip-topic">{{ sj.subject }}</span>
-            <span class="seif-chip-count">{{ sj.count }}</span>
-          </a>
+          <div class="seif-chip-row">
+            <a href="{{ url_for('student.revision_siman_detail', subject=sj.subject, siman=s.siman) }}"
+               class="seif-chip">{% if sj.seif_min is not none %}<span class="seif-chip-num">{% if sj.seif_min == sj.seif_max %}{{ sj.seif_min | to_hebrew }}{% else %}{{ sj.seif_min | to_hebrew }}–{{ sj.seif_max | to_hebrew }}{% endif %}</span> {% endif %}<span class="seif-chip-topic">{{ sj.subject }}</span> <span class="seif-chip-count">{{ sj.count }}</span></a>
+          </div>
           {% endfor %}
         {% else %}
           <p style="font-size:var(--text-sm);color:var(--muted);">אין נושאים</p>
