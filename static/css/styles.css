@@ -1136,6 +1136,9 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   padding: var(--space-1) 0 var(--space-2);
   /* interligne aéré : les lignes de pilules successives ne se chevauchent pas */
   line-height: 2.4;
+  /* justifié : l'espace entre les mots s'étire pour que chaque ligne (sauf la dernière)
+     se termine au même endroit, des deux côtés */
+  text-align: justify;
 }
 .seif-chip {
   display: inline;
