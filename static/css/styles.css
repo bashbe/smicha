@@ -1128,34 +1128,28 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   padding: var(--space-2) 0 var(--space-1);
 }
 
-/* Seifim : pilules « surligneur » — le sujet coule comme du texte et la pilule le suit,
-   ligne par ligne. Chaque sujet occupe sa propre rangée (.seif-chip-row = bloc pleine
-   largeur) ; la pilule elle-même est inline pour pouvoir se couper en fin de ligne et
-   reprendre au début de la ligne suivante. */
+/* Seifim : pilules « surligneur » qui s'enchaînent comme du texte. Les sujets coulent
+   inline les uns à la suite des autres (une pilule peut commencer au milieu d'une ligne,
+   là où finit la précédente) et se coupent naturellement en fin de ligne. */
 .seif-chips {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-1);
+  display: block;
   padding: var(--space-1) 0 var(--space-2);
-}
-.seif-chip-row {
-  max-width: 100%;
+  /* interligne aéré : les lignes de pilules successives ne se chevauchent pas */
+  line-height: 2.4;
 }
 .seif-chip {
   display: inline;
-  /* box-decoration-break: clone → chaque fragment de ligne reçoit sa bordure complète
-     (demi-cercles aux deux bouts + bords haut/bas), donc la pilule « se termine » en fin
-     de ligne et « repart » au début de la suivante au lieu de s'étirer en un seul bloc. */
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
+  /* box-decoration-break: slice (défaut) → les demi-cercles n'apparaissent qu'au vrai début
+     et à la vraie fin de chaque pilule ; aux coupures de ligne au milieu d'une même pilule,
+     le bord est « tranché » (pas de demi-cercle), donc la pilule se poursuit visuellement. */
+  -webkit-box-decoration-break: slice;
+  box-decoration-break: slice;
   padding: 5px 15px;
+  margin-inline-start: 5px; /* petit espace entre deux pilules consécutives */
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   font-size: var(--text-sm);
   color: var(--fg);
-  /* interligne aéré : les segments de pilule des lignes successives ne se chevauchent pas */
-  line-height: 2.35;
   overflow-wrap: anywhere;
   transition: background 0.12s, border-color 0.12s;
 }
