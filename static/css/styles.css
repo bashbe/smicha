@@ -1132,14 +1132,16 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
 .seif-chips {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-start; /* chaque pilule garde sa hauteur — pas d'étirement sur la plus haute de la rangée */
   gap: 6px;
   padding: var(--space-1) 0 var(--space-2);
 }
 .seif-chip {
   display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
-  padding: 4px 10px;
+  align-items: center; /* contenu centré verticalement : capsule équilibrée même sur plusieurs lignes */
+  gap: 8px;
+  /* padding horizontal ≥ rayon du demi-cercle pour que texte/numéro ne mordent pas sur l'arrondi */
+  padding: 6px 16px;
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   font-size: var(--text-sm);
