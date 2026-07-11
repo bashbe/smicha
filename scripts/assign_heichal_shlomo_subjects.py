@@ -8,9 +8,8 @@ donc partagé par plusieurs seifim quand la source elle-même ne les distingue
 pas plus finement.
 
 Le seif 5 n'a aucun contenu identifiable dans le document fourni (aucune
-mention "סעיף ה" nulle part dans le texte) : les questions de ce seif sont
-laissées inchangées et un avertissement est affiché. Corriger SEIF_SUBJECTS
-ci-dessous puis relancer le script si une source pour le seif 5 est trouvée.
+mention "סעיף ה" nulle part dans le texte) ; son sujet a été communiqué
+directement par l'utilisateur (ביצה בתוך התרנגולת).
 
 Usage :
     python -m scripts.assign_heichal_shlomo_subjects           # aperçu (dry-run)
@@ -29,27 +28,29 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app import create_app  # noqa: E402
 from models import Question, db  # noqa: E402
 
-# seif → sujet, dérivé de שו"ת היכל שלמה סימן פז (Livre 18 juin 2026.pdf)
+# seif → sujet (quelques mots max), dérivé de שו"ת היכל שלמה סימן פז
+# (Livre 18 juin 2026.pdf)
 SEIF_SUBJECTS = {
-    # סעיפים א–ב : gדר האיסור (תורה/דרבנן/מראית עין) וגדר "בישול" (מליחה/כבישה,
+    # סעיפים א–ב : גדר האיסור (תורה/דרבנן/מראית עין) וגדר "בישול" (מליחה/כבישה,
     # בישול אחר בישול, חיה ועוף)
-    1: 'באיזה בשר נוהג איסור בישול בשר בחלב, וגדר "בישול"',
-    2: 'באיזה בשר נוהג איסור בישול בשר בחלב, וגדר "בישול"',
+    1: "גדר בישול בבשר בחלב",
+    2: "גדר בישול בבשר בחלב",
     # סעיף ג : בשר/חלב מבהמה טמאה, בשר נבילה וטריפה, דגים וחגבים בחלב
-    3: "בשר או חלב מבהמה טמאה, בשר נבילה, ודגים בחלב",
+    3: "בשר וחלב מבהמה טמאה",
     # סעיף ד : כללי איסור מראית עין (חלב אשה, חלב שקדים, תחליפי חלב)
-    4: "כללי איסור מראית עין בבשר בחלב",
-    # סעיף ה : אין מקור בטקסט שסופק — לא מעודכן (ראה האזהרה בהרצה)
+    4: "איסור מראית עין בבב״ח",
+    # סעיף ה : אין מקור בטקסט שסופק — נמסר ישירות ע"י המשתמש
+    5: "ביצה בתוך התרנגולת כבשר",
     # סעיפים ו-ח : דם ואיברים (עור/עצמות/שליא) בחלב, חלב זכר/מתה/מעושן
-    6: "בישול דם ואיברים בחלב; חלב זכר, מתה ומעושן",
-    7: "בישול דם ואיברים בחלב; חלב זכר, מתה ומעושן",
-    8: "בישול דם ואיברים בחלב; חלב זכר, מתה ומעושן",
+    6: "דם ואיברים מבושלים בחלב",
+    7: "דם ואיברים מבושלים בחלב",
+    8: "דם ואיברים מבושלים בחלב",
     # סעיף ט : חלב הנמצא בקיבת הבהמה
-    9: "חלב הנמצא בקיבת הבהמה",
+    9: "חלב בתוך קיבת הבהמה",
     # סעיף י : ייבוש עור קיבה/בשר והשריה בחלב + מעמיד מחלב קיבה שקיבל טעם בשר
-    10: "ייבוש עור קיבה ובשר; העמדת גבינה בחלב קיבה שקיבל טעם בשר",
+    10: "ייבוש בשר ועור קיבה",
     # סעיפים י-יא : מעמיד מעור קיבה כשרה/טמאה, וזה וזה גורם
-    11: "העמדת גבינה בעור קיבה כשרה או טמאה, וזה וזה גורם",
+    11: "העמדת גבינה בעור קיבה",
 }
 
 
