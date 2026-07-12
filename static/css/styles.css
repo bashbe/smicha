@@ -1128,9 +1128,10 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   padding: var(--space-2) 0 var(--space-1);
 }
 
-/* Seifim : pilules « surligneur » qui s'enchaînent comme du texte. Les sujets coulent
-   inline les uns à la suite des autres (une pilule peut commencer au milieu d'une ligne,
-   là où finit la précédente) et se coupent naturellement en fin de ligne. */
+/* Seifim : pilules « surligneur » qui coulent comme des mots et retombent naturellement
+   à la ligne. Chaque pilule est un bloc atomique (inline-block) : elle ne peut jamais se
+   couper au milieu de son contenu (ce qui produirait un fragment de texte sans bordure,
+   visuellement détaché et donc trompeur — ex. « ו'-ח' » coupé en deux moitiés illisibles). */
 .seif-chips {
   display: block;
   padding: var(--space-1) 0 var(--space-2);
@@ -1142,14 +1143,10 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   text-align: start;
 }
 .seif-chip {
-  display: inline;
-  /* box-decoration-break: slice (défaut) → les demi-cercles n'apparaissent qu'au vrai début
-     et à la vraie fin de chaque pilule ; aux coupures de ligne au milieu d'une même pilule,
-     le bord est « tranché » (pas de demi-cercle), donc la pilule se poursuit visuellement. */
-  -webkit-box-decoration-break: slice;
-  box-decoration-break: slice;
+  display: inline-block;
   padding: 5px 15px;
   margin-inline-start: 5px; /* petit espace entre deux pilules consécutives */
+  margin-bottom: 5px; /* espace vertical quand les pilules retombent à la ligne */
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   font-size: var(--text-sm);
