@@ -1129,29 +1129,33 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
 }
 
 /* Seifim : pilules « surligneur » qui coulent comme des mots et retombent naturellement
-   à la ligne. Chaque pilule est un bloc atomique (inline-block) : elle ne peut jamais se
-   couper au milieu de son contenu (ce qui produirait un fragment de texte sans bordure,
-   visuellement détaché et donc trompeur — ex. « ו'-ח' » coupé en deux moitiés illisibles). */
+   à la ligne — une pilule peut commencer là où finit la précédente, comme du texte surligné. */
 .seif-chips {
   display: block;
   padding: var(--space-1) 0 var(--space-2);
   /* interligne aéré : les lignes de pilules successives ne se chevauchent pas */
   line-height: 2.4;
-  /* pas de justify : les pilules ont une largeur fixe (pas du texte normal), donc justify
-     concentre tout l'espace restant sur l'unique espace de la ligne et crée un trou énorme
-     entre la pilule et le mot suivant. Alignement naturel RTL à la place. */
+  /* pas de justify : les pilules n'ont pas la souplesse du texte normal, donc justify
+     concentre tout l'espace restant sur l'unique espace d'une ligne et crée un trou énorme
+     entre deux pilules. Alignement naturel RTL à la place. */
   text-align: start;
 }
 .seif-chip {
-  display: inline-block;
+  /* inline (pas inline-block) → les pilules coulent et s'enchaînent serré comme du texte.
+     white-space: nowrap → une pilule ne se coupe JAMAIS au milieu de son contenu : elle
+     bascule entière à la ligne suivante si elle ne tient pas (sinon on obtenait un fragment
+     de texte sans bordure, détaché et trompeur — ex. « ו'-ח' » coupé en deux moitiés).
+     box-decoration-break: clone → bordure et demi-cercles complets aux deux extrémités. */
+  display: inline;
+  white-space: nowrap;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
   padding: 5px 15px;
   margin-inline-start: 5px; /* petit espace entre deux pilules consécutives */
-  margin-bottom: 5px; /* espace vertical quand les pilules retombent à la ligne */
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   font-size: var(--text-sm);
   color: var(--fg);
-  overflow-wrap: anywhere;
   transition: background 0.12s, border-color 0.12s;
 }
 .seif-chip:hover {
