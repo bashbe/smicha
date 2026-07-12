@@ -21,12 +21,31 @@
   <div class="grid grid-2 grid-2-mobile-1">
     <div class="card">
       <h2 class="text-lg semibold" style="margin-bottom:0.75rem;">📄 שאלות לפי נושא</h2>
+      <p class="text-xs muted" style="margin-bottom:0.5rem;">לחיצה על ✏️ מאפשרת לשנות את שם הנושא — השינוי יחול על כל הכרטיסים שחולקים אותו שם (חיפוש והחלפה).</p>
       {% if not by_subject %}
         <p class="text-sm muted">עוד אין שאלות במערכת.</p>
       {% else %}
         <ul style="list-style:none;padding:0;margin:0;" class="stack-sm">
           {% for name, count in by_subject %}
-          <li class="row between text-sm"><span>{{ name }}</span><span class="muted">{{ count }}</span></li>
+          <li class="text-sm" data-subject-row>
+            <div class="row between" style="gap:0.5rem;align-items:center;">
+              <span>{{ name }}</span>
+              <span class="row gap-1" style="align-items:center;">
+                <span class="muted">{{ count }}</span>
+                {% if name != '— ללא נושא —' %}
+                <button type="button" class="btn btn-outline" style="padding:0.2rem 0.5rem;min-height:auto;font-size:0.75rem;" onclick="toggleSubjectRename(this)">✏️</button>
+                {% endif %}
+              </span>
+            </div>
+            {% if name != '— ללא נושא —' %}
+            <form method="post" action="{{ url_for('admin.rename_subject') }}" class="row gap-1" style="display:none;margin-top:0.4rem;" data-rename-form
+                  onsubmit="return confirm('לשנות את שם הנושא בכל {{ count }} הכרטיסים? הפעולה תעדכן גם התקדמות תלמידים קיימת.');">
+              <input type="hidden" name="old_subject" value="{{ name }}" />
+              <input type="text" name="new_subject" value="{{ name }}" placeholder="שם נושא חדש…" style="flex:1;" required />
+              <button type="submit" class="btn btn-primary" style="padding:0.3rem 0.75rem;min-height:auto;font-size:0.8rem;">שנה</button>
+            </form>
+            {% endif %}
+          </li>
           {% endfor %}
         </ul>
       {% endif %}
@@ -41,6 +60,16 @@
       </div>
     </div>
   </div>
+
+  <script>
+    function toggleSubjectRename(btn) {
+      const row = btn.closest('[data-subject-row]');
+      const form = row.querySelector('[data-rename-form]');
+      const showing = form.style.display !== 'none';
+      form.style.display = showing ? 'none' : 'flex';
+      if (!showing) form.querySelector('input[name=new_subject]').focus();
+    }
+  </script>
 
   {% if current_user and current_user.has_role('super_admin') %}
   <div class="card" style="border:1px solid var(--destructive);background:rgba(239,68,68,0.05);">

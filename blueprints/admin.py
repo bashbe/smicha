@@ -11,7 +11,7 @@ from blueprints.auth import create_account
 from chapter_topics import save_topics
 from chapter_topics import seif_topic as get_seif_topic
 from chapter_topics import siman_topic as get_siman_topic
-from models import FsrsCard, Question, QuestionEdit, StudentProfile, User, UserAnswer, db
+from models import FsrsCard, Progression, Question, QuestionEdit, StudentProfile, User, UserAnswer, db
 from question_types import (
     PARCOURS_LABELS,
     QUESTION_TYPES,
@@ -71,6 +71,49 @@ def dashboard():
         by_subject[name] = by_subject.get(name, 0) + 1
     by_subject_sorted = sorted(by_subject.items(), key=lambda kv: -kv[1])
     return render_template("admin/dashboard.html", counts=counts, by_subject=by_subject_sorted)
+
+
+@bp.route("/subjects/rename", methods=["POST"])
+@staff_required
+def rename_subject():
+    """Renames a subject (`sujet`) across every card sharing that exact title.
+
+    Acts as a search-and-replace on Question.subject; matching Progression
+    rows are updated in tandem so existing student progress stays linked to
+    the renamed subject instead of silently orphaning.
+    """
+    user = current_user()
+    old_subject = (request.form.get("old_subject") or "").strip()
+    new_subject = (request.form.get("new_subject") or "").strip()
+
+    if not old_subject or not new_subject:
+        flash("יש להזין שם נושא חדש", "error")
+        return redirect(url_for("admin.dashboard"))
+    if old_subject == new_subject:
+        flash("השם החדש זהה לשם הקיים", "error")
+        return redirect(url_for("admin.dashboard"))
+
+    matching = Question.query.filter_by(subject=old_subject).all()
+    if not matching:
+        flash(f'לא נמצאו שאלות עם הנושא "{old_subject}"', "error")
+        return redirect(url_for("admin.dashboard"))
+
+    note = f'שינוי שם נושא: "{old_subject}" ← "{new_subject}"'
+    for q in matching:
+        previous = q.as_dict()
+        q.subject = new_subject
+        db.session.add(
+            QuestionEdit(
+                question_id=q.id, editor_id=user.id, action="edited",
+                previous_content=previous, new_content=q.as_dict(), note=note,
+            )
+        )
+
+    Progression.query.filter_by(subject=old_subject).update({"subject": new_subject})
+
+    db.session.commit()
+    flash(f'{len(matching)} שאלות עודכנו: "{old_subject}" ← "{new_subject}"', "success")
+    return redirect(url_for("admin.dashboard"))
 
 
 @bp.route("/users")

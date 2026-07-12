@@ -2,11 +2,34 @@
 
 from __future__ import annotations
 
-from flask import Flask
+import os
+import subprocess
+import time
+
+from flask import Flask, Response, render_template
 
 from config import Config
 from models import db
 from auth_helpers import current_user
+
+
+def _compute_app_version() -> str:
+    """Short git commit hash, or a startup timestamp if git is unavailable."""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=os.path.dirname(__file__),
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=True,
+        )
+        return result.stdout.strip()
+    except Exception:
+        return str(int(time.time()))
+
+
+APP_VERSION = _compute_app_version()
 
 
 def create_app(config_object: type = Config) -> Flask:
@@ -14,6 +37,13 @@ def create_app(config_object: type = Config) -> Flask:
     app.config.from_object(config_object)
 
     db.init_app(app)
+
+    @app.route("/sw.js")
+    def service_worker():
+        body = render_template("sw.js.jinja", app_version=APP_VERSION)
+        response = Response(body, mimetype="application/javascript")
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
+        return response
 
     @app.template_filter("to_hebrew")
     def to_hebrew(n) -> str:
@@ -55,7 +85,7 @@ def create_app(config_object: type = Config) -> Flask:
 
     @app.context_processor
     def inject_user():
-        return {"current_user": current_user()}
+        return {"current_user": current_user(), "app_version": APP_VERSION}
 
     with app.app_context():
         db.create_all()

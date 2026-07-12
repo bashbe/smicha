@@ -34,6 +34,7 @@ L'app est entièrement en hébreu (RTL), thème sombre navy/indigo/ambre.
 10. [Pipeline d'import des questions](#pipeline-dimport-des-questions)
 11. [Rôles et authentification](#rôles-et-authentification)
 12. [Commandes utiles](#commandes-utiles)
+13. [Service worker & mise à jour automatique](#service-worker--mise-à-jour-automatique)
 
 ---
 
@@ -528,6 +529,7 @@ Retourne uniquement un tableau JSON valide, sans texte avant ou après.
 | POST | `/admin/validate/approve-all` | Approuve en un clic toutes les questions `pending` (bouton « אשר הכל » de `/admin/questions` filtré sur `pending`) |
 | GET | `/admin/questions` | Recherche/édition de toutes les questions — filtres `status`, `type`, `parcours`, `siman`, `q` (texte libre) |
 | POST | `/admin/questions/<qid>/edit` | Sauvegarde / approuve / rejette une question depuis `/admin/questions` |
+| POST | `/admin/subjects/rename` | Renomme un `sujet` (recherche/remplace exact) sur toutes les cartes qui le partagent, depuis `/admin/dashboard` (bloc « שאלות לפי נושא ») — met aussi à jour `Progression.subject` en parallèle pour ne pas casser la progression déjà enregistrée |
 | POST | `/admin/reset-db` | **super_admin uniquement** — efface et recrée toutes les tables (confirmation texte `"RESET"` requise) |
 
 ---
@@ -841,6 +843,36 @@ python app.py
 # Git — sauvegarder les credentials GitHub une seule fois (ex. sur PythonAnywhere)
 git config --global credential.helper store
 ```
+
+---
+
+## Service worker & mise à jour automatique
+
+L'app sert un service worker (`GET /sw.js`, route Flask — pas un fichier statique) pour éviter
+qu'un navigateur affiche une version obsolète des assets `static/` après un déploiement.
+
+- **Versioning** : `APP_VERSION` est calculé une seule fois au démarrage (`app.py`), via
+  `git rev-parse --short HEAD` ; fallback sur un timestamp si `.git` est absent. Il est injecté dans
+  `templates/sw.js.jinja` comme `CACHE_NAME = "smiha-static-{APP_VERSION}"`. Le nom du cache change
+  donc à chaque déploiement, ce qui fait changer les octets de `/sw.js` et déclenche la détection
+  native de mise à jour du navigateur.
+- **`/sw.js` est une route Flask** (pas un fichier dans `static/`) car son contenu dépend de
+  `APP_VERSION`, calculé au runtime — un fichier statique ne pourrait pas être régénéré à chaque
+  déploiement sans étape de build. La réponse est servie avec
+  `Cache-Control: no-cache, must-revalidate` pour que le fichier lui-même ne soit jamais mis en
+  cache par le navigateur (sinon la détection de mise à jour serait retardée).
+- **Portée** : le service worker n'intercepte que les requêtes `GET /static/*`
+  (stale-while-revalidate). Toute autre requête (pages HTML, `/app/*`, `/admin/*`, `/auth/*`,
+  `/api/*`) passe en direct — aucune donnée dynamique/authentifiée n'est mise en cache.
+- **Bandeau de mise à jour** : script inline dans `templates/base.html` — enregistre le SW, affiche
+  un bandeau (« גרסה חדשה זמינה ») quand une nouvelle version est installée en arrière-plan, et
+  recharge la page une fois l'utilisateur cliqué « רענן ».
+- **Manifest PWA** : `static/manifest.json`, icônes `static/images/icon-192.png` / `icon-512.png`
+  générées depuis `static/favicon.svg` via `scripts/generate_pwa_icons.py` (à relancer manuellement
+  si le favicon change — nécessite `cairosvg`, non listé dans `requirements.txt` car outil de build
+  uniquement, pas une dépendance runtime).
+- **Règle** : ne jamais committer/hardcoder un nom de cache statique — tout est dérivé
+  automatiquement de `APP_VERSION`.
 
 ---
 

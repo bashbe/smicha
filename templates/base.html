@@ -16,9 +16,50 @@
   <link href="https://fonts.googleapis.com/css2?family=Secular+One&family=Noto+Sans+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}" />
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}" />
+  <meta name="theme-color" content="#0D1117" />
   {% block head %}{% endblock %}
 </head>
 <body>
   {% block body %}{% endblock %}
+
+  <div id="sw-update-banner" class="sw-update-banner" hidden>
+    <span>גרסה חדשה זמינה</span>
+    <button type="button" id="sw-update-btn">רענן</button>
+  </div>
+  <script>
+    (function () {
+      if (!("serviceWorker" in navigator)) return;
+
+      var banner = document.getElementById("sw-update-banner");
+      var refreshButton = document.getElementById("sw-update-btn");
+      var waitingWorker = null;
+
+      navigator.serviceWorker.register("/sw.js").then(function (registration) {
+        registration.addEventListener("updatefound", function () {
+          var newWorker = registration.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener("statechange", function () {
+            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+              waitingWorker = newWorker;
+              banner.hidden = false;
+            }
+          });
+        });
+
+        document.addEventListener("visibilitychange", function () {
+          if (document.visibilityState === "visible") registration.update();
+        });
+      });
+
+      navigator.serviceWorker.addEventListener("controllerchange", function () {
+        location.reload();
+      });
+
+      refreshButton.addEventListener("click", function () {
+        if (waitingWorker) waitingWorker.postMessage({ type: "SKIP_WAITING" });
+      });
+    })();
+  </script>
 </body>
 </html>
