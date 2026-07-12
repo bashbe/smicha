@@ -1128,34 +1128,32 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   padding: var(--space-2) 0 var(--space-1);
 }
 
-/* Seifim : pilules « surligneur » qui coulent comme des mots et retombent naturellement
-   à la ligne — une pilule peut commencer là où finit la précédente, comme du texte surligné. */
+/* Seifim : pilules « surligneur » qui s'enchaînent comme du texte. Les sujets coulent
+   inline les uns à la suite des autres (une pilule peut commencer au milieu d'une ligne,
+   là où finit la précédente) et se coupent naturellement en fin de ligne. */
 .seif-chips {
   display: block;
   padding: var(--space-1) 0 var(--space-2);
   /* interligne aéré : les lignes de pilules successives ne se chevauchent pas */
   line-height: 2.4;
-  /* pas de justify : les pilules n'ont pas la souplesse du texte normal, donc justify
-     concentre tout l'espace restant sur l'unique espace d'une ligne et crée un trou énorme
-     entre deux pilules. Alignement naturel RTL à la place. */
-  text-align: start;
+  /* justifié : l'espace entre les mots s'étire pour que chaque ligne (sauf la dernière)
+     se termine au même endroit, des deux côtés */
+  text-align: justify;
 }
 .seif-chip {
-  /* inline (pas inline-block) → les pilules coulent et s'enchaînent serré comme du texte.
-     white-space: nowrap → une pilule ne se coupe JAMAIS au milieu de son contenu : elle
-     bascule entière à la ligne suivante si elle ne tient pas (sinon on obtenait un fragment
-     de texte sans bordure, détaché et trompeur — ex. « ו'-ח' » coupé en deux moitiés).
-     box-decoration-break: clone → bordure et demi-cercles complets aux deux extrémités. */
   display: inline;
-  white-space: nowrap;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
+  /* box-decoration-break: slice (défaut) → les demi-cercles n'apparaissent qu'au vrai début
+     et à la vraie fin de chaque pilule ; aux coupures de ligne au milieu d'une même pilule,
+     le bord est « tranché » (pas de demi-cercle), donc la pilule se poursuit visuellement. */
+  -webkit-box-decoration-break: slice;
+  box-decoration-break: slice;
   padding: 5px 15px;
   margin-inline-start: 5px; /* petit espace entre deux pilules consécutives */
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   font-size: var(--text-sm);
   color: var(--fg);
+  overflow-wrap: anywhere;
   transition: background 0.12s, border-color 0.12s;
 }
 .seif-chip:hover {
