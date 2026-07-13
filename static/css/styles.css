@@ -41,6 +41,9 @@
   --secondary:           var(--surface);
   --info:                var(--accent);
 
+  /* --- Viewport --- */
+  --vh: 1vh; /* recalculée en JS (window.innerHeight * 0.01) pour éviter le décalage 100vh sur mobile */
+
   /* --- Espacement (grille 8 px) --- */
   --space-1: 0.5rem;    /*  8 px */
   --space-2: 1rem;      /* 16 px */
@@ -1445,7 +1448,7 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
    Récit visuel en trois temps : étude, révision, examen.
    ============================================================ */
 .landing {
-  min-height: 100vh;
+  min-height: calc(var(--vh, 1vh) * 100);
   padding: var(--space-3) var(--space-2) var(--space-4);
 }
 
@@ -1458,8 +1461,8 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: var(--space-2);
-  min-height: calc(100vh - var(--space-5));
-  padding-top: clamp(2rem, 7vh, 4.5rem);
+  min-height: calc(var(--vh, 1vh) * 100 - var(--space-5));
+  padding-top: clamp(2rem, calc(var(--vh, 1vh) * 7), 4.5rem);
   align-content: center;
 }
 
@@ -1492,7 +1495,7 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
 .landing-viewport {
   position: relative;
   overflow: hidden;
-  min-height: clamp(24rem, 56vh, 34rem);
+  min-height: clamp(24rem, calc(var(--vh, 1vh) * 56), 34rem);
   touch-action: pan-y;
 }
 
@@ -1529,7 +1532,7 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   position: relative;
   display: grid;
   place-items: center;
-  height: clamp(20rem, 46vh, 30rem);
+  height: clamp(20rem, calc(var(--vh, 1vh) * 46), 30rem);
   overflow: hidden;
 }
 
@@ -1610,8 +1613,8 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   }
 
   .landing-hero {
-    min-height: calc(100vh - var(--space-4));
-    padding-top: clamp(1.5rem, 5vh, 3rem);
+    min-height: calc(var(--vh, 1vh) * 100 - var(--space-4));
+    padding-top: clamp(1.5rem, calc(var(--vh, 1vh) * 5), 3rem);
     gap: var(--space-2);
   }
 
@@ -1620,7 +1623,7 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   }
 
   .landing-viewport {
-    min-height: clamp(25rem, 65vh, 31rem);
+    min-height: clamp(25rem, calc(var(--vh, 1vh) * 65), 31rem);
   }
 
   .landing-slide {
@@ -1629,7 +1632,7 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   }
 
   .landing-slide-image {
-    height: clamp(19rem, 50vh, 25rem);
+    height: clamp(19rem, calc(var(--vh, 1vh) * 50), 25rem);
   }
 
   .landing-slide-copy p {

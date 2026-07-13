@@ -61,6 +61,46 @@
 
 <script>
   (function () {
+    // Corrige le décalage entre 100vh et la hauteur réellement visible
+    // (barre d'adresse mobile), puis réduit le contenu si besoin pour
+    // qu'il tienne toujours dans la hauteur visible, sans scroll vertical.
+    var shell = document.querySelector(".landing-shell");
+    var page = document.querySelector(".landing");
+    var canZoom = shell && "zoom" in shell.style;
+    var fitPending = false;
+
+    function setViewportHeight() {
+      document.documentElement.style.setProperty("--vh", window.innerHeight * 0.01 + "px");
+    }
+
+    function fitToScreen() {
+      if (!canZoom) return;
+      shell.style.zoom = 1;
+      if (fitPending) return;
+      fitPending = true;
+      window.requestAnimationFrame(function () {
+        fitPending = false;
+        var styles = window.getComputedStyle(page);
+        var verticalPadding = parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom);
+        var available = window.innerHeight - verticalPadding;
+        var natural = shell.scrollHeight;
+        var scale = natural > available ? Math.max(0.72, available / natural) : 1;
+        shell.style.zoom = scale;
+      });
+    }
+
+    function refresh() {
+      setViewportHeight();
+      fitToScreen();
+    }
+
+    refresh();
+    window.addEventListener("resize", refresh);
+    window.addEventListener("orientationchange", refresh);
+    window.addEventListener("load", refresh);
+  })();
+
+  (function () {
     var root = document.querySelector("[data-landing-carousel]");
     if (!root) return;
 
