@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from fsrs import (  # noqa: E402
     CAP_FIRST,
     DEFAULT_W,
+    FIRST_CONTACT_POINTS,
     FsrsCardState,
     FsrsConfig,
     ItemPrior,
@@ -24,6 +25,8 @@ from fsrs import (  # noqa: E402
     _initial_difficulty,
     _initial_stability,
     _next_difficulty,
+    personal_bucket,
+    rating_for,
     retrievability,
     schedule_next,
     soften_first_contact,
@@ -105,6 +108,44 @@ def test_soften_first_contact():
     assert soften_first_contact(1, False, True) == 1
     # once the card has history, no softening
     assert soften_first_contact(2, True, False) == 2
+
+
+def test_personal_bucket_no_reference():
+    # No reference time yet (very first exposure) -> neutral "medium"
+    assert personal_bucket(None, 5000) == "medium"
+    assert personal_bucket(0, 5000) == "medium"
+
+
+def test_personal_bucket_relative_thresholds():
+    reference = 9000
+    # More than 1/3 faster than the reference -> fast
+    assert personal_bucket(reference, 6000) == "fast"
+    # More than 1/3 slower than the reference -> slow
+    assert personal_bucket(reference, 12000) == "slow"
+    # In between -> medium (the "Good" zone)
+    assert personal_bucket(reference, 9000) == "medium"
+    assert personal_bucket(reference, 7500) == "medium"
+
+
+def test_personal_bucket_boundary_is_inclusive():
+    reference = 9000
+    assert personal_bucket(reference, round(reference * 2 / 3)) == "fast"
+    assert personal_bucket(reference, round(reference * 4 / 3)) == "slow"
+
+
+def test_activation_rating_matches_personal_bucket():
+    # Mirrors the "activation" transition (Cas C in blueprints/api.py): the
+    # rating fed into schedule_next comes straight from the comparison to the
+    # first-success response time, with no soften_first_contact floor.
+    reference = 9000
+    assert rating_for(True, personal_bucket(reference, 6000)) == 4   # 1/3 faster -> Easy
+    assert rating_for(True, personal_bucket(reference, 9000)) == 3   # unchanged -> Good
+    assert rating_for(True, personal_bucket(reference, 12000)) == 2  # 1/3 slower -> Hard
+    assert rating_for(False, personal_bucket(reference, 6000)) == 1  # wrong -> Again regardless of speed
+
+
+def test_first_contact_points_constant():
+    assert FIRST_CONTACT_POINTS == 20
 
 
 def test_prior_blend_is_bounded():

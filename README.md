@@ -639,12 +639,41 @@ contre `py-fsrs`), sans dépendance externe. La courbe d'oubli est personnalisab
 (`DECAY = −w20`), la difficulté utilise le *linear damping* + réversion à la moyenne vers `D0(Easy)`,
 et un lapse ne peut jamais augmenter la stabilité (cap FSRS-6).
 
-- **Rating automatique** (pas de choix utilisateur) : déduit de l'exactitude + de la vitesse.
-  - Par défaut, la vitesse est normalisée par **z-score** collectif (voir `calibration.py`). Tant qu'un
-    item/utilisateur n'a pas assez de données, on retombe sur des seuils absolus par difficulté
-    (fallback rétro-compatible) :
-    - Difficulté 1 : rapide < 5 s, moyen < 15 s · Difficulté 2 : < 10 s / < 25 s · Difficulté 3 : < 18 s / < 40 s
-  - Rating 1 = mauvais, 2 = lent, 3 = moyen, 4 = rapide.
+- **Rating automatique** (pas de choix utilisateur) : déduit de l'exactitude + de la vitesse
+  **personnelle** de l'étudiant sur cette carte précise (`fsrs.personal_bucket`), pas d'un
+  z-score collectif ni de seuils absolus par difficulté.
+  - Rating 1 = mauvais, 2 = lent (≥ 1/3 plus lent que la référence), 3 = moyen (référence
+    inchangée), 4 = rapide (≤ 1/3 plus rapide que la référence).
+  - La « référence » est le temps de réponse du **premier succès** sur la carte tant que FSRS
+    n'a pas encore été engagé, puis la moyenne glissante des 3 derniers temps
+    (`FsrsCard.avg_response_time_ms`) une fois engagé — voir *Cycle de vie d'une carte* ci-dessous.
+  - La calibration collective par z-score (`calibration.bucket_from_z`, seuils absolus
+    `fsrs.speed_bucket`/`THRESHOLDS`) continue de tourner en arrière-plan (Elo, `ItemStats`,
+    priors S0/D0 des nouvelles cartes) mais ne pilote plus ni ce rating ni le bonus de points —
+    voir *Calibration collective* plus bas.
+
+#### Cycle de vie d'une carte : activation avant scheduling
+
+Le tout premier passage sur une carte ne déclenche **aucun calcul FSRS**. La carte n'est
+réellement planifiée par l'algorithme qu'à partir du premier succès qui suit un cycle
+d'activation :
+
+1. **Jamais réussie** — tant que l'étudiant n'a jamais répondu juste à cette carte, un échec ne
+   crée ni ne modifie aucune `FsrsCard` : 0 point, aucune planification. La carte reste
+   librement accessible depuis `/app/parcours` et réapparaît dans la session de lecture en
+   cours (`queue.push(q)` dans `chapitre.js`).
+2. **Premier succès (activation)** — la `FsrsCard` est créée, planifiée pour le lendemain
+   (`due_date = aujourd'hui + 1 jour`), **sans** calcul de stabilité/difficulté. L'étudiant
+   gagne systématiquement `FIRST_CONTACT_POINTS` (20) points, et le temps de réponse est
+   retenu comme référence (`avg_response_time_ms`).
+3. **Passage suivant** — si l'étudiant répond juste, FSRS s'engage enfin : le rating est dérivé
+   de `personal_bucket(référence, temps_de_réponse)` et `schedule_next` tourne pour la première
+   fois (prior collectif par item éventuellement injecté, comme pour toute carte `state="new"`).
+   S'il répond faux, la carte est simplement replanifiée au lendemain (0 point, référence
+   inchangée) et ce cycle se répète jusqu'au premier succès.
+4. **Cartes engagées** — une fois `schedule_next` exécuté au moins une fois, le rating de
+   chaque révision suivante compare le temps de réponse à la moyenne glissante
+   `avg_response_time_ms` (mise à jour via `fsrs.roll_avg`), avec la même règle ±1/3.
 - **Rétentabilité** : `R(t, S) = (1 + FACTOR × t / S)^DECAY`, avec `DECAY = −w20`.
 - **Intervalle optimal** : `interval = S / FACTOR × (target^(1/DECAY) − 1)` (≈ `S × 0.40` à `target = 0.95`).
 - **Pression examen** : compression continue quand l'examen est à moins de 90 jours.
@@ -664,8 +693,10 @@ empiriquement (voir `scripts/sim_schedule.py` pour balayer scénarios + options)
   ne pilote pleinement.
 - **`W7_FLOOR`** (0.15) — plancher sur la réversion à la moyenne (le défaut FSRS-6 `w7 = 0.001` est
   inerte) : une carte ratée au départ revient vite à une difficulté moyenne.
-- **Adoucissement du 1er contact** (`soften_first_contact`) — sur la 1re exposition, une réponse
-  correcte ne descend jamais sous « Good » (la latence y reflète la lecture, pas la mémoire).
+- **`soften_first_contact`** — conservée dans `fsrs.py` (couverte par `tests/test_fsrs.py`) mais
+  n'est plus appelée par `blueprints/api.py` : la toute première exposition à une carte ne passe
+  plus du tout par `rating_for` (voir *Cycle de vie d'une carte* ci-dessus), donc ce garde-fou
+  n'a plus lieu d'être sur le chemin réel.
 
 #### Calibration collective (`calibration.py`, Phase 2)
 
@@ -696,6 +727,12 @@ la régularité est le bonus de complétion quotidienne explicite (`daily_bonus`
 Dans les trois formules : mauvaise réponse → 0 point, combo réinitialisé à 0 côté client.
 `combo` (multiplicateur commun) : `{2: ×1.1, 3: ×1.2, 4: ×1.3, 5+: ×1.5}`.
 
+> **Cas particulier — cycle d'activation d'une carte** : tant qu'une carte n'a jamais été
+> engagée par FSRS (voir *Cycle de vie d'une carte* dans la section FSRS-6 ci-dessus), ces
+> formules ne s'appliquent pas : le premier succès rapporte `FIRST_CONTACT_POINTS` (20 points
+> fixes) et tout échec avant ce premier succès (ou avant l'engagement FSRS qui suit) rapporte
+> 0 point. Ce cas est géré directement dans `blueprints/api.py`, pas dans `points.py`.
+
 #### `compute_points` — étude normale (`mode` omis ou `"study"`)
 
 ```
@@ -705,6 +742,9 @@ base = 10
 bonus_difficulté : {1: +2, 2: +4, 3: +6}
 bonus_vitesse    : {rapide: +5, moyen: +2, lent: 0}
 ```
+
+`bonus_vitesse` est dérivé de `fsrs.personal_bucket` — comparaison au propre temps de
+référence de l'étudiant sur cette carte (±1/3), pas d'un z-score collectif.
 
 #### `compute_daily_points` — révision du jour (`mode="revision_daily"`)
 
