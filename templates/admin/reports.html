@@ -1,0 +1,59 @@
+{% extends "admin/_layout.html" %}
+{% block title %}דיווחים — ניהול{% endblock %}
+{% block content %}
+<div class="stack">
+  <div>
+    <h1 class="text-2xl bold">דיווחים אישיים</h1>
+    <p class="text-sm muted">
+      כרטיסים שדווחו על ידי תלמיד רגיל — מוסתרים רק עבורו, ונשארים גלויים לכל השאר, עד שהצוות מכריע.
+      "אשר" מסיר את הכרטיס לכולם (עובר ל"ממתינות" בטאב שאלות). "דחה" מבטל את ההסתרה ומחזיר את הכרטיס לתלמיד שדיווח.
+    </p>
+  </div>
+
+  {% if not reports %}
+  <div class="card">
+    <p class="center-text text-sm muted" style="padding:1.5rem;">אין דיווחים ממתינים כרגע 🎉</p>
+  </div>
+  {% else %}
+  <div class="stack-sm">
+    {% for rep, q, reporter in reports %}
+    <div class="card">
+      <div class="row between" style="gap:0.75rem;flex-wrap:wrap;align-items:flex-start;">
+        <div class="stack-sm" style="flex:1;min-width:16rem;">
+          <div class="row gap-1" style="flex-wrap:wrap;">
+            {% if q.status == 'approved' %}
+            <span class="badge" style="background:rgba(34,197,94,0.15);color:#22c55e;font-size:0.65rem;">גלוי לכולם (מאושרת)</span>
+            {% elif q.status == 'rejected' %}
+            <span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;font-size:0.65rem;">נדחתה</span>
+            {% else %}
+            <span class="badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;font-size:0.65rem;">ממתינה</span>
+            {% endif %}
+            <span class="badge text-xs">{{ type_label.get(q.question_type, '—') }}</span>
+            {% if q.subject %}<span class="badge">{{ q.subject }}</span>{% endif %}
+            {% if q.siman is not none %}<span class="badge">סי' {{ q.siman }}</span>{% endif %}
+          </div>
+          <div class="semibold text-sm">{{ q.text or '— ללא טקסט —' }}</div>
+          <div class="text-xs muted">
+            דווח על ידי <strong>{{ reporter.full_name or reporter.email }}</strong>
+            ב־{{ rep.created_at.strftime('%d/%m/%Y %H:%M') }}
+            {% if rep.reason %} — נימוק: "{{ rep.reason }}"{% endif %}
+          </div>
+        </div>
+        <div class="row gap-2" style="flex-wrap:wrap;">
+          <a href="{{ url_for('admin.questions', id=q.id) }}" class="btn btn-outline">✏️ צפה / ערוך</a>
+          <form method="post" action="{{ url_for('admin.dismiss_report', report_id=rep.id) }}"
+                onsubmit="return confirm('הדיווח לא מוצדק — להחזיר את הכרטיס לתלמיד שדיווח?');">
+            <button type="submit" class="btn btn-outline">✗ דחה דיווח</button>
+          </form>
+          <form method="post" action="{{ url_for('admin.confirm_report', report_id=rep.id) }}"
+                onsubmit="return confirm('הדיווח מוצדק — להסיר את הכרטיס לכולם ולהעביר לטיפול?');">
+            <button type="submit" class="btn btn-destructive">✓ אשר — הסר לכולם</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

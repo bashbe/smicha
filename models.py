@@ -146,6 +146,27 @@ class Question(db.Model):
         }
 
 
+class QuestionReport(db.Model):
+    """Signalement d'une question par un étudiant simple (rôle `student` sans
+    rôle staff). Tant que le signalement est "open", la question est retirée
+    UNIQUEMENT pour ce `reporter_id` (Question.status global n'est pas touché).
+    Un validateur/super_admin peut "confirmer" (retire la question pour tout
+    le monde, Question.status -> "pending") ou "rejeter" (le signalement est
+    injustifié, la question redevient visible pour ce seul étudiant).
+    """
+
+    __tablename__ = "question_reports"
+
+    id = db.Column(db.String(36), primary_key=True, default=_uuid)
+    question_id = db.Column(db.String(36), db.ForeignKey("questions.id", ondelete="CASCADE"), nullable=False, index=True)
+    reporter_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    reason = db.Column(db.Text)
+    status = db.Column(db.String(16), default="open", nullable=False, index=True)  # open | confirmed | dismissed
+    resolved_by = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"))
+    resolved_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+
 class QuestionEdit(db.Model):
     __tablename__ = "question_edits"
 

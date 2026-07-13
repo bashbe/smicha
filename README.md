@@ -298,6 +298,24 @@ Journal d'audit : chaque action d'un validateur (approve / correct / reject) est
 
 ---
 
+### `question_reports`
+Signalement **personnel** d'une question par un étudiant simple (aucun rôle staff). Tant que `status="open"`,
+la question reste `approved` globalement mais est retirée **uniquement** pour `reporter_id` (voir
+[règle de signalement](#règle-métier--acceptation-par-défaut-et-signalement)).
+
+| Colonne | Type | Notes |
+|---|---|---|
+| `id` | UUID (PK) | |
+| `question_id` | FK questions.id | |
+| `reporter_id` | FK users.id | Étudiant qui a signalé |
+| `reason` | Text | Motif optionnel |
+| `status` | String | `"open"` / `"confirmed"` (retirée pour tout le monde) / `"dismissed"` (signalement injustifié, redevient visible pour le signaleur) |
+| `resolved_by` | FK users.id | Validateur/super_admin ayant tranché |
+| `resolved_at` | DateTime | |
+| `created_at` | DateTime | |
+
+---
+
 ## Format JSON des questions
 
 > **Règle** : ce format est la source de vérité pour l'import. Toute modification de `_validate_common()` dans `question_types.py` doit être reflétée ici **et** dans `sample_questions.json`.
@@ -528,7 +546,10 @@ Retourne uniquement un tableau JSON valide, sans texte avant ou après.
 | GET | `/admin/validate` | Redirection héritée vers `/admin/questions?status=pending` (l'onglet unifié) |
 | POST | `/admin/validate/approve-all` | Approuve en un clic toutes les questions `pending` (bouton « אשר הכל » de `/admin/questions` filtré sur `pending`) |
 | GET | `/admin/questions` | Recherche/édition de toutes les questions — filtres `status`, `type`, `parcours`, `siman`, `q` (texte libre) |
-| POST | `/admin/questions/<qid>/edit` | Sauvegarde / approuve / rejette une question depuis `/admin/questions` |
+| POST | `/admin/questions/<qid>/edit` | Sauvegarde / approuve / rejette une question depuis `/admin/questions` — résout aussi les `QuestionReport` "open" de la question (`"dismissed"` sur sauvegarde/approbation, `"confirmed"` sur rejet) |
+| GET | `/admin/reports` | File des signalements personnels `QuestionReport.status="open"` — carte non retirée pour tout le monde, juste pour le(s) signaleur(s) |
+| POST | `/admin/reports/<report_id>/confirm` | Signalement jugé justifié — retire la question pour tout le monde (`Question.status="pending"`, rejoint `/admin/questions`) et classe tous les signalements "open" de la question en `"confirmed"` |
+| POST | `/admin/reports/<report_id>/dismiss` | Signalement jugé injustifié — classe ce signalement en `"dismissed"`, la question redevient visible pour ce seul étudiant |
 | POST | `/admin/subjects/rename` | Renomme un `sujet` (recherche/remplace exact) sur toutes les cartes qui le partagent, depuis `/admin/dashboard` (bloc « שאלות לפי נושא ») — met aussi à jour `Progression.subject` en parallèle pour ne pas casser la progression déjà enregistrée |
 | POST | `/admin/reset-db` | **super_admin uniquement** — efface et recrée toutes les tables (confirmation texte `"RESET"` requise) |
 
@@ -589,7 +610,13 @@ en plus de `points`.
 
 #### `POST /api/report`
 
-Signalement d'une question par un étudiant, depuis le bouton 🚩 du lecteur (`chapitre.js`).
+Signalement d'une question, depuis le bouton 🚩 du lecteur (`chapitre.js`). Le comportement dépend
+du rôle de l'utilisateur qui signale (voir [règle de signalement](#règle-métier--acceptation-par-défaut-et-signalement)) :
+
+- **Étudiant simple** (aucun rôle staff) : crée un `QuestionReport` (`status="open"`) — la question
+  n'est retirée **que pour lui**, `Question.status` global n'est pas touché.
+- **`validator` / `super_admin`** : retrait immédiat pour tout le monde — `Question.status` repasse
+  à `"pending"` et une `QuestionEdit` (`action="reported"`, `note=reason`) est journalisée, comme avant.
 
 Corps JSON attendu :
 ```json
@@ -599,9 +626,7 @@ Corps JSON attendu :
 }
 ```
 
-Réponse JSON : `{"ok": true}`. Effet de bord : `Question.status` repasse à `"pending"` et une
-`QuestionEdit` (`action="reported"`, `note=reason`) est journalisée. La question redevient
-invisible pour tous les étudiants tant qu'un validateur ne l'a pas retraitée dans `/admin/questions` (filtre `pending`).
+Réponse JSON : `{"ok": true}`.
 
 ---
 
@@ -766,9 +791,15 @@ Implémenté dans `allowed_sections()` + `question_in_sections()` (`blueprints/s
 
 Toute question est **acceptée par défaut** (`status="approved"` dès sa création — import ou seed), et donc immédiatement proposée aux étudiants. Il n'y a plus de file d'attente systématique avant mise en ligne.
 
-- **Signalement étudiant** — dans le lecteur de questions (`chapitre.js`), un bouton 🚩 (icône drapeau) permet à l'étudiant de signaler une question douteuse, avec un motif optionnel. Cela appelle `POST /api/report` (`blueprints/api.py`) qui repasse la question en `status="pending"` et journalise l'action dans `question_edits` (`action="reported"`, `note` = motif). La question disparaît alors du parcours de tous les étudiants jusqu'à décision.
-- **Décision de l'admin** — la question signalée réapparaît dans `/admin/questions` (filtre statut `pending`) exactement comme une question nouvellement importée ; le validateur l'approuve ou la rejette normalement.
-- **Base existante** — `scripts/migrate_approve_pending.py` bascule en `approved` les questions `pending` d'une base existante (celles jamais explicitement rejetées) pour aligner les anciennes données sur ce nouveau défaut.
+Le signalement d'une question (bouton 🚩 dans `chapitre.js`, `POST /api/report`) a un effet différent selon le rôle de qui signale :
+
+- **Étudiant simple** (aucun rôle staff) — la question est retirée **uniquement pour lui** : un `QuestionReport` (`status="open"`) est créé, `Question.status` global n'est pas modifié et les autres étudiants continuent de voir la question normalement. Toutes les requêtes du parcours étudiant (`blueprints/student.py`, helper `_hidden_question_ids()`) excluent les questions ayant un `QuestionReport` "open" pour l'utilisateur courant. La question réapparaît pour lui dès qu'un validateur tranche :
+  - **Confirme** (`POST /admin/reports/<id>/confirm`) → retrait pour **tout le monde** : `Question.status="pending"`, la carte rejoint la file standard de `/admin/questions` pour correction/rejet, et le signalement passe à `"confirmed"`.
+  - **Rejette** (`POST /admin/reports/<id>/dismiss`) → le signalement était injustifié : passe à `"dismissed"`, la question redevient visible pour ce seul étudiant.
+  - **Modifie/ré-approuve la question** depuis `/admin/questions` (`POST /admin/questions/<qid>/edit`, action `save`/`approve`) → résout aussi automatiquement tout `QuestionReport` "open" de cette question en `"dismissed"` (elle a été corrigée, redevient visible pour ceux qui l'avaient signalée). Un rejet (`action="reject"`) les classe en `"confirmed"`.
+- **`validator` / `super_admin`** — retrait immédiat **pour tout le monde** : `Question.status` repasse à `"pending"` et une `QuestionEdit` (`action="reported"`, `note`=motif) est journalisée, comme dans l'ancien comportement historique. La question disparaît du parcours de tous les étudiants jusqu'à décision dans `/admin/questions`.
+- **File d'attente des signalements personnels** — `/admin/reports` (accès staff) liste tous les `QuestionReport` "open", avec boutons "אשר" (confirmer, retrait global) / "דחה" (rejeter le signalement).
+- **Base existante** — `scripts/migrate_approve_pending.py` bascule en `approved` les questions `pending` d'une base existante (celles jamais explicitement rejetées) pour aligner les anciennes données sur ce nouveau défaut. La table `question_reports` est créée automatiquement par `db.create_all()` (nouvelle table, pas de script de migration nécessaire).
 
 ---
 
@@ -779,9 +810,20 @@ Importer (JSON) → Prévisualisation (normalize_imported_question) → Sauvegar
                                                                           ↓
                                                         (visible immédiatement aux étudiants)
                                                                           ↓
-                                        Étudiant signale (🚩) → status="pending"
-                                                                          ↓
-Validateur → /admin/questions → Édite métadonnées (subject/siman/seif/parcours, difficulté, tags)
+                              ┌─────────────────────────┴─────────────────────────┐
+                              ↓                                                     ↓
+            Étudiant simple signale (🚩)                          validator/super_admin signale (🚩)
+            → QuestionReport "open"                                → status="pending" (retrait global)
+            (retrait pour lui SEUL)                                            ↓
+                              ↓                                    /admin/questions → édite/approuve/rejette
+              /admin/reports (file des signalements)
+                    ↓                        ↓
+      confirme (justifié)          rejette (injustifié)
+      → status="pending"           → QuestionReport "dismissed"
+        (retrait global,             (redevient visible pour
+         rejoint /admin/questions)    ce seul étudiant)
+                              ↓
+            /admin/questions → édite (→ reports "dismissed") / rejette (→ reports "confirmed")
                                     ↓                        ↓
                               Approuve → status="approved"   Rejette → status="rejected" + note
                                     ↓
@@ -798,10 +840,10 @@ Le format JSON d'import accepte un tableau d'objets. Chaque objet est normalisé
 
 | Rôle | Accès | Attribution |
 |---|---|---|
-| `student` | `/app/*` | Par défaut à l'inscription |
+| `student` | `/app/*` — signaler une question (🚩) ne la retire que pour lui-même (`QuestionReport`) | Par défaut à l'inscription |
 | `importer` | `/admin/*` + import JSON | Manuel (super_admin) |
-| `validator` | `/admin/*` + validation | Manuel (super_admin) |
-| `super_admin` | Tout + reset DB | Auto si email = `SUPER_ADMIN_EMAIL`, sinon manuel |
+| `validator` | `/admin/*` + validation + `/admin/reports` (confirmer/rejeter les signalements) — signaler une question (🚩) la retire immédiatement pour **tout le monde** | Manuel (super_admin) |
+| `super_admin` | Tout + reset DB — mêmes privilèges de signalement que `validator` | Auto si email = `SUPER_ADMIN_EMAIL`, sinon manuel |
 
 Décorateurs disponibles dans `auth_helpers.py` :
 - `@login_required` — redirige vers `/auth` si non connecté

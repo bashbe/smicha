@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 
 from flask import Blueprint, Response, flash, redirect, render_template, request, url_for
 
@@ -11,7 +12,17 @@ from blueprints.auth import create_account
 from chapter_topics import save_topics
 from chapter_topics import seif_topic as get_seif_topic
 from chapter_topics import siman_topic as get_siman_topic
-from models import FsrsCard, Progression, Question, QuestionEdit, StudentProfile, User, UserAnswer, db
+from models import (
+    FsrsCard,
+    Progression,
+    Question,
+    QuestionEdit,
+    QuestionReport,
+    StudentProfile,
+    User,
+    UserAnswer,
+    db,
+)
 from question_types import (
     PARCOURS_LABELS,
     QUESTION_TYPES,
@@ -26,6 +37,30 @@ TYPE_LABEL = {
     "multiple_opinions_dropdown": "התאמת פוסקים",
     "true_false": "נכון/לא נכון",
 }
+
+
+@bp.context_processor
+def inject_reports_count():
+    """Badge du nombre de signalements personnels "open" — affiché dans le nav admin."""
+    user = current_user()
+    if user is None or not user.is_staff():
+        return {}
+    return {"open_reports_count": QuestionReport.query.filter_by(status="open").count()}
+
+
+def _resolve_open_reports(question_id: str, resolver_id: str, resolution: str) -> None:
+    """Classe tous les signalements "open" d'une question.
+
+    resolution="confirmed" — la question est retirée pour tout le monde (le
+    signalement était justifié). resolution="dismissed" — l'admin a modifié
+    ou ré-approuvé la question, elle redevient visible pour chaque étudiant
+    qui l'avait signalée.
+    """
+    now = datetime.utcnow()
+    for r in QuestionReport.query.filter_by(question_id=question_id, status="open").all():
+        r.status = resolution
+        r.resolved_by = resolver_id
+        r.resolved_at = now
 
 
 @bp.route("/login", methods=["GET", "POST"])
@@ -70,7 +105,10 @@ def dashboard():
         name = subject or "— ללא נושא —"
         by_subject[name] = by_subject.get(name, 0) + 1
     by_subject_sorted = sorted(by_subject.items(), key=lambda kv: -kv[1])
-    return render_template("admin/dashboard.html", counts=counts, by_subject=by_subject_sorted)
+    reports_count = QuestionReport.query.filter_by(status="open").count()
+    return render_template(
+        "admin/dashboard.html", counts=counts, by_subject=by_subject_sorted, reports_count=reports_count,
+    )
 
 
 @bp.route("/subjects/rename", methods=["POST"])
@@ -316,9 +354,68 @@ def approve_all_pending():
                 note="אישור גורף של כל השאלות הממתינות",
             )
         )
+        _resolve_open_reports(q.id, user.id, "dismissed")
     db.session.commit()
     flash(f"{len(pending)} שאלות אושרו", "success")
     return redirect(url_for("admin.questions", status="pending"))
+
+
+@bp.route("/reports")
+@staff_required
+def reports():
+    """File d'attente des signalements personnels (étudiants simples) encore
+    "open" — la question reste visible pour tout le monde SAUF le(s)
+    signaleur(s), tant qu'un validateur ne confirme pas (retrait global) ou
+    ne rejette pas (le signalement était injustifié) chaque signalement."""
+    open_reports = (
+        db.session.query(QuestionReport, Question, User)
+        .join(Question, Question.id == QuestionReport.question_id)
+        .join(User, User.id == QuestionReport.reporter_id)
+        .filter(QuestionReport.status == "open")
+        .order_by(QuestionReport.created_at.desc())
+        .all()
+    )
+    return render_template("admin/reports.html", reports=open_reports, type_label=TYPE_LABEL)
+
+
+@bp.route("/reports/<report_id>/confirm", methods=["POST"])
+@staff_required
+def confirm_report(report_id):
+    """Le signalement est justifié : retrait de la question pour TOUT LE
+    MONDE (status -> "pending"), elle rejoint la file standard de
+    /admin/questions pour correction/rejet."""
+    user = current_user()
+    rep = QuestionReport.query.get_or_404(report_id)
+    q = Question.query.get_or_404(rep.question_id)
+
+    if q.status == "approved":
+        previous = q.as_dict()
+        q.status = "pending"
+        db.session.add(
+            QuestionEdit(
+                question_id=q.id, editor_id=user.id, action="reported",
+                note=rep.reason, previous_content=previous,
+            )
+        )
+    _resolve_open_reports(q.id, user.id, "confirmed")
+    db.session.commit()
+    flash("הדיווח אושר — השאלה הוסרה לכולם וממתינה לטיפול", "success")
+    return redirect(url_for("admin.reports"))
+
+
+@bp.route("/reports/<report_id>/dismiss", methods=["POST"])
+@staff_required
+def dismiss_report(report_id):
+    """Le signalement n'est pas justifié : la question redevient visible pour
+    le seul étudiant qui l'avait signalée."""
+    user = current_user()
+    rep = QuestionReport.query.get_or_404(report_id)
+    rep.status = "dismissed"
+    rep.resolved_by = user.id
+    rep.resolved_at = datetime.utcnow()
+    db.session.commit()
+    flash("הדיווח נדחה — השאלה גלויה שוב למי שדיווח", "success")
+    return redirect(url_for("admin.reports"))
 
 
 @bp.route("/export/rejected")
@@ -435,6 +532,7 @@ def edit_question(qid):
                 note=note, previous_content=previous,
             )
         )
+        _resolve_open_reports(q.id, user.id, "confirmed")
         db.session.commit()
         flash("נדחתה", "success")
         return redirect(url_for("admin.questions", **redirect_params))
@@ -493,6 +591,7 @@ def edit_question(qid):
             previous_content=previous, new_content=q.as_dict(), note=note or None,
         )
     )
+    _resolve_open_reports(q.id, user.id, "dismissed")
     db.session.commit()
     return redirect(url_for("admin.questions", **redirect_params))
 

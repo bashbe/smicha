@@ -10,7 +10,7 @@ from sqlalchemy import distinct, func
 
 from auth_helpers import current_user, login_required
 from chapter_topics import siman_topic
-from models import FsrsCard, Progression, Question, StudentProfile, UserAnswer, db
+from models import FsrsCard, Progression, Question, QuestionReport, StudentProfile, UserAnswer, db
 from question_types import PARCOURS_LABELS, normalize_db_question
 
 bp = Blueprint("student", __name__, url_prefix="/app")
@@ -24,6 +24,18 @@ def _tag_counts(qs: list) -> dict[str, int]:
             if t:
                 counts[t] = counts.get(t, 0) + 1
     return counts
+
+
+def _hidden_question_ids(user_id: str) -> set[str]:
+    """IDs des questions que l'utilisateur a lui-même signalées et qui sont
+    encore "open" — retirées uniquement pour lui tant qu'un validateur ne les
+    a pas confirmées (retrait global) ou modifiées (signalement classé)."""
+    rows = (
+        db.session.query(QuestionReport.question_id)
+        .filter(QuestionReport.reporter_id == user_id, QuestionReport.status == "open")
+        .all()
+    )
+    return {r[0] for r in rows}
 
 
 def _learned_question_ids(user_id: str) -> list[str]:
@@ -118,13 +130,14 @@ def home():
         return redirect(url_for("student.onboarding"))
 
     allowed = allowed_sections(sp.section)
+    hidden_ids = _hidden_question_ids(sp.id)
     all_qs = (
         Question.query.filter(Question.status == "approved")
-        .with_entities(Question.subject, Question.siman, Question.section)
+        .with_entities(Question.id, Question.subject, Question.siman, Question.section)
         .all()
     )
-    qs = [(subject, siman) for subject, siman, section in all_qs
-          if set(_to_section_list(section)) & allowed]
+    qs = [(subject, siman) for qid, subject, siman, section in all_qs
+          if set(_to_section_list(section)) & allowed and qid not in hidden_ids]
     prog = {f"{p.subject}|{p.siman}": p for p in Progression.query.filter_by(user_id=sp.id).all()}
 
     seen, unique = set(), []
@@ -190,9 +203,10 @@ def home():
 def parcours():
     sp = get_profile()
     allowed = allowed_sections(sp.section)
+    hidden_ids = _hidden_question_ids(sp.id)
     qs = [q for q in Question.query.filter(
         Question.status == "approved",
-    ).all() if question_in_sections(q, allowed)]
+    ).all() if question_in_sections(q, allowed) and q.id not in hidden_ids]
 
     # Hiérarchie de contenu : parcours → siman → sujet (le sujet regroupe les
     # questions à l'intérieur du siman ; le seif reste indicatif).
@@ -267,6 +281,9 @@ def _load_chapitre(sp, base_filters: list, allowed: set[str] | None = None) -> l
     rows = Question.query.filter(*base_filters).order_by(Question.seif.asc()).all()
     if allowed:
         rows = [q for q in rows if question_in_sections(q, allowed)]
+    hidden_ids = _hidden_question_ids(sp.id)
+    if hidden_ids:
+        rows = [q for q in rows if q.id not in hidden_ids]
     if rows:
         correct_ids = {
             r[0] for r in
@@ -350,9 +367,10 @@ def revision():
     eligible_tags = 0
     if learned_ids:
         allowed = allowed_sections(sp.section)
+        hidden_ids = _hidden_question_ids(sp.id)
         qs = [q for q in Question.query.filter(
             Question.status == "approved", Question.id.in_(learned_ids),
-        ).all() if question_in_sections(q, allowed)]
+        ).all() if question_in_sections(q, allowed) and q.id not in hidden_ids]
         counts = _tag_counts(qs)
         eligible_tags = sum(1 for c in counts.values() if c >= 3)
 
@@ -371,8 +389,9 @@ def revision():
 def revision_jour():
     sp = get_profile()
     today = date.today()
+    hidden_ids = _hidden_question_ids(sp.id)
 
-    due_cards = (
+    due_query = (
         db.session.query(FsrsCard, Question)
         .join(Question, Question.id == FsrsCard.question_id)
         .filter(
@@ -380,9 +399,10 @@ def revision_jour():
             FsrsCard.due_date <= today,
             Question.status == "approved",
             )
-        .order_by(FsrsCard.stability.asc())
-        .all()
     )
+    if hidden_ids:
+        due_query = due_query.filter(Question.id.notin_(hidden_ids))
+    due_cards = due_query.order_by(FsrsCard.stability.asc()).all()
 
     questions = []
     for card, q in due_cards:
@@ -424,12 +444,13 @@ def revision_siman():
     sp = get_profile()
     allowed = allowed_sections(sp.section)
     learned_ids = _learned_question_ids(sp.id)
+    hidden_ids = _hidden_question_ids(sp.id)
 
     groups = []
     if learned_ids:
         qs = [q for q in Question.query.filter(
             Question.status == "approved", Question.id.in_(learned_ids),
-        ).all() if question_in_sections(q, allowed)]
+        ).all() if question_in_sections(q, allowed) and q.id not in hidden_ids]
 
         # Même regroupement que le sélecteur : parcours → siman → sujet
         by_parcours: dict[str, dict[int, dict[str, dict]]] = {}
@@ -482,11 +503,12 @@ def revision_siman_detail(subject: str, siman: int):
     sp = get_profile()
     allowed = allowed_sections(sp.section)
     learned_ids = _learned_question_ids(sp.id)
+    hidden_ids = _hidden_question_ids(sp.id)
 
     rows = [q for q in Question.query.filter(
         Question.subject == subject, Question.siman == siman,
         Question.status == "approved", Question.id.in_(learned_ids),
-    ).order_by(Question.seif.asc()).all() if question_in_sections(q, allowed)]
+    ).order_by(Question.seif.asc()).all() if question_in_sections(q, allowed) and q.id not in hidden_ids]
 
     if not rows:
         flash("אין עדיין כרטיסים שנלמדו בסימן זה.", "info")
@@ -513,12 +535,13 @@ def revision_sujet():
     sp = get_profile()
     allowed = allowed_sections(sp.section)
     learned_ids = _learned_question_ids(sp.id)
+    hidden_ids = _hidden_question_ids(sp.id)
 
     tags = []
     if learned_ids:
         qs = [q for q in Question.query.filter(
             Question.status == "approved", Question.id.in_(learned_ids),
-        ).all() if question_in_sections(q, allowed)]
+        ).all() if question_in_sections(q, allowed) and q.id not in hidden_ids]
         counts = _tag_counts(qs)
         tags = sorted(
             ({"tag": t, "count": c} for t, c in counts.items() if c >= 3),
@@ -534,12 +557,13 @@ def revision_sujet_detail(tag: str):
     sp = get_profile()
     allowed = allowed_sections(sp.section)
     learned_ids = _learned_question_ids(sp.id)
+    hidden_ids = _hidden_question_ids(sp.id)
 
     rows = [
         q for q in Question.query.filter(
             Question.status == "approved", Question.id.in_(learned_ids),
         ).order_by(Question.subject.asc(), Question.siman.asc(), Question.seif.asc()).all()
-        if question_in_sections(q, allowed) and tag in (q.tags or [])
+        if question_in_sections(q, allowed) and tag in (q.tags or []) and q.id not in hidden_ids
     ]
 
     if not rows:
@@ -567,10 +591,11 @@ def revision_aleatoire():
     sp = get_profile()
     allowed = allowed_sections(sp.section)
     learned_ids = _learned_question_ids(sp.id)
+    hidden_ids = _hidden_question_ids(sp.id)
 
     rows = [q for q in Question.query.filter(
         Question.status == "approved", Question.id.in_(learned_ids),
-    ).all() if question_in_sections(q, allowed)]
+    ).all() if question_in_sections(q, allowed) and q.id not in hidden_ids]
 
     if not rows:
         flash("עדיין אין כרטיסים שנלמדו לחזרה אקראית.", "info")
