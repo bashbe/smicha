@@ -23,6 +23,7 @@ from models import (
     Progression,
     Question,
     QuestionEdit,
+    QuestionReport,
     StudentProfile,
     UserAnswer,
     UserSpeed,
@@ -278,8 +279,15 @@ def answer():
 
 @bp.post("/report")
 def report():
-    """Un étudiant signale une question douteuse : elle repasse en "pending"
-    pour qu'un validateur la retraite dans /admin/questions."""
+    """Un utilisateur signale une question douteuse.
+
+    - Étudiant simple (aucun rôle staff) : la question est retirée
+      UNIQUEMENT pour lui (QuestionReport "open"), tant qu'un validateur ne
+      l'a pas confirmée (retrait global) ou modifiée (signalement classé).
+    - Validateur / super_admin : retrait immédiat pour tout le monde
+      (comportement historique) — Question.status repasse à "pending" pour
+      retraitement dans /admin/questions.
+    """
     user = current_user()
     if user is None:
         return jsonify({"error": "unauthorized"}), 401
@@ -292,16 +300,25 @@ def report():
     if q is None:
         return jsonify({"error": "question not found"}), 404
 
-    previous = q.as_dict()
-    q.status = "pending"
-    db.session.add(
-        QuestionEdit(
-            question_id=q.id,
-            editor_id=user.id,
-            action="reported",
-            note=reason or None,
-            previous_content=previous,
+    if user.has_role("validator") or user.has_role("super_admin"):
+        previous = q.as_dict()
+        q.status = "pending"
+        db.session.add(
+            QuestionEdit(
+                question_id=q.id,
+                editor_id=user.id,
+                action="reported",
+                note=reason or None,
+                previous_content=previous,
+            )
         )
-    )
+    else:
+        existing = QuestionReport.query.filter_by(
+            question_id=q.id, reporter_id=user.id, status="open"
+        ).first()
+        if existing is None:
+            db.session.add(
+                QuestionReport(question_id=q.id, reporter_id=user.id, reason=reason or None)
+            )
     db.session.commit()
     return jsonify({"ok": True})

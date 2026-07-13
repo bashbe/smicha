@@ -56,6 +56,7 @@
         <a href="{{ url_for('admin.questions') }}" class="btn btn-outline">📋 כל השאלות</a>
         <a href="{{ url_for('admin.import_questions') }}" class="btn btn-primary">⬆️ ייבוא שאלות חדשות</a>
         <a href="{{ url_for('admin.questions', status='pending') }}" class="btn btn-outline">✅ אימות שאלות ממתינות ({{ counts.pending }})</a>
+        <a href="{{ url_for('admin.reports') }}" class="btn btn-outline">🚩 דיווחים אישיים ({{ reports_count }})</a>
         <a href="{{ url_for('admin.export_rejected') }}" class="btn btn-outline">⬇️ ייצוא שאלות שנדחו ({{ counts.rejected }}) JSON</a>
       </div>
     </div>
