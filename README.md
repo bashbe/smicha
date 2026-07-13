@@ -1,4 +1,4 @@
-# סמיכה — Smiha Path (Flask + SQLAlchemy)
+# קניין הלכה (Flask + SQLAlchemy)
 
 Application web de préparation à l'examen de **Smiha** (ordination rabbinique). Portage complet depuis l'app d'origine TanStack Start + Supabase vers **Python / Flask / SQLAlchemy**.
 
@@ -415,7 +415,7 @@ Structure similaire à `multiple_choice` avec un champ `scenario_text` additionn
 
 ```
 Tu es un expert en Halakha (loi juive). Génère [N] questions en hébreu
-au format JSON valide pour l'application Smiha Path.
+au format JSON valide pour l'application קניין הלכה.
 
 Contraintes impératives :
 - Respecte scrupuleusement le format de la section "Format JSON des questions" du README

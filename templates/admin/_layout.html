@@ -4,7 +4,7 @@
   <header style="border-bottom:1px solid var(--border);background:var(--card);">
     <div class="container-wide row between" style="padding-top:0.75rem;padding-bottom:0.75rem;">
       <div class="row gap-4">
-        <a href="{{ url_for('admin.dashboard') }}" class="row gap-1 bold"><span class="primary">🛡️</span> ניהול סמיכה</a>
+        <a href="{{ url_for('admin.dashboard') }}" class="row gap-1 bold"><span class="primary">🛡️</span> ניהול קניין הלכה</a>
         <nav class="row gap-1 admin-nav-items">
           {% set items = [('admin.dashboard','לוח בקרה'),('admin.questions','שאלות'),('admin.reports','דיווחים' ~ (' (' ~ open_reports_count ~ ')' if open_reports_count else '')),('admin.import_questions','ייבוא שאלות'),('admin.topics','נושאי סימנים'),('admin.users','משתמשים')] %}
           {% for ep, label in items %}
