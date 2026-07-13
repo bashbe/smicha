@@ -1502,7 +1502,7 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
 .landing-track {
   display: flex;
   height: 100%;
-  direction: ltr;
+  direction: rtl;
   cursor: grab;
   transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
   will-change: transform;
