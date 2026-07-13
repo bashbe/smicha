@@ -68,13 +68,16 @@ class StudentProfile(db.Model):
     full_name = db.Column(db.String(255))
     preparation_goal = db.Column(db.String(32))  # discovery | serious | intensive
     target_stability = db.Column(db.Float, default=0.95)
+    # DEPRECATED (multi-parcours) — remplacé par StudentParcours.exam_date.
+    # Conservé en base pour la migration/rollback, plus jamais lu ni écrit.
     exam_date = db.Column(db.Date)
     section = db.Column(db.JSON, default=list)  # list of section strings
     total_points = db.Column(db.Integer, default=0, nullable=False)
     streak_days = db.Column(db.Integer, default=0, nullable=False)
     last_activity_date = db.Column(db.Date)
-    # Bonus de complétion quotidienne (mode "Révision du jour"), distinct de
-    # streak_days/last_activity_date qui restent purement informatifs.
+    # DEPRECATED (multi-parcours) — remplacés par StudentParcours.daily_completion_streak
+    # et StudentParcours.last_daily_completion_date (série par parcours).
+    # Conservés en base pour la migration/rollback, plus jamais lus ni écrits.
     daily_completion_streak = db.Column(db.Integer, default=0, nullable=False)
     last_daily_completion_date = db.Column(db.Date)
     onboarded = db.Column(db.Boolean, default=False, nullable=False)
@@ -83,6 +86,27 @@ class StudentProfile(db.Model):
     elo_ability = db.Column(db.Float, default=0.0, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
+class StudentParcours(db.Model):
+    """Parcours activé par un étudiant — une ligne = parcours actif.
+
+    Porte la date de מבחן et la série de complétion quotidienne PAR parcours.
+    La désactivation supprime la ligne (date + série perdues, assumé) ; les
+    FsrsCard du parcours restent en base, simplement masquées du parcours
+    étudiant tant qu'il n'est pas réactivé.
+    """
+
+    __tablename__ = "student_parcours"
+    __table_args__ = (db.UniqueConstraint("user_id", "parcours", name="uq_student_parcours"),)
+
+    id = db.Column(db.String(36), primary_key=True, default=_uuid)
+    user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    parcours = db.Column(db.String(64), nullable=False, index=True)  # valeur de VALID_PARCOURS
+    exam_date = db.Column(db.Date)  # nullable = pas de date fixée (pas de pression examen)
+    daily_completion_streak = db.Column(db.Integer, default=0, nullable=False)
+    last_daily_completion_date = db.Column(db.Date)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
 
 class Question(db.Model):

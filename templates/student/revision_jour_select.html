@@ -1,0 +1,49 @@
+{% extends "student/_layout.html" %}
+{% from "_icons.html" import icon_calendar, icon_repeat %}
+{% block title %}חזרה יומית — קניין הלכה{% endblock %}
+{% block content %}
+<div class="stack animate-slide-up">
+  <div>
+    <h2 class="mb-1">מה נחזור היום?</h2>
+    <p class="text-sm muted">בחר מסלול לחזרה היומית</p>
+  </div>
+
+  <div class="stack-sm">
+    {% for item in items %}
+      {% if item.due > 0 %}
+      <a href="{{ url_for('student.revision_jour_session', parcours_code=item.code) }}" class="folio-action">
+        <div class="folio-action-body">
+          <div class="folio-action-title row gap-1">
+            {{ item.label }}
+            <span class="badge">{{ item.due }}</span>
+          </div>
+          <div class="folio-action-sub">{{ item.due }} כרטיסים ממתינים היום</div>
+        </div>
+        <div class="icon-box icon-box-primary">{{ icon_calendar(20) }}</div>
+      </a>
+      {% else %}
+      <div class="folio-action" style="opacity:.45;pointer-events:none;">
+        <div class="folio-action-body">
+          <div class="folio-action-title">{{ item.label }}</div>
+          <div class="folio-action-sub">אין כרטיסים ממתינים היום</div>
+        </div>
+        <div class="icon-box">{{ icon_calendar(20) }}</div>
+      </div>
+      {% endif %}
+    {% endfor %}
+
+    {% if total > 0 %}
+    <a href="{{ url_for('student.revision_jour_session', parcours_code='all') }}" class="folio-action">
+      <div class="folio-action-body">
+        <div class="folio-action-title row gap-1">
+          הכל
+          <span class="badge">{{ total }}</span>
+        </div>
+        <div class="folio-action-sub">חזרה על כל המסלולים יחד</div>
+      </div>
+      <div class="icon-box icon-box-primary">{{ icon_repeat(20) }}</div>
+    </a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

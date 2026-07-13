@@ -31,7 +31,7 @@
        data-answer-url="{{ url_for('api.answer') }}"
        data-today-stats-url="{{ url_for('student.today_stats') }}"
        data-subject="חזרה"
-       data-siman="יומית"
+       data-siman="{{ mode_scope_label or 'יומית' }}"
        data-streak="{{ profile.streak_days or 0 }}"
        data-revision="true"
        data-mode="revision_daily"

@@ -154,11 +154,13 @@ smiha-flask/
 │   ├── sim_priors.py           # Démonstration du mélange des priors collectifs
 │   ├── recompute_item_stats.py # Batch : recalcul autoritaire des agrégats/priors
 │   ├── migrate_phase2.py       # Migration schéma Phase 2 (bases existantes)
-│   └── migrate_approve_pending.py  # Approuve les questions "pending" historiques (bases existantes)
+│   ├── migrate_approve_pending.py  # Approuve les questions "pending" historiques (bases existantes)
+│   └── migrate_multi_parcours.py   # Crée student_parcours + backfill legacy (bases existantes)
 │
 └── tests/
     ├── test_fsrs.py            # Tests du scheduler FSRS-6 + quick wins (runner autonome)
-    └── test_calibration.py     # Tests de la calibration collective
+    ├── test_calibration.py     # Tests de la calibration collective
+    └── test_multi_parcours.py  # Tests multi-parcours : bonus par parcours, sélecteur, pression examen
 ```
 
 ---
@@ -191,12 +193,30 @@ Contrainte unique `(user_id, role)`. Valeurs de `role` : `"super_admin"`, `"impo
 | `id` | UUID (FK users.id, PK) | |
 | `preparation_goal` | String | `"discovery"` / `"serious"` / `"intensive"` |
 | `target_stability` | Float | Seuil FSRS cible, défaut 0.90 |
-| `exam_date` | Date | Date de l'examen (pression temporelle FSRS) |
+| `exam_date` | Date | **DEPRECATED** — remplacé par `student_parcours.exam_date` (une date par parcours). Conservé en base pour migration/rollback, plus jamais lu ni écrit |
 | `section` | JSON | Liste de sections, ex. `["shulchan_aruch", "tur"]` |
 | `total_points` | Integer | Cumulatif |
 | `streak_days` | Integer | Jours consécutifs d'activité |
 | `last_activity_date` | Date | Pour calcul du streak |
+| `daily_completion_streak` / `last_daily_completion_date` | Integer / Date | **DEPRECATED** — remplacés par les champs homonymes de `student_parcours` (série par parcours) |
 | `onboarded` | Boolean | False jusqu'à passage de /app/onboarding |
+
+---
+
+### `student_parcours`
+Parcours **activé** par un étudiant — une ligne = parcours actif. Contrainte unique `(user_id, parcours)`. La désactivation (depuis les paramètres) **supprime** la ligne : date et série quotidienne perdues (assumé) ; les `fsrs_cards` du parcours restent en base, simplement masquées tant qu'il n'est pas réactivé.
+
+| Colonne | Type | Notes |
+|---|---|---|
+| `id` | UUID (PK) | |
+| `user_id` | FK users.id (index) | |
+| `parcours` | String(64) | Valeur de `VALID_PARCOURS` |
+| `exam_date` | Date (nullable) | Date du מבחן de CE parcours — pilote la pression FSRS des questions du parcours ; NULL = pas de pression |
+| `daily_completion_streak` | Integer | Série de complétion quotidienne **de ce parcours** |
+| `last_daily_completion_date` | Date | Garde anti-double bonus, par parcours |
+| `created_at` | DateTime | Date d'activation — sert de point de départ à la barre de préparation (`prep_pct`) |
+
+Un profil `onboarded` sans aucune ligne (base pré-migration) est automatiquement rattaché à `bassar_bechalav` par le fallback de `get_active_parcours()` (`blueprints/student.py`), en copiant les champs dépréciés de `student_profiles`.
 
 ---
 
@@ -515,12 +535,13 @@ Retourne uniquement un tableau JSON valide, sans texte avant ou après.
 | Méthode | Route | Description |
 |---|---|---|
 | GET | `/app/` | Redirige vers onboarding ou home |
-| GET/POST | `/app/onboarding` | Choix de l'objectif, date d'examen, sections |
-| GET | `/app/home` | Dashboard : compte à rebours, cartes dues, streak, % préparation |
-| GET | `/app/parcours` | Table des matières : parcours → simanim rétractables → cartes par sujet (plage de seifim indicative) |
-| GET | `/app/chapitre/<subject>/<siman>[/<seif>]` | Session d'étude sur un sujet du siman (la variante `/<seif>` reste supportée mais n'est plus liée depuis le sélecteur) |
-| GET | `/app/revision` | Hub de révision : 4 cartes (jour / siman / sujet / aléatoire) avec compteurs |
-| GET | `/app/revision/jour` | Révision du jour : cartes dues (répétition espacée FSRS) |
+| GET/POST | `/app/onboarding` | Choix des **parcours** (multi-select, ≥ 1 requis), date de מבחן **par parcours** (optionnelle), niveau cible, sections |
+| GET | `/app/home` | Dashboard : compte à rebours du מבחן **le plus proche** (+ liste des autres parcours datés), cartes dues, streak |
+| GET | `/app/parcours` | Table des matières : parcours **activés** → simanim rétractables → cartes par sujet (plage de seifim indicative) |
+| GET | `/app/chapitre/<subject>/<siman>[/<seif>]` | Session d'étude sur un sujet du siman — restreinte aux parcours activés (la variante `/<seif>` reste supportée mais n'est plus liée depuis le sélecteur) |
+| GET | `/app/revision` | Hub de révision : 4 cartes (jour / siman / sujet / aléatoire) avec compteurs (parcours activés uniquement) |
+| GET | `/app/revision/jour` | Révision du jour : session directe si ≤ 1 parcours actif, sinon **écran de choix du parcours** (compteur de cartes dues par parcours + option « הכל ») |
+| GET | `/app/revision/jour/<parcours>` | Session de révision du jour restreinte à un parcours actif ; valeur spéciale `all` = tous les parcours actifs. Parcours inconnu/non activé → redirection vers le sélecteur |
 | GET | `/app/revision/siman` | Liste des simanim déjà appris (parcours → siman → cartes par sujet) |
 | GET | `/app/revision/siman/<subject>/<siman>` | Session de révision sur un sujet déjà appris d'un siman |
 | GET | `/app/revision/sujet` | Liste des tags (`Question.tags`) ayant ≥ 3 cartes déjà apprises |
@@ -529,7 +550,7 @@ Retourne uniquement un tableau JSON valide, sans texte avant ou après.
 | POST | `/app/advance-revisions` | Avance toutes les cartes dues de 1 jour (outil de test) |
 | POST | `/app/reset-progress` | Efface UserAnswer + FsrsCard + Progression (nucléaire) |
 | GET | `/app/profil` | Profil : total réponses, précision % |
-| GET/POST | `/app/settings` | Modifier date examen, target_stability, sections |
+| GET/POST | `/app/settings` | Activer/désactiver les parcours et leur date de מבחן (≥ 1 parcours requis ; désactiver = masquer le contenu + perdre la série quotidienne du parcours), target_stability, sections |
 | GET | `/app/today-stats` | JSON : points du jour, cartes révisées, précision |
 
 ---
@@ -592,10 +613,14 @@ Réponse JSON :
 }
 ```
 
-`daily_bonus` — bonus de complétion quotidienne (150 + 20 par jour de série consécutive). Toujours
-`0` sauf quand `mode == "revision_daily"` **et** que cette réponse vide complètement la file des
-cartes dues du jour (`FsrsCard.due_date <= aujourd'hui`) — auquel cas il est ajouté à `total_points`
-en plus de `points`.
+`daily_bonus` — bonus de complétion quotidienne **par parcours** (150 + 20 par jour de série
+consécutive de CE parcours). Toujours `0` sauf quand `mode == "revision_daily"` **et** que cette
+réponse vide complètement la file des cartes dues du jour **du parcours de la question**
+(`FsrsCard.due_date <= aujourd'hui`, questions approuvées, signalements "open" de l'utilisateur
+exclus) — auquel cas il est ajouté à `total_points` en plus de `points`. En mode « הכל », chaque
+parcours dont la file se vide déclenche son propre bonus, cumulables le même jour (garde
+`last_daily_completion_date` par parcours). `daily_bonus_parcours` (libellé hébreu du parcours,
+`null` sinon) accompagne le bonus pour l'affichage.
 
 **Effets de bord** (dans l'ordre) :
 1. Enregistre un `UserAnswer` (avec `z_item`, `z_user`, `auto_grade`)
@@ -604,9 +629,10 @@ en plus de `points`.
    compteurs et distributions log-RT (`ItemStats`, `UserSpeed`)
 4. Met à jour (ou crée) la `Progression` du chapitre
 5. Met à jour `StudentProfile` : `total_points`, `streak_days`, `last_activity_date`
-6. Si `mode == "revision_daily"` et que la file du jour vient d'être vidée : ajoute le bonus de
-   complétion quotidienne (`daily_bonus`) à `total_points` et met à jour `daily_completion_streak` /
-   `last_daily_completion_date`
+6. Si `mode == "revision_daily"` et que la file du jour **du parcours de la question** vient d'être
+   vidée : ajoute le bonus de complétion quotidienne (`daily_bonus`) à `total_points` et met à jour
+   `daily_completion_streak` / `last_daily_completion_date` **sur la ligne `student_parcours`** du
+   parcours (plus jamais sur `StudentProfile`)
 
 #### `POST /api/report`
 
@@ -678,6 +704,9 @@ d'activation :
 - **Intervalle optimal** : `interval = S / FACTOR × (target^(1/DECAY) − 1)` (≈ `S × 0.40` à `target = 0.95`).
 - **Pression examen** : compression continue quand l'examen est à moins de 90 jours.
   - Facteur `max(0.30, days_left / 90)` — linéaire ; plafond absolu : l'intervalle ne dépasse jamais `days_left`.
+  - La date d'examen utilisée est celle du **parcours de la question** (`student_parcours.exam_date`,
+    résolue dans `blueprints/api.py`) — chaque parcours a sa propre pression ; un parcours sans date
+    n'en subit aucune.
 - **Tri des révisions** : cartes présentées par stabilité croissante (moins bien mémorisée en premier).
 - **`target_stability`** configurable par étudiant — 3 niveaux (`0.92` יעיל / `0.95` מאוזן / `0.96` מעמיק).
 - **Intervalle max** : 365 jours.
@@ -795,6 +824,32 @@ Convertit un entier en notation hébraïque (gematria) avec geresh/gershayim :
 - Cliquer une carte ouvre une session sur toutes les questions du sujet dans le siman (`/app/chapitre/<sujet>/<siman>`)
 - Aucun siman n'est verrouillé — l'étudiant accède librement à n'importe quel sujet
 
+### Multi-parcours
+
+Un étudiant peut préparer **plusieurs parcours en parallèle**, chacun avec sa propre date de מבחן :
+
+- **Activation** : à l'onboarding (multi-select, ≥ 1 requis) et dans les paramètres. Une ligne
+  `student_parcours` = un parcours actif. Désactiver un parcours **supprime la ligne** (date +
+  série quotidienne perdues) ; les `fsrs_cards` restent en base et réapparaissent à la réactivation
+  (attention au backlog de cartes dues accumulées).
+- **Filtre de contenu global** : un parcours non activé est masqué **partout** — `/app/parcours`,
+  `/app/home`, `/app/chapitre/…` (y compris accès URL directe) et toutes les révisions. Implémenté
+  par `Question.parcours.in_(codes actifs)` via les helpers `get_active_parcours()` /
+  `active_parcours_codes()` (`blueprints/student.py`).
+- **Révision du jour** : avec plusieurs parcours actifs, `/app/revision/jour` affiche d'abord un
+  écran de choix (compteur de cartes dues par parcours + « הכל ») ; la session est ensuite scoppée
+  au parcours choisi (`/app/revision/jour/<parcours>` ou `/all`).
+- **Bonus quotidien par parcours** : vider la file due d'un parcours déclenche SON bonus
+  (150 + 20×série du parcours) ; en mode « הכל » les bonus des différents parcours se cumulent le
+  même jour.
+- **Pression FSRS par parcours** : `schedule_next` reçoit la date du parcours de la question.
+- **Ajouter un parcours au catalogue** = 3 entrées dans `question_types.py` : `VALID_PARCOURS`,
+  `PARCOURS_LABELS`, `PARCOURS_DESCRIPTIONS` — onboarding, paramètres et sélecteur de révision se
+  mettent à jour automatiquement.
+- **Base existante** : `python -m scripts.migrate_multi_parcours` crée la table et rattache chaque
+  profil onboardé à `bassar_bechalav` en copiant les champs dépréciés (le fallback de
+  `get_active_parcours()` fait de même à la volée si besoin).
+
 ### Sections d'examen
 
 Les sections représentent les **sources halakhiques** étudiées. Chaque question est taguée avec une ou plusieurs sections ; chaque étudiant choisit les sources qu'il étudie à l'onboarding (et peut les modifier dans les paramètres).
@@ -909,10 +964,13 @@ python -m scripts.sim_priors            # visualiser le mélange des priors (jam
 python -m scripts.recompute_item_stats  # batch : recalcul autoritaire des agrégats/priors
 python -m scripts.migrate_phase2        # migration schéma sur une base EXISTANTE (prod)
 python -m scripts.migrate_approve_pending  # approuve les questions "pending" historiques (base EXISTANTE)
+python -m scripts.migrate_multi_parcours   # crée student_parcours + backfill (base EXISTANTE)
 
 # Tests (sans pytest requis)
 python tests/test_fsrs.py
 python tests/test_calibration.py
+python tests/test_points.py
+python tests/test_multi_parcours.py
 
 # Vérifier l'état de la base en SQLite
 sqlite3 smiha.db ".tables"
@@ -964,7 +1022,9 @@ qu'un navigateur affiche une version obsolète des assets `static/` après un d�
 - **`section` est une liste JSON** sur `StudentProfile` et `Question`. Utiliser `question.section_list()` pour la lire de façon cohérente.
 - **Filtrage strict des sections** : une question n'est proposée que si **toutes** ses sections sont dans celles de l'étudiant (`question.sections ⊆ student.sections`). Exemple : une question `["shulchan_aruch", "tur"]` est invisible pour un étudiant qui n'a que `shulchan_aruch`. Pas d'alias, pas d'implicite (sauf `shulchan_aruch` toujours injecté par `allowed_sections()`).
 - **Champs obligatoires des questions** : `parcours`, `sujet`/`subject`, `siman`, `seif` sont requis depuis l'import. Modifier leur validation dans `question_types.py` **doit** s'accompagner d'une mise à jour de ce README et de `sample_questions.json`.
-- **`VALID_PARCOURS`** dans `question_types.py` est la liste des parcours autorisés. Ajouter un parcours = ajouter ici + mettre à jour ce README.
+- **`VALID_PARCOURS`** dans `question_types.py` est la liste des parcours autorisés. Ajouter un parcours = ajouter ici + `PARCOURS_LABELS` + `PARCOURS_DESCRIPTIONS` + mettre à jour ce README.
+- **Filtrage par parcours actifs** : tout le parcours étudiant filtre sur `Question.parcours.in_(parcours actifs)`. Une question avec `parcours = NULL` est **invisible** pour tous les étudiants (la migration `migrate_multi_parcours` log un warning si de telles questions existent).
+- **Parcours désactivé** : ses cartes dues s'accumulent invisiblement ; à la réactivation l'étudiant retrouve tout le backlog d'un coup (le compteur du sélecteur de révision le rend explicite).
 - **Tests** : le cœur SRS est couvert par `tests/test_fsrs.py` et `tests/test_calibration.py`
   (runner autonome, pytest optionnel) ; le reste de l'app n'a pas de couverture — vérifier les
   régressions manuellement et étendre les tests avant d'ajouter une feature complexe.

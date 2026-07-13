@@ -25,13 +25,37 @@ from models import (
     Question,
     QuestionEdit,
     QuestionReport,
+    StudentParcours,
     StudentProfile,
     UserAnswer,
     UserSpeed,
     db,
 )
 from points import compute_daily_points, compute_points, compute_stability_points
-from question_types import is_correct_answer, normalize_db_question
+from question_types import PARCOURS_LABELS, is_correct_answer, normalize_db_question
+
+
+def _due_count_for_parcours(user_id: str, parcours: str, today) -> int:
+    """Cartes dues du parcours donné — même périmètre que la file servie par
+    la révision du jour : questions approuvées, signalements "open" de
+    l'utilisateur exclus (sans cette exclusion, une carte due mais signalée
+    rendrait la file impossible à vider et le bonus inatteignable)."""
+    hidden_subq = (
+        db.session.query(QuestionReport.question_id)
+        .filter(QuestionReport.reporter_id == user_id, QuestionReport.status == "open")
+    )
+    return (
+        FsrsCard.query.join(Question, Question.id == FsrsCard.question_id)
+        .filter(
+            FsrsCard.user_id == user_id,
+            FsrsCard.due_date <= today,
+            Question.status == "approved",
+            Question.parcours == parcours,
+            Question.id.notin_(hidden_subq),
+        )
+        .count()
+    )
+
 
 bp = Blueprint("api", __name__, url_prefix="/api")
 
@@ -54,6 +78,12 @@ def answer():
         return jsonify({"error": "question not found"}), 404
 
     sp = StudentProfile.query.get(user.id)
+    # Ligne du parcours activé par l'étudiant pour cette question — porte la
+    # date de מבחן (pression FSRS) et la série de complétion quotidienne.
+    spq = (
+        StudentParcours.query.filter_by(user_id=user.id, parcours=q.parcours).first()
+        if q.parcours else None
+    )
     nq = normalize_db_question(q.as_dict())
 
     is_correct = is_correct_answer(nq, given_answer)
@@ -100,20 +130,12 @@ def answer():
     bucket = personal_bucket(card.avg_response_time_ms if card else None, response_time_ms)
     rating = rating_for(is_correct, bucket)
 
-    # Nombre de cartes dues AVANT ce traitement (utilisé pour le bonus de
-    # complétion quotidienne — capturé avant l'upsert FSRS qui va déplacer
-    # due_date de cette carte).
+    # Nombre de cartes dues du parcours de cette question AVANT ce traitement
+    # (utilisé pour le bonus de complétion quotidienne PAR parcours — capturé
+    # avant l'upsert FSRS qui va déplacer due_date de cette carte).
     due_before = 0
-    if mode == "revision_daily":
-        due_before = (
-            FsrsCard.query.join(Question, Question.id == FsrsCard.question_id)
-            .filter(
-                FsrsCard.user_id == user.id,
-                FsrsCard.due_date <= date.today(),
-                Question.status == "approved",
-            )
-            .count()
-        )
+    if mode == "revision_daily" and spq is not None:
+        due_before = _due_count_for_parcours(user.id, q.parcours, date.today())
 
     if is_never_succeeded and is_correct:
         # Premier succès : points fixes, aucun calcul FSRS pour l'instant
@@ -193,7 +215,9 @@ def answer():
             avg_response_time_ms=card.avg_response_time_ms,
             last_review=card.last_review,
         )
-        exam = sp.exam_date.isoformat() if sp.exam_date else None
+        # Pression examen : date du מבחן du parcours de la question (pas de
+        # parcours activé ou pas de date fixée = aucune pression).
+        exam = spq.exam_date.isoformat() if spq is not None and spq.exam_date else None
         # Collective per-item prior — blended (never substituted) into S0/D0,
         # only on the first-ever real schedule_next call for this card.
         prior = calibration.build_prior(q.difficulty, item_stats) if card.state == "new" else None
@@ -277,32 +301,31 @@ def answer():
     sp.streak_days = new_streak
     sp.last_activity_date = today
 
-    # 5. bonus de complétion quotidienne — uniquement pour le mode "Révision
-    # du jour", et seulement quand cette réponse fait tomber le nombre de
-    # cartes dues à 0 (autoflush : la requête ci-dessous voit déjà le
-    # card.due_date mis à jour en mémoire au step 2 du FSRS upsert).
+    # 5. bonus de complétion quotidienne PAR parcours — uniquement pour le
+    # mode "Révision du jour", et seulement quand cette réponse fait tomber
+    # à 0 le nombre de cartes dues DU PARCOURS de la question (autoflush : la
+    # requête voit déjà le card.due_date mis à jour en mémoire au step 2 du
+    # FSRS upsert). En mode « הכל », chaque parcours vidé déclenche son
+    # propre bonus, cumulables le même jour (série et garde par parcours).
     daily_bonus = 0
-    if mode == "revision_daily" and due_before > 0 and sp.last_daily_completion_date != today:
-        due_after = (
-            FsrsCard.query.join(Question, Question.id == FsrsCard.question_id)
-            .filter(
-                FsrsCard.user_id == user.id,
-                FsrsCard.due_date <= today,
-                Question.status == "approved",
-            )
-            .count()
-        )
+    if (
+        mode == "revision_daily"
+        and spq is not None
+        and due_before > 0
+        and spq.last_daily_completion_date != today
+    ):
+        due_after = _due_count_for_parcours(user.id, q.parcours, today)
         if due_after == 0:
             yesterday = today - timedelta(days=1)
             new_daily_streak = (
-                (sp.daily_completion_streak or 0) + 1
-                if sp.last_daily_completion_date == yesterday
+                (spq.daily_completion_streak or 0) + 1
+                if spq.last_daily_completion_date == yesterday
                 else 1
             )
             daily_bonus = 150 + 20 * (new_daily_streak - 1)
             sp.total_points += daily_bonus
-            sp.daily_completion_streak = new_daily_streak
-            sp.last_daily_completion_date = today
+            spq.daily_completion_streak = new_daily_streak
+            spq.last_daily_completion_date = today
 
     db.session.commit()
 
@@ -319,6 +342,11 @@ def answer():
             "rating_badge": f"{label['emoji']} {label['label']}",
             "rating_tone": label["tone"],
             "daily_bonus": daily_bonus,
+            # Libellé du parcours vidé — permet au toast de préciser quel
+            # parcours a déclenché le bonus en mode « הכל ».
+            "daily_bonus_parcours": (
+                PARCOURS_LABELS.get(q.parcours, q.parcours) if daily_bonus > 0 else None
+            ),
         }
     )
 

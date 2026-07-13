@@ -19,6 +19,9 @@ VALID_PARCOURS = ("bassar_bechalav",)
 # Hebrew display labels — keep in sync with PARCOURS_LABELS in static/js/chapitre.js
 # and static/js/admin-question-editor.js.
 PARCOURS_LABELS = {"bassar_bechalav": "בשר בחלב"}
+# Sous-titre affiché sous chaque parcours dans l'onboarding et les paramètres.
+# Ajouter un parcours = une entrée dans VALID_PARCOURS + PARCOURS_LABELS + ici.
+PARCOURS_DESCRIPTIONS = {"bassar_bechalav": "הלכות בשר בחלב — סימנים פ״ז–צ״ז"}
 
 HEBREW_RE = re.compile(r"[֐-׿]")
 LATIN_RE = re.compile(r"[A-Za-zÀ-ÖØ-öø-ÿ]")

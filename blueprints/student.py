@@ -10,8 +10,8 @@ from sqlalchemy import distinct, func
 
 from auth_helpers import current_user, login_required
 from chapter_topics import siman_topic
-from models import FsrsCard, Progression, Question, QuestionReport, StudentProfile, UserAnswer, db
-from question_types import PARCOURS_LABELS, normalize_db_question
+from models import FsrsCard, Progression, Question, QuestionReport, StudentParcours, StudentProfile, UserAnswer, db
+from question_types import PARCOURS_DESCRIPTIONS, PARCOURS_LABELS, VALID_PARCOURS, normalize_db_question
 
 bp = Blueprint("student", __name__, url_prefix="/app")
 
@@ -96,6 +96,98 @@ def days_to_exam(exam_date) -> int | None:
     return max(0, (exam_date - date.today()).days)
 
 
+def get_active_parcours(user_id: str) -> list[StudentParcours]:
+    """Parcours activés par l'étudiant, triés par date d'activation.
+
+    Fallback legacy : un profil déjà onboardé sans aucune ligne (compte
+    d'avant le multi-parcours, base migrée à moitié) est automatiquement
+    rattaché à bassar_bechalav en reprenant la date d'examen et la série
+    quotidienne de l'ancien modèle global."""
+    rows = (
+        StudentParcours.query.filter_by(user_id=user_id)
+        .order_by(StudentParcours.created_at.asc())
+        .all()
+    )
+    if rows:
+        return rows
+    sp = StudentProfile.query.get(user_id)
+    if sp is None or not sp.onboarded:
+        return []
+    row = StudentParcours(
+        user_id=user_id,
+        parcours="bassar_bechalav",
+        exam_date=sp.exam_date,
+        daily_completion_streak=sp.daily_completion_streak or 0,
+        last_daily_completion_date=sp.last_daily_completion_date,
+        created_at=sp.created_at,
+    )
+    db.session.add(row)
+    db.session.commit()
+    return [row]
+
+
+def active_parcours_codes(user_id: str) -> list[str]:
+    return [r.parcours for r in get_active_parcours(user_id)]
+
+
+def sync_student_parcours(user_id: str, selected: dict) -> None:
+    """Upsert des parcours activés : crée les manquants, met à jour la date
+    d'examen des existants, supprime les lignes désélectionnées (date et
+    série quotidienne perdues — les FsrsCard restent, simplement masquées).
+    Ne commit pas — le caller commit."""
+    existing = {r.parcours: r for r in StudentParcours.query.filter_by(user_id=user_id).all()}
+    for code, exam_date in selected.items():
+        row = existing.pop(code, None)
+        if row is None:
+            db.session.add(StudentParcours(user_id=user_id, parcours=code, exam_date=exam_date))
+        else:
+            row.exam_date = exam_date
+    for row in existing.values():
+        db.session.delete(row)
+
+
+def _due_counts_by_parcours(user_id: str, codes: list[str], hidden_ids: set[str]) -> dict[str, int]:
+    """Cartes dues aujourd'hui par parcours actif — même périmètre que la
+    file servie par la révision du jour (questions approuvées, signalements
+    "open" de l'utilisateur exclus)."""
+    if not codes:
+        return {}
+    q = (
+        db.session.query(Question.parcours, func.count(FsrsCard.id))
+        .join(FsrsCard, FsrsCard.question_id == Question.id)
+        .filter(
+            FsrsCard.user_id == user_id,
+            FsrsCard.due_date <= date.today(),
+            Question.status == "approved",
+            Question.parcours.in_(codes),
+        )
+    )
+    if hidden_ids:
+        q = q.filter(Question.id.notin_(hidden_ids))
+    return {r[0]: r[1] for r in q.group_by(Question.parcours).all()}
+
+
+def _exam_cards(actifs: list[StudentParcours]) -> list[dict]:
+    """Compte à rebours + barre de préparation par parcours actif. `pct`
+    court depuis l'activation du parcours (created_at), pas depuis la
+    création du profil."""
+    cards = []
+    for r in actifs:
+        pct = 0
+        if r.exam_date and r.created_at:
+            total = (datetime.combine(r.exam_date, datetime.min.time()) - r.created_at).total_seconds()
+            done = (datetime.utcnow() - r.created_at).total_seconds()
+            pct = min(100, max(0, (done / total) * 100)) if total > 0 else 0
+        cards.append({
+            "code": r.parcours,
+            "label": PARCOURS_LABELS.get(r.parcours, r.parcours),
+            "exam_date": r.exam_date,
+            "days": days_to_exam(r.exam_date),
+            "pct": pct,
+        })
+    return cards
+
+
 @bp.route("/")
 @login_required
 def index():
@@ -109,9 +201,21 @@ def index():
 @login_required
 def onboarding():
     sp = get_profile()
+    ctx = dict(
+        valid_parcours=VALID_PARCOURS,
+        parcours_labels=PARCOURS_LABELS,
+        parcours_descriptions=PARCOURS_DESCRIPTIONS,
+    )
     if request.method == "POST":
-        exam = request.form.get("exam_date") or None
-        sp.exam_date = datetime.strptime(exam, "%Y-%m-%d").date() if exam else None
+        selected = [p for p in request.form.getlist("parcours") if p in VALID_PARCOURS]
+        if not selected:
+            flash("יש לבחור לפחות מסלול אחד", "error")
+            return render_template("student/onboarding.html", **ctx)
+        dates = {}
+        for code in selected:
+            raw = request.form.get(f"exam_date_{code}") or None
+            dates[code] = datetime.strptime(raw, "%Y-%m-%d").date() if raw else None
+        sync_student_parcours(sp.id, dates)
         stability = request.form.get("target_stability")
         sp.target_stability = float(stability) if stability else 0.95
         sp.section = request.form.getlist("section")
@@ -119,7 +223,7 @@ def onboarding():
         db.session.commit()
         flash("הכל מוכן — בהצלחה!", "success")
         return redirect(url_for("student.home"))
-    return render_template("student/onboarding.html")
+    return render_template("student/onboarding.html", **ctx)
 
 
 @bp.route("/home")
@@ -131,8 +235,10 @@ def home():
 
     allowed = allowed_sections(sp.section)
     hidden_ids = _hidden_question_ids(sp.id)
+    actifs = get_active_parcours(sp.id)
+    codes = [r.parcours for r in actifs]
     all_qs = (
-        Question.query.filter(Question.status == "approved")
+        Question.query.filter(Question.status == "approved", Question.parcours.in_(codes))
         .with_entities(Question.id, Question.subject, Question.siman, Question.section)
         .all()
     )
@@ -156,25 +262,31 @@ def home():
     )
 
     today = date.today()
-    due_count = FsrsCard.query.filter(FsrsCard.user_id == sp.id, FsrsCard.due_date <= today).count()
+    # Badge de la carte "חזרה יומית" — même périmètre que la file réellement
+    # servie (parcours actifs, questions approuvées, signalements exclus).
+    due_count = sum(_due_counts_by_parcours(sp.id, codes, hidden_ids).values())
 
     # Next scheduled revision: earliest future due_date and how many cards are due that day
-    next_due_row = (
+    next_due_q = (
         db.session.query(FsrsCard.due_date, func.count(FsrsCard.id))
-        .filter(FsrsCard.user_id == sp.id, FsrsCard.due_date > today)
-        .group_by(FsrsCard.due_date)
-        .order_by(FsrsCard.due_date.asc())
-        .first()
+        .join(Question, Question.id == FsrsCard.question_id)
+        .filter(
+            FsrsCard.user_id == sp.id,
+            FsrsCard.due_date > today,
+            Question.status == "approved",
+            Question.parcours.in_(codes),
+        )
     )
+    if hidden_ids:
+        next_due_q = next_due_q.filter(Question.id.notin_(hidden_ids))
+    next_due_row = next_due_q.group_by(FsrsCard.due_date).order_by(FsrsCard.due_date.asc()).first()
     next_due_date = next_due_row[0] if next_due_row else None
     next_due_count = next_due_row[1] if next_due_row else 0
     next_due_days = (next_due_date - today).days if next_due_date else None
 
-    prep_pct = 0
-    if sp.exam_date and sp.created_at:
-        total = (datetime.combine(sp.exam_date, datetime.min.time()) - sp.created_at).total_seconds()
-        done = (datetime.utcnow() - sp.created_at).total_seconds()
-        prep_pct = min(100, max(0, (done / total) * 100)) if total > 0 else 0
+    exam_cards = _exam_cards(actifs)
+    dated = [c for c in exam_cards if c["days"] is not None]
+    nearest = min(dated, key=lambda c: c["days"]) if dated else None
 
     # last 7 days streak markers
     streak = sp.streak_days or 0
@@ -192,8 +304,8 @@ def home():
         due_count=due_count,
         next_due_days=next_due_days,
         next_due_count=next_due_count,
-        days_to_exam=days_to_exam(sp.exam_date),
-        prep_pct=prep_pct,
+        exam_cards=exam_cards,
+        nearest=nearest,
         days7=days7,
     )
 
@@ -204,8 +316,10 @@ def parcours():
     sp = get_profile()
     allowed = allowed_sections(sp.section)
     hidden_ids = _hidden_question_ids(sp.id)
+    codes = active_parcours_codes(sp.id)
     qs = [q for q in Question.query.filter(
         Question.status == "approved",
+        Question.parcours.in_(codes),
     ).all() if question_in_sections(q, allowed) and q.id not in hidden_ids]
 
     # Hiérarchie de contenu : parcours → siman → sujet (le sujet regroupe les
@@ -277,8 +391,15 @@ def parcours():
 
 
 def _load_chapitre(sp, base_filters: list, allowed: set[str] | None = None) -> list | None:
-    """Shared helper: fetch unanswered questions matching base_filters."""
-    rows = Question.query.filter(*base_filters).order_by(Question.seif.asc()).all()
+    """Shared helper: fetch unanswered questions matching base_filters.
+    Restreint aux parcours activés — bloque aussi l'accès par URL directe à
+    un sujet d'un parcours non activé."""
+    codes = active_parcours_codes(sp.id)
+    rows = (
+        Question.query.filter(Question.parcours.in_(codes), *base_filters)
+        .order_by(Question.seif.asc())
+        .all()
+    )
     if allowed:
         rows = [q for q in rows if question_in_sections(q, allowed)]
     hidden_ids = _hidden_question_ids(sp.id)
@@ -358,19 +479,23 @@ def chapitre(subject: str, siman: int):
 @login_required
 def revision():
     sp = get_profile()
-    today = date.today()
+    codes = active_parcours_codes(sp.id)
+    hidden_ids = _hidden_question_ids(sp.id)
 
-    due_count = FsrsCard.query.filter(FsrsCard.user_id == sp.id, FsrsCard.due_date <= today).count()
+    due_count = sum(_due_counts_by_parcours(sp.id, codes, hidden_ids).values())
     learned_ids = _learned_question_ids(sp.id)
-    learned_count = len(learned_ids)
 
+    # Compteurs alignés sur ce que les sessions servent réellement :
+    # cartes apprises restreintes aux parcours actifs / sections / signalements.
+    learned_count = 0
     eligible_tags = 0
     if learned_ids:
         allowed = allowed_sections(sp.section)
-        hidden_ids = _hidden_question_ids(sp.id)
         qs = [q for q in Question.query.filter(
             Question.status == "approved", Question.id.in_(learned_ids),
+            Question.parcours.in_(codes),
         ).all() if question_in_sections(q, allowed) and q.id not in hidden_ids]
+        learned_count = len(qs)
         counts = _tag_counts(qs)
         eligible_tags = sum(1 for c in counts.values() if c >= 3)
 
@@ -387,9 +512,50 @@ def revision():
 @bp.route("/revision/jour")
 @login_required
 def revision_jour():
+    """Dispatcheur : session directe s'il n'y a qu'un parcours actif, sinon
+    écran de choix du parcours à réviser (avec option « הכל »)."""
     sp = get_profile()
+    actifs = get_active_parcours(sp.id)
+    if len(actifs) <= 1:
+        return _render_revision_jour(sp, actifs)
+
+    hidden_ids = _hidden_question_ids(sp.id)
+    counts = _due_counts_by_parcours(sp.id, [r.parcours for r in actifs], hidden_ids)
+    items = [
+        {
+            "code": r.parcours,
+            "label": PARCOURS_LABELS.get(r.parcours, r.parcours),
+            "due": counts.get(r.parcours, 0),
+        }
+        for r in actifs
+    ]
+    return render_template(
+        "student/revision_jour_select.html",
+        items=items,
+        total=sum(i["due"] for i in items),
+        profile=sp,
+    )
+
+
+@bp.route("/revision/jour/<parcours_code>")
+@login_required
+def revision_jour_session(parcours_code: str):
+    """Session de révision du jour restreinte à un parcours actif, ou à tous
+    les parcours actifs avec la valeur spéciale « all »."""
+    sp = get_profile()
+    actifs = get_active_parcours(sp.id)
+    if parcours_code == "all":
+        return _render_revision_jour(sp, actifs)
+    match = [r for r in actifs if r.parcours == parcours_code]
+    if not match:
+        return redirect(url_for("student.revision_jour"))
+    return _render_revision_jour(sp, match)
+
+
+def _render_revision_jour(sp, actifs: list[StudentParcours]):
     today = date.today()
     hidden_ids = _hidden_question_ids(sp.id)
+    codes = [r.parcours for r in actifs]
 
     due_query = (
         db.session.query(FsrsCard, Question)
@@ -398,7 +564,8 @@ def revision_jour():
             FsrsCard.user_id == sp.id,
             FsrsCard.due_date <= today,
             Question.status == "approved",
-            )
+            Question.parcours.in_(codes),
+        )
     )
     if hidden_ids:
         due_query = due_query.filter(Question.id.notin_(hidden_ids))
@@ -418,16 +585,27 @@ def revision_jour():
             "normalized": nq,
         })
 
-    next_due_row = (
+    next_due_q = (
         db.session.query(FsrsCard.due_date, func.count(FsrsCard.id))
-        .filter(FsrsCard.user_id == sp.id, FsrsCard.due_date > today)
-        .group_by(FsrsCard.due_date)
-        .order_by(FsrsCard.due_date.asc())
-        .first()
+        .join(Question, Question.id == FsrsCard.question_id)
+        .filter(
+            FsrsCard.user_id == sp.id,
+            FsrsCard.due_date > today,
+            Question.status == "approved",
+            Question.parcours.in_(codes),
+        )
     )
+    if hidden_ids:
+        next_due_q = next_due_q.filter(Question.id.notin_(hidden_ids))
+    next_due_row = next_due_q.group_by(FsrsCard.due_date).order_by(FsrsCard.due_date.asc()).first()
     next_due_date = next_due_row[0] if next_due_row else None
     next_due_count = next_due_row[1] if next_due_row else 0
     next_due_days = (next_due_date - today).days if next_due_date else None
+
+    if len(codes) == 1:
+        mode_scope_label = PARCOURS_LABELS.get(codes[0], codes[0])
+    else:
+        mode_scope_label = "כל המסלולים"
 
     return render_template(
         "student/revision_jour.html",
@@ -435,6 +613,7 @@ def revision_jour():
         profile=sp,
         next_due_days=next_due_days,
         next_due_count=next_due_count,
+        mode_scope_label=mode_scope_label,
     )
 
 
@@ -445,11 +624,13 @@ def revision_siman():
     allowed = allowed_sections(sp.section)
     learned_ids = _learned_question_ids(sp.id)
     hidden_ids = _hidden_question_ids(sp.id)
+    codes = active_parcours_codes(sp.id)
 
     groups = []
     if learned_ids:
         qs = [q for q in Question.query.filter(
             Question.status == "approved", Question.id.in_(learned_ids),
+            Question.parcours.in_(codes),
         ).all() if question_in_sections(q, allowed) and q.id not in hidden_ids]
 
         # Même regroupement que le sélecteur : parcours → siman → sujet
@@ -505,9 +686,11 @@ def revision_siman_detail(subject: str, siman: int):
     learned_ids = _learned_question_ids(sp.id)
     hidden_ids = _hidden_question_ids(sp.id)
 
+    codes = active_parcours_codes(sp.id)
     rows = [q for q in Question.query.filter(
         Question.subject == subject, Question.siman == siman,
         Question.status == "approved", Question.id.in_(learned_ids),
+        Question.parcours.in_(codes),
     ).order_by(Question.seif.asc()).all() if question_in_sections(q, allowed) and q.id not in hidden_ids]
 
     if not rows:
@@ -539,8 +722,10 @@ def revision_sujet():
 
     tags = []
     if learned_ids:
+        codes = active_parcours_codes(sp.id)
         qs = [q for q in Question.query.filter(
             Question.status == "approved", Question.id.in_(learned_ids),
+            Question.parcours.in_(codes),
         ).all() if question_in_sections(q, allowed) and q.id not in hidden_ids]
         counts = _tag_counts(qs)
         tags = sorted(
@@ -559,9 +744,11 @@ def revision_sujet_detail(tag: str):
     learned_ids = _learned_question_ids(sp.id)
     hidden_ids = _hidden_question_ids(sp.id)
 
+    codes = active_parcours_codes(sp.id)
     rows = [
         q for q in Question.query.filter(
             Question.status == "approved", Question.id.in_(learned_ids),
+            Question.parcours.in_(codes),
         ).order_by(Question.subject.asc(), Question.siman.asc(), Question.seif.asc()).all()
         if question_in_sections(q, allowed) and tag in (q.tags or []) and q.id not in hidden_ids
     ]
@@ -593,8 +780,10 @@ def revision_aleatoire():
     learned_ids = _learned_question_ids(sp.id)
     hidden_ids = _hidden_question_ids(sp.id)
 
+    codes = active_parcours_codes(sp.id)
     rows = [q for q in Question.query.filter(
         Question.status == "approved", Question.id.in_(learned_ids),
+        Question.parcours.in_(codes),
     ).all() if question_in_sections(q, allowed) and q.id not in hidden_ids]
 
     if not rows:
@@ -645,6 +834,11 @@ def reset_progress():
     sp.total_points = 0
     sp.streak_days = 0
     sp.last_activity_date = None
+    # Les parcours restent activés (dates conservées), seule la série de
+    # complétion quotidienne repart de zéro.
+    for row in StudentParcours.query.filter_by(user_id=user.id).all():
+        row.daily_completion_streak = 0
+        row.last_daily_completion_date = None
     db.session.commit()
     flash("הפרוגרס אופס בהצלחה.", "success")
     return redirect(url_for("student.profil"))
@@ -663,7 +857,7 @@ def profil():
         profile=sp,
         total=total,
         accuracy=accuracy,
-        days_to_exam=days_to_exam(sp.exam_date),
+        exam_cards=_exam_cards(get_active_parcours(sp.id)),
     )
 
 
@@ -674,17 +868,32 @@ def settings():
     if not sp.onboarded:
         return redirect(url_for("student.onboarding"))
     if request.method == "POST":
-        exam = request.form.get("exam_date") or None
-        sp.exam_date = datetime.strptime(exam, "%Y-%m-%d").date() if exam else None
-        stability = request.form.get("target_stability")
-        sp.target_stability = float(stability) if stability else sp.target_stability
-        sections = request.form.getlist("section")
-        if sections:
-            sp.section = sections
-        db.session.commit()
-        flash("ההגדרות נשמרו בהצלחה.", "success")
-        return redirect(url_for("student.profil"))
-    return render_template("student/settings.html", profile=sp)
+        selected = [p for p in request.form.getlist("parcours") if p in VALID_PARCOURS]
+        if not selected:
+            flash("יש לבחור לפחות מסלול אחד", "error")
+        else:
+            dates = {}
+            for code in selected:
+                raw = request.form.get(f"exam_date_{code}") or None
+                dates[code] = datetime.strptime(raw, "%Y-%m-%d").date() if raw else None
+            sync_student_parcours(sp.id, dates)
+            stability = request.form.get("target_stability")
+            sp.target_stability = float(stability) if stability else sp.target_stability
+            sections = request.form.getlist("section")
+            if sections:
+                sp.section = sections
+            db.session.commit()
+            flash("ההגדרות נשמרו בהצלחה.", "success")
+            return redirect(url_for("student.profil"))
+    active_map = {r.parcours: r for r in get_active_parcours(sp.id)}
+    return render_template(
+        "student/settings.html",
+        profile=sp,
+        valid_parcours=VALID_PARCOURS,
+        parcours_labels=PARCOURS_LABELS,
+        parcours_descriptions=PARCOURS_DESCRIPTIONS,
+        active_map=active_map,
+    )
 
 
 @bp.get("/today-stats")

@@ -33,10 +33,12 @@
       <span class="stat-label">דיוק</span>
       <span class="stat-value">{{ accuracy }}%</span>
     </div>
+    {% for c in exam_cards %}
     <div class="stat-row">
-      <span class="stat-label">ימים למבחן</span>
-      <span class="stat-value">{{ days_to_exam if days_to_exam is not none else "—" }}</span>
+      <span class="stat-label">ימים למבחן · {{ c.label }}</span>
+      <span class="stat-value">{{ c.days if c.days is not none else "—" }}</span>
     </div>
+    {% endfor %}
     <div class="stat-row">
       <span class="stat-label">סך שאלות שעניתי</span>
       <span class="stat-value">{{ total }}</span>
@@ -45,10 +47,12 @@
       <span class="stat-label">יעד שליטה</span>
       <span class="stat-value">{{ (profile.target_stability * 100) | round | int }}%</span>
     </div>
-    <div class="stat-row" style="border-bottom:none;">
-      <span class="stat-label">תאריך מבחן</span>
-      <span class="stat-value" style="font-size:var(--text-base);font-family:'Noto Sans Hebrew',sans-serif;font-weight:600;">{{ profile.exam_date or "—" }}</span>
+    {% for c in exam_cards %}
+    <div class="stat-row" {% if loop.last %}style="border-bottom:none;"{% endif %}>
+      <span class="stat-label">תאריך מבחן · {{ c.label }}</span>
+      <span class="stat-value" style="font-size:var(--text-base);font-family:'Noto Sans Hebrew',sans-serif;font-weight:600;">{{ c.exam_date or "—" }}</span>
     </div>
+    {% endfor %}
   </div>
 
   <a href="{{ url_for('student.settings') }}" class="btn btn-ghost btn-block row gap-2 center">

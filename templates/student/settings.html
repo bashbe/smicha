@@ -7,14 +7,27 @@
     <p class="text-sm muted">שינויים לא ישפיעו על הפרוגרס הקיים</p>
   </div>
 
-  <!-- Exam date -->
+  <!-- Parcours + exam date per parcours -->
   <div class="stack-sm">
-    <div class="bold text-sm">תאריך המבחן</div>
-    <input type="hidden" name="exam_date" id="settings_exam_date"
-           value="{{ profile.exam_date.isoformat() if profile.exam_date else '' }}">
-    <div class="card">
-      <div id="settings-cal-root"></div>
+    <div class="bold text-sm">מסלולים ותאריכי מבחן</div>
+    <p class="text-xs muted">ביטול מסלול יסתיר את התוכן והחזרות שלו ויאפס את רצף ההשלמה היומית שלו</p>
+    {% for code in valid_parcours %}
+    {% set row = active_map.get(code) %}
+    <label class="card opt-card opt-parcours" style="cursor:pointer;{{ 'border-color:var(--accent);' if row }}">
+      <input type="checkbox" name="parcours" value="{{ code }}" class="input-checkbox-auto" {{ 'checked' if row }} />
+      <div class="flex-1">
+        <div class="bold">{{ parcours_labels.get(code, code) }}</div>
+        <div class="text-sm muted">{{ parcours_descriptions.get(code, '') }}</div>
+      </div>
+    </label>
+    <div class="parcours-cal {{ 'hidden' if not row }}" data-parcours-cal="{{ code }}">
+      <input type="hidden" name="exam_date_{{ code }}" id="exam_date_{{ code }}"
+             value="{{ row.exam_date.isoformat() if row and row.exam_date else '' }}">
+      <div class="card">
+        <div id="cal-root-{{ code }}"></div>
+      </div>
     </div>
+    {% endfor %}
   </div>
 
   <!-- Target stability -->
@@ -65,11 +78,34 @@
 
 <script src="{{ url_for('static', filename='js/hebrew-calendar.js') }}"></script>
 <script>
-  HebrewCalendar.init(
-    "settings-cal-root",
-    "settings_exam_date",
-    document.getElementById("settings_exam_date").value || null
-  );
+  const initializedCals = new Set();
+
+  function initCal(code) {
+    if (initializedCals.has(code)) return;
+    HebrewCalendar.init(
+      "cal-root-" + code,
+      "exam_date_" + code,
+      document.getElementById("exam_date_" + code).value || null
+    );
+    initializedCals.add(code);
+  }
+
+  document.querySelectorAll(".opt-parcours input").forEach((c) => {
+    const wrap = document.querySelector('[data-parcours-cal="' + c.value + '"]');
+    if (c.checked) initCal(c.value);
+    c.addEventListener("change", () => {
+      if (!c.checked) {
+        const label = c.closest(".opt-parcours").querySelector(".bold").textContent;
+        if (!confirm("לבטל את המסלול \"" + label + "\"? התוכן והחזרות שלו יוסתרו ורצף ההשלמה היומית שלו יאופס.")) {
+          c.checked = true;
+          return;
+        }
+      }
+      c.closest(".opt-parcours").style.borderColor = c.checked ? "var(--accent)" : "var(--border)";
+      wrap.classList.toggle("hidden", !c.checked);
+      if (c.checked) initCal(c.value);
+    });
+  });
 
   document.querySelectorAll(".opt-stability input").forEach((r) => r.addEventListener("change", () => {
     document.querySelectorAll(".opt-stability").forEach((l) => {
