@@ -20,20 +20,23 @@
     </div>
   </div>
 
-  <!-- step 1: subject selection -->
+  <!-- step 1: parcours selection (multi) -->
   <div class="step stack animate-slide-up" data-step="1">
     <div>
-      <h2>מה אתה לומד עכשיו?</h2>
-      <p style="font-size:var(--text-sm);color:var(--muted);margin-top:var(--space-1);">בחר את הנושא הנוכחי שלך</p>
+      <h2>אילו מסלולים אתה לומד?</h2>
+      <p style="font-size:var(--text-sm);color:var(--muted);margin-top:var(--space-1);">ניתן לבחור כמה מסלולים במקביל</p>
     </div>
-    <div id="subject-cards" class="stack-sm">
-      <div class="card opt-card subject-card" data-subject="basar_bechalav" id="card-bbc" style="cursor:pointer;">
+    <div id="parcours-cards" class="stack-sm">
+      {% for code in valid_parcours %}
+      <label class="card opt-card opt-parcours" style="cursor:pointer;">
+        <input type="checkbox" name="parcours" value="{{ code }}" class="hidden" />
         <span style="color:var(--muted);display:flex;">{{ icon_book(18) }}</span>
         <div class="flex-1">
-          <div style="font-weight:700;">בשר בחלב</div>
-          <div style="font-size:var(--text-sm);color:var(--muted);">הלכות בישול ואכילת בשר בחלב</div>
+          <div style="font-weight:700;">{{ parcours_labels.get(code, code) }}</div>
+          <div style="font-size:var(--text-sm);color:var(--muted);">{{ parcours_descriptions.get(code, '') }}</div>
         </div>
-      </div>
+      </label>
+      {% endfor %}
       <div class="card opt-card" style="opacity:0.4;cursor:not-allowed;">
         <span style="color:var(--muted);display:flex;">{{ icon_lock(16) }}</span>
         <div class="flex-1">
@@ -52,17 +55,22 @@
     <button type="button" class="btn btn-primary btn-block btn-lg" data-next="2" disabled id="next1">המשך</button>
   </div>
 
-  <!-- step 2: exam date -->
+  <!-- step 2: exam date per parcours (optional) -->
   <div class="step stack hidden" data-step="2">
     <div>
-      <h2>מתי המבחן שלך?</h2>
-      <p style="font-size:var(--text-sm);color:var(--muted);margin-top:var(--space-1);">נבנה עבורך תוכנית למידה מותאמת</p>
+      <h2>מתי המבחנים שלך?</h2>
+      <p style="font-size:var(--text-sm);color:var(--muted);margin-top:var(--space-1);">תאריך מבחן לכל מסלול · אפשר לדלג ולהגדיר בהמשך</p>
     </div>
-    <input type="hidden" name="exam_date" id="exam_date" value="">
-    <div class="card">
-      <div id="cal-root"></div>
+    {% for code in valid_parcours %}
+    <div class="parcours-cal hidden" data-parcours-cal="{{ code }}">
+      <div style="font-size:var(--text-sm);font-weight:700;margin-bottom:var(--space-1);">{{ parcours_labels.get(code, code) }}</div>
+      <input type="hidden" name="exam_date_{{ code }}" id="exam_date_{{ code }}" value="">
+      <div class="card">
+        <div id="cal-root-{{ code }}"></div>
+      </div>
     </div>
-    <button type="button" class="btn btn-primary btn-block btn-lg" data-next="3" disabled id="next2">המשך</button>
+    {% endfor %}
+    <button type="button" class="btn btn-primary btn-block btn-lg" data-next="3" id="next2">המשך</button>
   </div>
 
   <!-- step 3: target stability -->
@@ -130,6 +138,12 @@
 <script>
   const dots = document.querySelectorAll("[data-dot]");
   const stepNumber = document.getElementById("step-number");
+  const PARCOURS_LABELS = {{ parcours_labels | tojson }};
+  const initializedCals = new Set();
+
+  function checkedParcours() {
+    return Array.from(document.querySelectorAll('input[name="parcours"]:checked')).map((c) => c.value);
+  }
 
   function show(step) {
     step = parseInt(step);
@@ -146,14 +160,28 @@
     });
     stepNumber.textContent = step;
     if (step === 5) {
-      const ed = document.getElementById("exam_date").value;
-      if (ed) {
-        const days = Math.max(0, Math.ceil((new Date(ed) - Date.now()) / 86400000));
-        document.getElementById("days-left").textContent = "נותרו " + days + " ימים למבחן";
-      }
+      const lines = [];
+      checkedParcours().forEach((code) => {
+        const ed = document.getElementById("exam_date_" + code).value;
+        if (ed) {
+          const days = Math.max(0, Math.ceil((new Date(ed) - Date.now()) / 86400000));
+          lines.push((PARCOURS_LABELS[code] || code) + ": נותרו " + days + " ימים למבחן");
+        }
+      });
+      document.getElementById("days-left").innerHTML = lines.join("<br>");
     }
-    if (step === 2 && !document.getElementById("cal-root").hasChildNodes()) {
-      HebrewCalendar.init("cal-root", "exam_date", null);
+    if (step === 2) {
+      // Un calendrier par parcours coché — jamais deux init sur le même container.
+      const checked = checkedParcours();
+      document.querySelectorAll("[data-parcours-cal]").forEach((w) => {
+        const code = w.dataset.parcoursCal;
+        const active = checked.includes(code);
+        w.classList.toggle("hidden", !active);
+        if (active && !initializedCals.has(code)) {
+          HebrewCalendar.init("cal-root-" + code, "exam_date_" + code, null);
+          initializedCals.add(code);
+        }
+      });
     }
   }
 
@@ -161,15 +189,12 @@
     b.addEventListener("click", () => show(b.dataset.next))
   );
 
-  document.getElementById("card-bbc").addEventListener("click", function () {
-    document.querySelectorAll(".subject-card").forEach((c) => c.style.borderColor = "var(--border)");
-    this.style.borderColor = "var(--brand)";
-    document.getElementById("next1").disabled = false;
-  });
-
-  document.getElementById("exam_date").addEventListener("change", () => {
-    document.getElementById("next2").disabled = !document.getElementById("exam_date").value;
-  });
+  document.querySelectorAll(".opt-parcours input").forEach((c) =>
+    c.addEventListener("change", () => {
+      c.closest(".opt-parcours").style.borderColor = c.checked ? "var(--brand)" : "var(--border)";
+      document.getElementById("next1").disabled = checkedParcours().length === 0;
+    })
+  );
 
   document.querySelectorAll(".opt-stability input").forEach((r) =>
     r.addEventListener("change", () => {

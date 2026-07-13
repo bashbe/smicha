@@ -18,6 +18,7 @@ from models import (
     Question,
     QuestionEdit,
     QuestionReport,
+    StudentParcours,
     StudentProfile,
     User,
     UserAnswer,
@@ -169,7 +170,16 @@ def users():
         .group_by(FsrsCard.user_id)
         .all()
     )
-    return render_template("admin/users.html", profiles=profiles, card_counts=card_counts)
+    # Date de מבחן la plus proche parmi les parcours activés de chaque étudiant.
+    exam_dates = dict(
+        db.session.query(StudentParcours.user_id, func.min(StudentParcours.exam_date))
+        .filter(StudentParcours.exam_date.isnot(None))
+        .group_by(StudentParcours.user_id)
+        .all()
+    )
+    return render_template(
+        "admin/users.html", profiles=profiles, card_counts=card_counts, exam_dates=exam_dates
+    )
 
 
 @bp.route("/users/<user_id>")
@@ -196,10 +206,16 @@ def user_detail(user_id):
         .filter_by(user_id=user_id)
         .scalar() or 0
     )
+    nearest_exam_date = (
+        db.session.query(func.min(StudentParcours.exam_date))
+        .filter(StudentParcours.user_id == user_id, StudentParcours.exam_date.isnot(None))
+        .scalar()
+    )
     return render_template(
         "admin/user_detail.html",
         user=user,
         profile=profile,
+        nearest_exam_date=nearest_exam_date,
         cards=cards,
         total_answers=total_answers,
         correct_answers=correct_answers,

@@ -27,6 +27,7 @@
     sessionPoints: 0,
     correctCount: 0,
     dailyBonus: 0,
+    dailyBonusParcours: [],
     results: new Array(origQuestions.length).fill(null),
     chosen: null,
     multiSelected: new Set(),
@@ -183,7 +184,12 @@
 
     state.combo = data.combo;
     state.results[origIdx] = data.is_correct ? "correct" : "wrong";
-    if (data.daily_bonus) state.dailyBonus += data.daily_bonus;
+    if (data.daily_bonus) {
+      state.dailyBonus += data.daily_bonus;
+      // Bonus par parcours : en mode "הכל" chaque parcours vidé déclenche le
+      // sien — on retient les libellés pour l'écran de fin.
+      if (data.daily_bonus_parcours) state.dailyBonusParcours.push(data.daily_bonus_parcours);
+    }
 
     if (data.is_correct) {
       state.sessionPoints += data.points;
@@ -363,7 +369,9 @@
     wrap.appendChild(el("p", "text-sm muted", "עשית עבודה מצוינת היום"));
 
     if (state.dailyBonus > 0) {
-      const bonusPill = el("div", "pill pill-accent animate-pop-in mt-3", icon("flame", 14), "בונוס השלמה יומית +" + state.dailyBonus);
+      let bonusText = "בונוס השלמה יומית +" + state.dailyBonus;
+      if (state.dailyBonusParcours.length) bonusText += " (" + state.dailyBonusParcours.join(", ") + ")";
+      const bonusPill = el("div", "pill pill-accent animate-pop-in mt-3", icon("flame", 14), bonusText);
       wrap.appendChild(bonusPill);
     }
 

@@ -33,7 +33,8 @@
             {% if not profile.onboarded %}<span class="text-xs muted" style="margin-right:0.4rem;">(לא הושלם)</span>{% endif %}
           </td>
           <td style="padding:0.75rem 1rem;" class="muted">{{ user.email }}</td>
-          <td style="padding:0.75rem 1rem;">{{ profile.exam_date.strftime('%d/%m/%Y') if profile.exam_date else '—' }}</td>
+          {% set exam = exam_dates.get(user.id) %}
+          <td style="padding:0.75rem 1rem;">{{ exam.strftime('%d/%m/%Y') if exam else '—' }}</td>
           <td style="padding:0.75rem 1rem;">{{ profile.total_points }}</td>
           <td style="padding:0.75rem 1rem;">{{ profile.streak_days }} 🔥</td>
           <td style="padding:0.75rem 1rem;">{{ card_counts.get(user.id, 0) }}</td>

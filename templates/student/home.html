@@ -20,14 +20,25 @@
     </div>
   </header>
 
-  <!-- Grand compteur : thesis de la page -->
+  <!-- Grand compteur : מבחן le plus proche parmi les parcours actifs -->
   <div class="home-folio">
-    {% if days_to_exam is not none %}
-      <div class="folio-big-number">{{ days_to_exam }}</div>
-      <div class="folio-sublabel">ימים עד המבחן</div>
+    {% if nearest %}
+      <div class="folio-big-number">{{ nearest.days }}</div>
+      <div class="folio-sublabel">ימים עד המבחן{% if exam_cards | length > 1 %} · {{ nearest.label }}{% endif %}</div>
       <div class="folio-progress">
-        <div class="folio-progress-fill" style="width:{{ prep_pct }}%;"></div>
+        <div class="folio-progress-fill" style="width:{{ nearest.pct }}%;"></div>
       </div>
+      {% set others = exam_cards | rejectattr('code', 'equalto', nearest.code) | selectattr('days', 'ne', none) | list %}
+      {% if others %}
+      <div class="stack-sm" style="margin-top:var(--space-3);">
+        {% for c in others %}
+        <div class="row between">
+          <span class="text-sm muted">{{ c.label }}</span>
+          <span class="text-sm bold">{{ c.days }} ימים</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
     {% else %}
       <div class="folio-big-number folio-big-number-empty">—</div>
       <div class="folio-sublabel">

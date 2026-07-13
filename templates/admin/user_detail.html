@@ -43,7 +43,7 @@
       {% else %}
       <div class="stack-sm text-sm">
         <div class="row between"><span class="muted">מטרת הכנה</span><span>{{ profile.preparation_goal or '—' }}</span></div>
-        <div class="row between"><span class="muted">תאריך בחינה</span><span>{{ profile.exam_date.strftime('%d/%m/%Y') if profile.exam_date else '—' }}</span></div>
+        <div class="row between"><span class="muted">תאריך בחינה</span><span>{{ nearest_exam_date.strftime('%d/%m/%Y') if nearest_exam_date else '—' }}</span></div>
         <div class="row between"><span class="muted">יציבות יעד (FSRS)</span><span>{{ '%.0f%%'|format(profile.target_stability * 100) }}</span></div>
         <div class="row between"><span class="muted">מקצועות</span><span>{{ (profile.section or [])|join(', ') or '—' }}</span></div>
         <div class="row between"><span class="muted">הצטרף</span><span>{{ profile.created_at.strftime('%d/%m/%Y') }}</span></div>
