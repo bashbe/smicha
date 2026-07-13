@@ -8,12 +8,13 @@ from flask import Blueprint, jsonify, request
 
 from auth_helpers import current_user
 from fsrs import (
+    FIRST_CONTACT_POINTS,
     FsrsCardState,
+    personal_bucket,
     rating_for,
     retrievability,
     roll_avg,
     schedule_next,
-    soften_first_contact,
     RATING_LABEL,
 )
 import calibration
@@ -56,11 +57,18 @@ def answer():
 
     is_correct = is_correct_answer(nq, given_answer)
 
-    # Collective calibration (Phase 2): normalise the latency by item + user,
-    # derive the speed bucket / rating from z-scores (absolute-threshold
-    # fallback when uncalibrated).
+    # Cycle de vie d'une carte du point de vue du scheduling FSRS :
+    #  - is_never_succeeded : aucune FsrsCard n'existe encore — l'élève n'a
+    #    encore jamais répondu juste à cette question, quel que soit le
+    #    nombre d'essais.
+    #  - is_pre_engage : la carte existe (le premier succès a eu lieu) mais
+    #    schedule_next() n'a encore jamais tourné dessus.
+    #  - is_engaged : schedule_next() a déjà tourné au moins une fois —
+    #    comportement FSRS normal.
     card = FsrsCard.query.filter_by(user_id=user.id, question_id=q.id).first()
-    is_first_contact = card is None or card.state == "new"
+    is_engaged = card is not None and (card.state != "new" or card.reps > 0)
+    is_pre_engage = card is not None and not is_engaged
+    is_never_succeeded = card is None
 
     item_stats = ItemStats.query.get(q.id)
     if item_stats is None:
@@ -75,12 +83,21 @@ def answer():
         user_speed = UserSpeed(user_id=user.id)
         db.session.add(user_speed)
 
+    # Calibration collective (Phase 2) — conservée en arrière-plan (Elo,
+    # distributions log-RT par item/utilisateur, priors des nouvelles cartes)
+    # mais ne pilote plus ni le rating FSRS ni le bonus de points : c'est le
+    # bucket personnel ci-dessous qui s'en charge désormais.
     z_item, z_user = calibration.normalize_latency(response_time_ms, item_stats, user_speed)
     z_eff = z_item if z_item is not None else z_user
-    bucket = calibration.bucket_from_z(z_item, z_user, q.difficulty, response_time_ms)
-    rating = soften_first_contact(rating_for(is_correct, bucket), is_correct, is_first_contact)
-    auto_grade = calibration.auto_grade_from_latency(is_correct, z_eff, bucket)
+    collective_bucket = calibration.bucket_from_z(z_item, z_user, q.difficulty, response_time_ms)
+    auto_grade = calibration.auto_grade_from_latency(is_correct, z_eff, collective_bucket)
     new_combo = combo + 1 if is_correct else 0
+
+    # Bucket de vitesse personnel : comparaison au propre temps de référence
+    # de l'élève sur cette carte (temps du premier succès tant que FSRS n'est
+    # pas engagé, puis moyenne glissante `avg_response_time_ms`).
+    bucket = personal_bucket(card.avg_response_time_ms if card else None, response_time_ms)
+    rating = rating_for(is_correct, bucket)
 
     # Nombre de cartes dues AVANT ce traitement (utilisé pour le bonus de
     # complétion quotidienne — capturé avant l'upsert FSRS qui va déplacer
@@ -97,7 +114,16 @@ def answer():
             .count()
         )
 
-    if mode == "revision_daily":
+    if is_never_succeeded and is_correct:
+        # Premier succès : points fixes, aucun calcul FSRS pour l'instant
+        # (voir bloc 2 plus bas).
+        breakdown = {"total": FIRST_CONTACT_POINTS}
+    elif (is_never_succeeded or is_pre_engage) and not is_correct:
+        # Échec avant que FSRS n'ait jamais été engagé sur cette carte :
+        # aucun point, comme une mauvaise réponse partout ailleurs dans
+        # l'app.
+        breakdown = {"total": 0}
+    elif mode == "revision_daily":
         days_since = (date.today() - card.last_review.date()).days if (card and card.last_review) else 0
         breakdown = compute_daily_points(is_correct, days_since, new_combo)
     elif mode in ("revision_siman", "revision_sujet", "revision_random"):
@@ -124,7 +150,35 @@ def answer():
     )
 
     # 2. FSRS card upsert
-    if card:
+    if is_never_succeeded and not is_correct:
+        # Jamais de succès, encore raté : aucune carte créée, la question
+        # reste librement accessible depuis /app/parcours (le réaffichage
+        # dans la session en cours est déjà géré côté front par
+        # chapitre.js : queue.push(q) sur une réponse fausse).
+        label = RATING_LABEL[1]
+    elif is_never_succeeded:
+        # Premier succès : on crée la carte sans jamais appeler
+        # schedule_next — le temps de réponse devient la référence pour
+        # l'activation FSRS du prochain passage.
+        card = FsrsCard(
+            user_id=user.id,
+            question_id=q.id,
+            due_date=date.today() + timedelta(days=1),
+            avg_response_time_ms=response_time_ms,
+            target_stability=sp.target_stability or 0.95,
+            last_review=datetime.utcnow(),
+        )
+        db.session.add(card)
+        label = {"emoji": "🆕", "label": "היכרות ראשונה", "tone": "tone-info"}
+    elif is_pre_engage and not is_correct:
+        # Activée mais pas encore engagée, nouvel échec : replanifiée pour
+        # demain, aucun calcul FSRS, référence de vitesse inchangée.
+        card.due_date = date.today() + timedelta(days=1)
+        card.last_review = datetime.utcnow()
+        label = RATING_LABEL[1]
+    else:
+        # Activation FSRS (state encore "new", premier appel réel à
+        # schedule_next) ou carte déjà engagée : scheduling FSRS-6 normal.
         base = FsrsCardState(
             stability=card.stability,
             fsrs_difficulty=card.fsrs_difficulty,
@@ -138,32 +192,26 @@ def answer():
             avg_response_time_ms=card.avg_response_time_ms,
             last_review=card.last_review,
         )
-    else:
-        card = FsrsCard(user_id=user.id, question_id=q.id)
-        base = FsrsCardState(
-            target_stability=sp.target_stability or 0.95,
-            due_date=date.today().isoformat(),
-        )
-        db.session.add(card)
+        exam = sp.exam_date.isoformat() if sp.exam_date else None
+        # Collective per-item prior — blended (never substituted) into S0/D0,
+        # only on the first-ever real schedule_next call for this card.
+        prior = calibration.build_prior(q.difficulty, item_stats) if card.state == "new" else None
+        nx = schedule_next(base, rating, exam, prior=prior)
+        avg = roll_avg(base.avg_response_time_ms, response_time_ms)
 
-    exam = sp.exam_date.isoformat() if sp.exam_date else None
-    # Collective per-item prior — blended (never substituted) into S0/D0 for a
-    # brand-new card only (schedule_next ignores it once the card has history).
-    prior = calibration.build_prior(q.difficulty, item_stats) if is_first_contact else None
-    nx = schedule_next(base, rating, exam, prior=prior)
-    avg = roll_avg(base.avg_response_time_ms, response_time_ms)
+        card.stability = nx.stability
+        card.fsrs_difficulty = nx.fsrs_difficulty
+        card.scheduled_days = nx.scheduled_days
+        card.elapsed_days = 0
+        card.reps = nx.reps
+        card.lapses = nx.lapses
+        card.state = nx.state
+        card.due_date = datetime.strptime(nx.due_date, "%Y-%m-%d").date()
+        card.target_stability = nx.target_stability
+        card.avg_response_time_ms = avg
+        card.last_review = datetime.utcnow()
 
-    card.stability = nx.stability
-    card.fsrs_difficulty = nx.fsrs_difficulty
-    card.scheduled_days = nx.scheduled_days
-    card.elapsed_days = 0
-    card.reps = nx.reps
-    card.lapses = nx.lapses
-    card.state = nx.state
-    card.due_date = datetime.strptime(nx.due_date, "%Y-%m-%d").date()
-    card.target_stability = nx.target_stability
-    card.avg_response_time_ms = avg
-    card.last_review = datetime.utcnow()
+        label = RATING_LABEL[rating]
 
     # 2b. collective calibration updates (online Elo + running stats).
     new_diff, new_ability = calibration.update_elo(
@@ -256,8 +304,6 @@ def answer():
             sp.last_daily_completion_date = today
 
     db.session.commit()
-
-    label = RATING_LABEL[rating]
 
     return jsonify(
         {

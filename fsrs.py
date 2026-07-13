@@ -58,6 +58,10 @@ CAP_FIRST = 4               # hard ceiling (days) on the very first interval
 WARMUP_INTERVALS = [1, 3, 7]  # conservative ramp for the first successful passes
 W7_FLOOR = 0.15             # floor on mean-reversion weight (default w7=0.001 is inert)
 
+# Flat points awarded for the very first successful answer to a card, before
+# FSRS scheduling has ever run on it (see blueprints/api.py "Cas A").
+FIRST_CONTACT_POINTS = 20
+
 
 @dataclass
 class FsrsConfig:
@@ -126,6 +130,21 @@ def rating_for(is_correct: bool, bucket: str) -> int:
     if bucket == "medium":
         return 3
     return 4
+
+
+def personal_bucket(reference_ms: int | None, rt_ms: int) -> str:
+    """Speed bucket derived from the student's own reference time for this
+    card (not a collective z-score). ``reference_ms`` is the previous response
+    time to compare against (first-success time, or the rolling average once
+    FSRS has engaged). ±1/3 relative rule: faster -> "fast", slower -> "slow".
+    """
+    if not reference_ms or reference_ms <= 0:
+        return "medium"
+    if rt_ms <= reference_ms * 2 / 3:
+        return "fast"
+    if rt_ms >= reference_ms * 4 / 3:
+        return "slow"
+    return "medium"
 
 
 def soften_first_contact(rating: int, is_correct: bool, is_first_contact: bool) -> int:
