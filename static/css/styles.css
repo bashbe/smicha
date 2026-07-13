@@ -202,6 +202,67 @@ button { font-family: inherit; cursor: pointer; }
   padding: var(--space-3);
 }
 
+/* ---- Auth (connexion / inscription) ---- */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2);
+}
+
+.auth-shell {
+  width: 100%;
+  max-width: 24rem;
+}
+
+.auth-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin-bottom: var(--space-3);
+}
+
+.auth-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--space-4) var(--space-3);
+}
+
+.auth-title {
+  margin: 0 0 0.25rem;
+}
+
+.auth-subtitle {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.auth-submit {
+  margin-top: var(--space-3);
+}
+
+.auth-toggle {
+  width: 100%;
+  margin-top: var(--space-3);
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  padding: var(--space-1);
+  font-family: inherit;
+}
+
+.auth-toggle-accent {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 /* ---- Boutons ---- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--space-1);
@@ -1414,6 +1475,12 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   margin: 0;
 }
 
+.landing-subtitle {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-base);
+  color: var(--muted);
+}
+
 .landing-carousel {
   position: relative;
   display: grid;
@@ -1422,31 +1489,40 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   min-height: 0;
 }
 
-.landing-track {
+.landing-viewport {
   position: relative;
+  overflow: hidden;
   min-height: clamp(24rem, 56vh, 34rem);
+  touch-action: pan-y;
+}
+
+.landing-track {
+  display: flex;
+  height: 100%;
+  direction: ltr;
+  cursor: grab;
+  transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform;
+}
+
+.landing-track.is-dragging {
+  transition: none;
+}
+
+.landing-track:active {
+  cursor: grabbing;
 }
 
 .landing-slide {
-  position: absolute;
-  inset: 0;
+  flex: 0 0 100%;
+  width: 100%;
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   gap: var(--space-2);
   align-items: center;
   padding: 0 var(--space-2);
   text-align: center;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(1rem) scale(0.985);
-  transition: opacity 0.75s ease, transform 0.75s ease, visibility 0.75s step-end;
-}
-
-.landing-slide.is-active {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0) scale(1);
-  transition: opacity 0.75s ease, transform 0.75s ease, visibility 0s;
+  direction: rtl;
 }
 
 .landing-slide-image {
@@ -1464,6 +1540,9 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   width: 100%;
   height: 100%;
   object-fit: contain;
+  object-position: center bottom;
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 .landing-slide-copy h2 {
@@ -1493,6 +1572,7 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--muted), transparent 55%);
   transition: width 0.4s ease, background 0.4s ease;
+  cursor: pointer;
 }
 
 .landing-dot.is-active {
@@ -1539,7 +1619,7 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
     font-size: 3.75rem;
   }
 
-  .landing-track {
+  .landing-viewport {
     min-height: clamp(25rem, 65vh, 31rem);
   }
 

@@ -7,42 +7,45 @@
     <section class="landing-hero" aria-label="קניין הלכה">
       <div class="landing-heading">
         <h1 class="landing-title">קניין הלכה</h1>
+        <p class="landing-subtitle">תוכנית שינון וחזרה להכנה לבחינת הסמיכה</p>
       </div>
 
       <div class="landing-carousel" data-landing-carousel>
-        <div class="landing-track" data-landing-track>
-          <article class="landing-slide landing-slide--book is-active" data-landing-slide>
-            <div class="landing-slide-image">
-              <img src="{{ url_for('static', filename='images/landing1.png') }}" alt="">
-            </div>
-            <div class="landing-slide-copy">
-              <h2>לימוד</h2>
-              <p>תוך כדי הלימוד עונים על שאלות, כדי לברר שהדברים הובנו ולחזק את הידיעה.</p>
-            </div>
-          </article>
+        <div class="landing-viewport">
+          <div class="landing-track" data-landing-track>
+            <article class="landing-slide landing-slide--book is-active" data-landing-slide>
+              <div class="landing-slide-image">
+                <img src="{{ url_for('static', filename='images/landing1.png') }}" alt="" draggable="false">
+              </div>
+              <div class="landing-slide-copy">
+                <h2>לימוד</h2>
+                <p>תוך כדי הלימוד עונים על שאלות, כדי לברר שהדברים הובנו ולחזק את הידיעה.</p>
+              </div>
+            </article>
 
-          <article class="landing-slide landing-slide--hourglass" data-landing-slide>
-            <div class="landing-slide-image">
-              <img src="{{ url_for('static', filename='images/landing2.png') }}?v=4" alt="">
-            </div>
-            <div class="landing-slide-copy">
-              <h2>חזרה</h2>
-              <p>בכל יום האלגוריתם מציע שאלות לחזרה, בהתאם לחזרות שכבר נעשו, כדי שהדברים יישארו בזיכרון.</p>
-            </div>
-          </article>
+            <article class="landing-slide landing-slide--hourglass" data-landing-slide>
+              <div class="landing-slide-image">
+                <img src="{{ url_for('static', filename='images/landing2.png') }}?v=4" alt="" draggable="false">
+              </div>
+              <div class="landing-slide-copy">
+                <h2>חזרה</h2>
+                <p>בכל יום האלגוריתם מציע שאלות לחזרה, בהתאם לחזרות שכבר נעשו, כדי שהדברים יישארו בזיכרון.</p>
+              </div>
+            </article>
 
-          <article class="landing-slide landing-slide--certificate" data-landing-slide>
-            <div class="landing-slide-image">
-              <img src="{{ url_for('static', filename='images/Landing3.png') }}?v=2" alt="">
-            </div>
-            <div class="landing-slide-copy">
-              <h2>לקראת הבחינה</h2>
-              <p>ביום הבחינה ניגשים אליה ברוגע, לאחר הכנה מסודרת וחזרות שנעשו לאורך הדרך.</p>
-            </div>
-          </article>
+            <article class="landing-slide landing-slide--certificate" data-landing-slide>
+              <div class="landing-slide-image">
+                <img src="{{ url_for('static', filename='images/Landing3.png') }}?v=2" alt="" draggable="false">
+              </div>
+              <div class="landing-slide-copy">
+                <h2>לקראת הבחינה</h2>
+                <p>ביום הבחינה ניגשים אליה ברוגע, לאחר הכנה מסודרת וחזרות שנעשו לאורך הדרך.</p>
+              </div>
+            </article>
+          </div>
         </div>
 
-        <div class="landing-dots" aria-hidden="true">
+        <div class="landing-dots" data-landing-dots>
           <span class="landing-dot is-active" data-landing-dot></span>
           <span class="landing-dot" data-landing-dot></span>
           <span class="landing-dot" data-landing-dot></span>
@@ -61,21 +64,34 @@
     var root = document.querySelector("[data-landing-carousel]");
     if (!root) return;
 
+    var track = root.querySelector("[data-landing-track]");
     var slides = Array.prototype.slice.call(root.querySelectorAll("[data-landing-slide]"));
     var dots = Array.prototype.slice.call(root.querySelectorAll("[data-landing-dot]"));
     var current = 0;
     var timer = null;
     var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-    function show(index) {
-      current = (index + slides.length) % slides.length;
+    var dragging = false;
+    var dragPointerId = null;
+    var dragStartX = 0;
+    var dragDeltaX = 0;
+    var trackWidth = 0;
+
+    function render() {
+      track.style.transform = "translateX(" + (-current * 100) + "%)";
       slides.forEach(function (slide, i) {
         slide.classList.toggle("is-active", i === current);
+        slide.setAttribute("aria-hidden", i === current ? "false" : "true");
       });
       dots.forEach(function (dot, i) {
         dot.classList.toggle("is-active", i === current);
         dot.setAttribute("aria-current", i === current ? "true" : "false");
       });
+    }
+
+    function goTo(index) {
+      current = (index + slides.length) % slides.length;
+      render();
     }
 
     function stopAutoplay() {
@@ -85,8 +101,54 @@
 
     function startAutoplay() {
       if (timer || reducedMotion.matches) return;
-      timer = window.setInterval(function () { show(current + 1); }, 6200);
+      timer = window.setInterval(function () { goTo(current + 1); }, 6200);
     }
+
+    dots.forEach(function (dot, i) {
+      dot.addEventListener("click", function () {
+        stopAutoplay();
+        goTo(i);
+        startAutoplay();
+      });
+    });
+
+    track.addEventListener("pointerdown", function (e) {
+      dragging = true;
+      dragPointerId = e.pointerId;
+      dragStartX = e.clientX;
+      dragDeltaX = 0;
+      trackWidth = track.getBoundingClientRect().width;
+      track.classList.add("is-dragging");
+      track.setPointerCapture(e.pointerId);
+      stopAutoplay();
+    });
+
+    track.addEventListener("pointermove", function (e) {
+      if (!dragging || e.pointerId !== dragPointerId || !trackWidth) return;
+      dragDeltaX = e.clientX - dragStartX;
+      var resisted = dragDeltaX;
+      if ((current === 0 && dragDeltaX > 0) || (current === slides.length - 1 && dragDeltaX < 0)) {
+        resisted = dragDeltaX * 0.35;
+      }
+      var percent = (resisted / trackWidth) * 100;
+      track.style.transform = "translateX(calc(" + (-current * 100) + "% + " + percent + "%))";
+    });
+
+    function endDrag(e) {
+      if (!dragging || (e && e.pointerId !== dragPointerId)) return;
+      dragging = false;
+      track.classList.remove("is-dragging");
+      var threshold = trackWidth * 0.18;
+      if (Math.abs(dragDeltaX) > threshold) {
+        if (dragDeltaX < 0) current = Math.min(slides.length - 1, current + 1);
+        else current = Math.max(0, current - 1);
+      }
+      render();
+      startAutoplay();
+    }
+
+    track.addEventListener("pointerup", endDrag);
+    track.addEventListener("pointercancel", endDrag);
 
     document.addEventListener("visibilitychange", function () {
       if (document.hidden) stopAutoplay();
@@ -98,6 +160,7 @@
       startAutoplay();
     });
 
+    render();
     startAutoplay();
   })();
 </script>
