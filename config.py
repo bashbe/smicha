@@ -1,10 +1,15 @@
 import os
+from datetime import timedelta
 
 
 class Config:
     """Application configuration. Override via environment variables."""
 
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-change-me-in-production")
+
+    # Durée de vie du cookie de session quand l'utilisateur coche « rester connecté »
+    # (auth.py met session.permanent = True dans ce cas uniquement).
+    PERMANENT_SESSION_LIFETIME = timedelta(days=30)
 
     # SQL database. Defaults to a local SQLite file; set DATABASE_URL to point
     # at Postgres/MySQL in production (e.g. postgresql+psycopg://user:pw@host/db).

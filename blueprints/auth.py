@@ -35,6 +35,7 @@ def login():
         mode = request.form.get("mode", "login")
         email = (request.form.get("email") or "").strip().lower()
         password = request.form.get("password") or ""
+        remember = request.form.get("remember") == "on"
         try:
             if mode == "signup":
                 if User.query.filter_by(email=email).first():
@@ -42,12 +43,12 @@ def login():
                 if len(password) < 6:
                     raise ValueError("הסיסמה חייבת להכיל לפחות 6 תווים")
                 user = create_account(email, password, request.form.get("name"))
-                login_user(user)
+                login_user(user, remember=remember)
             else:
                 user = User.query.filter_by(email=email).first()
                 if not user or not user.check_password(password):
                     raise ValueError("דוא\"ל או סיסמה שגויים")
-                login_user(user)
+                login_user(user, remember=remember)
             return redirect(url_for("student.home"))
         except ValueError as e:
             flash(str(e), "error")
