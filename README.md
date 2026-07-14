@@ -35,6 +35,7 @@ L'app est entièrement en hébreu (RTL), thème sombre navy/indigo/ambre.
 11. [Rôles et authentification](#rôles-et-authentification)
 12. [Commandes utiles](#commandes-utiles)
 13. [Service worker & mise à jour automatique](#service-worker--mise-à-jour-automatique)
+14. [Déploiement continu (PythonAnywhere)](#déploiement-continu-pythonanywhere)
 
 ---
 
@@ -103,6 +104,10 @@ Toutes les variables se trouvent dans `config.py` et sont surchargeables par var
 | `DATABASE_URL` | `sqlite:///smiha.db` | URL de connexion SQLAlchemy. Passer `postgresql+psycopg://...` pour Postgres |
 | `SUPER_ADMIN_EMAIL` | `bcbeneghmos@gmail.com` | Email automatiquement promu `super_admin` à l'inscription |
 | `FLASK_PORT` | `5000` | Port d'écoute (lu dans `app.py`) |
+| `GITHUB_WEBHOOK_SECRET` | `None` | Secret HMAC-SHA256 partagé avec le webhook GitHub — voir [Déploiement continu](#déploiement-continu-pythonanywhere). `None` désactive l'endpoint |
+| `PYTHONANYWHERE_API_TOKEN` | `None` | Token API PythonAnywhere (Account → API Token) — optionnel, déclenche un reload automatique du web app après le `git pull` |
+| `PYTHONANYWHERE_USERNAME` | `None` | Nom d'utilisateur PythonAnywhere — requis avec `PYTHONANYWHERE_API_TOKEN` pour le reload automatique |
+| `PYTHONANYWHERE_DOMAIN` | `<USERNAME>.pythonanywhere.com` | Domaine du web app à recharger (à surcharger pour un domaine personnalisé) |
 
 Exemple production :
 
@@ -134,7 +139,8 @@ smiha-flask/
 │   ├── auth.py             # Landing page, /auth (login/signup), /logout
 │   ├── student.py          # /app/* : onboarding, home, parcours, chapitre, profil, révision
 │   ├── admin.py            # /admin/* : dashboard, import, validation, gestion utilisateurs
-│   └── api.py              # POST /api/answer (cœur de la boucle d'apprentissage)
+│   ├── api.py              # POST /api/answer (cœur de la boucle d'apprentissage)
+│   └── webhook.py          # POST /webhook/deploy : git pull auto sur push GitHub (voir Déploiement continu)
 │
 ├── templates/
 │   ├── base.html           # Layout HTML de base (lang="he" dir="rtl")
@@ -656,6 +662,14 @@ Réponse JSON : `{"ok": true}`.
 
 ---
 
+### Webhook de déploiement (`/webhook/*`)
+
+| Méthode | Route | Description |
+|---|---|---|
+| POST | `/webhook/deploy` | Récepteur de webhook GitHub — `git pull --ff-only origin main` sur push vers `main`, puis reload PythonAnywhere optionnel (voir [Déploiement continu](#déploiement-continu-pythonanywhere)) |
+
+---
+
 ## Logique métier clé
 
 ### Algorithme FSRS-6 (`fsrs.py`)
@@ -1013,6 +1027,72 @@ qu'un navigateur affiche une version obsolète des assets `static/` après un d�
   uniquement, pas une dépendance runtime).
 - **Règle** : ne jamais committer/hardcoder un nom de cache statique — tout est dérivé
   automatiquement de `APP_VERSION`.
+
+---
+
+## Déploiement continu (PythonAnywhere)
+
+PythonAnywhere (plan gratuit) n'autorise pas de processus persistant en dehors du serveur WSGI de
+l'app — impossible d'y faire tourner un service webhook séparé. `blueprints/webhook.py` fait donc
+servir le webhook GitHub par l'app Flask elle-même (déjà toujours active) : `POST /webhook/deploy`
+exécute `git pull --ff-only origin main` dans le dossier du dépôt à chaque push sur `main`.
+
+### 1. Générer un secret et le configurer côté serveur
+
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+Sur PythonAnywhere, onglet **Web** → **Environment variables** (ou dans le fichier WSGI avant
+`from app import app`) :
+
+```bash
+export GITHUB_WEBHOOK_SECRET="le-secret-généré-ci-dessus"
+```
+
+### 2. Autoriser `git pull` sans mot de passe interactif
+
+```bash
+git config --global credential.helper store
+git pull origin main   # une fois manuellement, pour enregistrer les credentials
+```
+
+### 3. Créer le webhook côté GitHub
+
+Dans le dépôt GitHub → **Settings** → **Webhooks** → **Add webhook** :
+
+| Champ | Valeur |
+|---|---|
+| Payload URL | `https://<votre-username>.pythonanywhere.com/webhook/deploy` |
+| Content type | `application/json` |
+| Secret | le même secret que `GITHUB_WEBHOOK_SECRET` |
+| Événements | `Just the push event` |
+
+GitHub envoie un événement `ping` immédiatement après la création — `/webhook/deploy` y répond
+`{"ok": true, "message": "pong"}` (200) sans toucher au dépôt, ce qui permet de vérifier la
+connectivité sans attendre un vrai push.
+
+### 4. (Optionnel) Recharger automatiquement le web app après le `pull`
+
+Sur PythonAnywhere, un `git pull` seul ne suffit pas : le process WSGI doit être rechargé pour
+servir le nouveau code. Deux options :
+
+- **Automatique** — renseigner `PYTHONANYWHERE_API_TOKEN` (Account → **API Token**) et
+  `PYTHONANYWHERE_USERNAME` : `blueprints/webhook.py` appelle alors l'API PythonAnywhere
+  (`POST /api/v0/user/<username>/webapps/<domain>/reload/`) juste après le `pull` réussi.
+- **Manuel** — sans ces variables, le reload est ignoré (`reloaded: false` dans la réponse JSON) ;
+  il faut alors cliquer sur **Reload** dans l'onglet **Web** après chaque déploiement.
+
+### Vérification
+
+La réponse JSON de `/webhook/deploy` (visible dans l'onglet **Recent Deliveries** du webhook
+GitHub) indique `pull_output`, `reloaded` et `reload_message` — utile pour diagnostiquer un échec
+sans avoir besoin d'une console PythonAnywhere.
+
+> **Sécurité** : la route vérifie la signature `X-Hub-Signature-256` (HMAC-SHA256 du corps de la
+> requête avec `GITHUB_WEBHOOK_SECRET`) avant toute action ; sans secret configuré ou avec une
+> signature invalide, aucune requête ne peut déclencher de `git pull`. Seuls les push vers
+> `refs/heads/main` déclenchent un pull — tout autre event/branche est ignoré (`200`, no-op).
 
 ---
 
