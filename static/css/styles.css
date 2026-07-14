@@ -308,21 +308,31 @@ button { font-family: inherit; cursor: pointer; }
   cursor: pointer;
 }
 
-.auth-toggle {
-  width: 100%;
-  margin-top: var(--space-3);
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-size: var(--text-sm);
-  cursor: pointer;
-  padding: var(--space-1);
-  font-family: inherit;
+.auth-tabs {
+  display: flex;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-btn);
+  padding: 4px;
+  background: color-mix(in srgb, var(--surface), var(--border) 25%);
 }
-
-.auth-toggle-accent {
-  color: var(--accent);
+.auth-tab {
+  flex: 1;
+  padding: 0.625rem;
+  border-radius: calc(var(--radius-btn) - 4px);
+  border: none;
+  background: none;
+  color: var(--muted);
   font-weight: 600;
+  font-size: var(--text-sm);
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.auth-tab.active {
+  background: var(--accent);
+  color: #FFFFFF;
 }
 
 /* ---- Boutons ---- */

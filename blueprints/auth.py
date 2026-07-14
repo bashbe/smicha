@@ -40,6 +40,8 @@ def login():
         remember = request.form.get("remember") == "on"
         try:
             if mode == "signup":
+                if email not in current_app.config["ALLOWED_SIGNUP_EMAILS"]:
+                    raise ValueError("ההרשמה סגורה כרגע — כתובת דוא\"ל זו אינה מורשית ליצירת חשבון")
                 if User.query.filter_by(email=email).first():
                     raise ValueError("כתובת הדוא\"ל כבר רשומה")
                 if len(password) < 6:
@@ -54,8 +56,10 @@ def login():
             return redirect(url_for("student.home"))
         except ValueError as e:
             flash(str(e), "error")
+            return render_template("auth.html", mode=mode)
 
-    return render_template("auth.html")
+    initial_mode = "signup" if request.args.get("mode") == "signup" else "login"
+    return render_template("auth.html", mode=initial_mode)
 
 
 @bp.route("/logout")
