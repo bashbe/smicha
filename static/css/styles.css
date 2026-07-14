@@ -1656,7 +1656,7 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   gap: var(--space-2);
-  align-items: center;
+  align-items: end;
   padding: 0 var(--space-2);
   text-align: center;
   direction: rtl;
@@ -1683,8 +1683,10 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
 }
 
 .landing-slide-copy h2 {
-  font-size: var(--text-2xl);
-  margin-bottom: 0.25rem;
+  font-family: 'Secular One', sans-serif;
+  font-size: clamp(2.25rem, 5vw, 3rem);
+  color: var(--fg);
+  margin-bottom: 0.5rem;
 }
 
 .landing-slide-copy p {
@@ -1767,6 +1769,10 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
 
   .landing-slide-image {
     height: clamp(19rem, calc(var(--vh, 1vh) * 50), 25rem);
+  }
+
+  .landing-slide-copy h2 {
+    font-size: clamp(2rem, 8vw, 2.5rem);
   }
 
   .landing-slide-copy p {
