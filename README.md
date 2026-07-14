@@ -542,7 +542,7 @@ Retourne uniquement un tableau JSON valide, sans texte avant ou après.
 |---|---|---|
 | GET | `/app/` | Redirige vers onboarding ou home |
 | GET/POST | `/app/onboarding` | Choix des **parcours** (multi-select, ≥ 1 requis), date de מבחן **par parcours** (optionnelle), niveau cible, sections |
-| GET | `/app/home` | Dashboard : compte à rebours du מבחן **le plus proche** (+ liste des autres parcours datés), cartes dues, streak |
+| GET | `/app/home` | Dashboard : salutation + message contextuel (examen imminent ≤ 7 j > cartes dues > série active > défaut), streak, puis **une section par parcours activé** (compte à rebours du מבחן du parcours, barre de préparation, stats rapides — précision/nb réponses/cartes dues — et boutons « המשך הלמידה » / « חזרה יומית » scopés à ce parcours) |
 | GET | `/app/parcours` | Table des matières : parcours **activés** → simanim rétractables → cartes par sujet (plage de seifim indicative) |
 | GET | `/app/chapitre/<subject>/<siman>[/<seif>]` | Session d'étude sur un sujet du siman — restreinte aux parcours activés (la variante `/<seif>` reste supportée mais n'est plus liée depuis le sélecteur) |
 | GET | `/app/revision` | Hub de révision : 4 cartes (jour / siman / sujet / aléatoire) avec compteurs (parcours activés uniquement) |
