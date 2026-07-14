@@ -19,9 +19,11 @@ from app import create_app  # noqa: E402
 from models import (  # noqa: E402
     FsrsCard,
     Question,
+    QuestionReport,
     StudentParcours,
     StudentProfile,
     User,
+    UserAnswer,
     db,
 )
 
@@ -291,6 +293,56 @@ def test_content_hidden_for_inactive_parcours():
         # Accès URL directe à un sujet d'un parcours non activé → redirection.
         resp = client.get("/app/chapitre/נושא p2/2")
         assert resp.status_code == 302
+
+
+def test_flagged_and_pending_cards_hidden_from_revision():
+    """Une carte signalée par l'étudiant lui-même (QuestionReport "open") ou
+    passée "pending" (signalement staff / non encore validée) ne doit
+    apparaître dans AUCUNE des vues de révision, ni compter dans leurs
+    compteurs — pas seulement dans l'étude normale."""
+    app = _fresh_app()
+    with app.app_context():
+        uid = _make_user()
+        _activate(uid, "p1")
+        q_reported = _make_question("p1", siman=1, seif=1)
+        q_pending = _make_question("p1", siman=1, seif=2)
+        q_visible = _make_question("p1", siman=1, seif=3)
+        for q in (q_reported, q_pending, q_visible):
+            q.tags = ["t1"]
+        q_pending.status = "pending"
+        db.session.commit()
+
+        db.session.add(QuestionReport(question_id=q_reported.id, reporter_id=uid, status="open"))
+        db.session.commit()
+
+        for q in (q_reported, q_pending, q_visible):
+            db.session.add(UserAnswer(
+                user_id=uid, question_id=q.id, given_answer="true",
+                is_correct=True, response_time_ms=5000,
+            ))
+            _make_due_card(uid, q)
+        db.session.commit()
+
+        client = app.test_client()
+        _login(client, uid)
+
+        subject = q_visible.subject
+
+        def _assert_only_visible(html: str):
+            assert q_visible.id in html
+            assert q_reported.id not in html
+            assert q_pending.id not in html
+
+        _assert_only_visible(client.get("/app/revision/jour").get_data(as_text=True))
+        _assert_only_visible(
+            client.get(f"/app/revision/siman/{subject}/1").get_data(as_text=True)
+        )
+        _assert_only_visible(
+            client.get("/app/revision/sujet/t1").get_data(as_text=True)
+        )
+        _assert_only_visible(client.get("/app/revision/aleatoire").get_data(as_text=True))
+
+        assert client.get("/app/revision").status_code == 200
 
 
 def _run():
