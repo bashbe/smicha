@@ -40,6 +40,9 @@ def _reload_pythonanywhere() -> tuple[bool, str]:
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
             return resp.status == 200, f"reload HTTP {resp.status}"
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")[:500]
+        return False, f"reload échoué : HTTP {exc.code} {exc.reason} — {body}"
     except urllib.error.URLError as exc:
         return False, f"reload échoué : {exc}"
 
