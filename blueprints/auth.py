@@ -26,6 +26,8 @@ def create_account(email: str, password: str, full_name: str | None) -> User:
 
 @bp.route("/")
 def index():
+    if current_user() is not None:
+        return redirect(url_for("student.home"))
     return render_template("landing.html")
 
 
