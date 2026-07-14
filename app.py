@@ -77,11 +77,13 @@ def create_app(config_object: type = Config) -> Flask:
     from blueprints.student import bp as student_bp
     from blueprints.admin import bp as admin_bp
     from blueprints.api import bp as api_bp
+    from blueprints.webhook import bp as webhook_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(student_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(api_bp)
+    app.register_blueprint(webhook_bp)
 
     @app.context_processor
     def inject_user():
