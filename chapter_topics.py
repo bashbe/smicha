@@ -20,6 +20,7 @@ _cache: dict | None = None
 
 
 def _load() -> dict:
+    """Load the topic labels from siman_seif_topics.json, caching the result."""
     global _cache
     if _cache is None:
         try:
@@ -31,14 +32,17 @@ def _load() -> dict:
 
 
 def siman_topic(parcours: str, siman: int) -> str | None:
+    """Fetch the display label for a siman chapter, or None if not set."""
     return _load().get(parcours, {}).get("siman_topics", {}).get(str(siman))
 
 
 def seif_topic(parcours: str, siman: int, seif: int) -> str | None:
+    """Fetch the display label for a seif (sub-section), or None if not set."""
     return _load().get(parcours, {}).get("seif_topics", {}).get(str(siman), {}).get(str(seif))
 
 
 def _write(data: dict) -> None:
+    """Write topic labels to siman_seif_topics.json and update the cache."""
     global _cache
     with open(_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2, sort_keys=True)

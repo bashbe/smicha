@@ -6,6 +6,7 @@ import math
 
 
 def _combo_multiplier(combo: int) -> float:
+    """Map a combo count to a points multiplier (gamification boost)."""
     if combo >= 5:
         return 1.5
     if combo == 4:
@@ -75,6 +76,7 @@ def compute_stability_points(is_correct: bool, retrievability: float, combo: int
 
 
 def combo_label(combo: int) -> str | None:
+    """Format a combo count as a display label with emoji, or None if combo < 2."""
     if combo < 2:
         return None
     if combo >= 5:

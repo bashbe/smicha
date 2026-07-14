@@ -66,6 +66,7 @@ def _resolve_open_reports(question_id: str, resolver_id: str, resolution: str) -
 
 @bp.route("/login", methods=["GET", "POST"])
 def login():
+    """Staff login/signup page. Requires staff role to access the rest of /admin."""
     if request.method == "POST":
         mode = request.form.get("mode", "login")
         email = (request.form.get("email") or "").strip().lower()
@@ -90,6 +91,7 @@ def login():
 
 @bp.route("/denied")
 def denied():
+    """Display a "forbidden" page when a non-staff user tries to access /admin."""
     return render_template("admin/denied.html")
 
 
@@ -97,6 +99,7 @@ def denied():
 @bp.route("/dashboard")
 @staff_required
 def dashboard():
+    """Admin dashboard: overview of question status and subject distribution."""
     qs = Question.query.with_entities(Question.status, Question.subject).all()
     counts = {"pending": 0, "approved": 0, "rejected": 0}
     by_subject: dict[str, int] = {}
@@ -158,6 +161,7 @@ def rename_subject():
 @bp.route("/users")
 @staff_required
 def users():
+    """List all student profiles with their card counts."""
     from sqlalchemy import func
     profiles = (
         db.session.query(StudentProfile, User)
@@ -185,6 +189,7 @@ def users():
 @bp.route("/users/<user_id>")
 @staff_required
 def user_detail(user_id):
+    """Display detailed progress for a specific student (cards, answers, stability)."""
     from datetime import date
     from sqlalchemy import func
     user = User.query.get_or_404(user_id)
@@ -226,6 +231,13 @@ def user_detail(user_id):
 
 
 def _extract_questions(parsed):
+    """Extract a list of questions from parsed JSON.
+
+    Handles three formats:
+    1. A raw list of question dicts → return as-is
+    2. A dict with a "questions" key → return that list
+    3. A single question dict → wrap in a list
+    """
     if isinstance(parsed, list):
         return parsed
     if isinstance(parsed, dict) and isinstance(parsed.get("questions"), list):
@@ -236,6 +248,7 @@ def _extract_questions(parsed):
 @bp.route("/import", methods=["GET", "POST"])
 @staff_required
 def import_questions():
+    """Import questions from a JSON file: preview, validate, then save as approved."""
     if request.method == "POST":
         action = request.form.get("action")
         if action == "preview":

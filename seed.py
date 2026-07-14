@@ -17,6 +17,7 @@ app = create_app()
 
 
 def run():
+    """Initialize the database with demo users and sample questions from seed.json."""
     with app.app_context():
         db.create_all()
 

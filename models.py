@@ -36,18 +36,23 @@ class User(db.Model):
     )
 
     def set_password(self, password: str) -> None:
+        """Hash and store a plaintext password (PBKDF2 via Werkzeug)."""
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password: str) -> bool:
+        """Verify a plaintext password against the stored hash."""
         return check_password_hash(self.password_hash, password)
 
     def role_names(self) -> list[str]:
+        """Return the list of role strings assigned to this user."""
         return [r.role for r in self.roles]
 
     def has_role(self, role: str) -> bool:
+        """Check whether this user has a specific role."""
         return role in self.role_names()
 
     def is_staff(self) -> bool:
+        """Check whether this user is a staff member (has any staff role)."""
         return any(r in STAFF_ROLES for r in self.role_names())
 
 
@@ -141,7 +146,10 @@ class Question(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     def section_list(self) -> list[str]:
-        """Always returns section as a list, regardless of how it's stored."""
+        """Return the question's exam sections as a normalized list.
+
+        Handles both list and string storage formats; defaults to shulchan_aruch.
+        """
         if isinstance(self.section, list):
             return self.section
         if isinstance(self.section, str) and self.section:
@@ -149,6 +157,7 @@ class Question(db.Model):
         return ["shulchan_aruch"]
 
     def as_dict(self) -> dict:
+        """Serialize the question to a dictionary (used by admin preview/editing)."""
         return {
             "id": self.id,
             "text": self.text,

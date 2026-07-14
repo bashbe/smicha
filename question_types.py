@@ -39,12 +39,13 @@ def _normalize_sections(value) -> list[str]:
     return valid if valid else ["shulchan_aruch"]
 
 
-
 def _text(v) -> str:
+    """Strip whitespace from a string, or return empty string if not a string."""
     return v.strip() if isinstance(v, str) else ""
 
 
 def _add_text_issue(issues: list, value, label: str) -> None:
+    """Validate that a field is non-empty Hebrew text; append error message if invalid."""
     s = _text(value)
     if not s:
         issues.append(f"{label} חסר")
@@ -53,6 +54,7 @@ def _add_text_issue(issues: list, value, label: str) -> None:
 
 
 def _has_hebrew_key(obj) -> bool:
+    """Recursively check if any dict key or nested value is Hebrew text."""
     if not isinstance(obj, (dict, list)):
         return False
     if isinstance(obj, list):
@@ -61,6 +63,7 @@ def _has_hebrew_key(obj) -> bool:
 
 
 def _source_to_ref(q) -> str | None:
+    """Extract and serialize the source reference from a question dict."""
     src = q.get("source")
     if isinstance(src, dict):
         return json.dumps(src, ensure_ascii=False)
@@ -68,6 +71,7 @@ def _source_to_ref(q) -> str | None:
 
 
 def _normalize_tags(tags) -> list:
+    """Convert tags to a list of non-empty stripped strings, or empty list."""
     if isinstance(tags, list):
         return [str(t).strip() for t in tags if str(t).strip()]
     return []
@@ -104,6 +108,8 @@ def _validate_common(q, issues: list):
 
 
 def _validate_numbered_options(q, issues: list) -> None:
+    """Validate that multiple-choice options have sequential numbers 1, 2, 3, ...
+    and at least one is marked correct."""
     options = q.get("options") if isinstance(q.get("options"), list) else []
     if len(options) < 2:
         issues.append("חייבות להיות לפחות 2 תשובות")
@@ -212,6 +218,7 @@ def normalize_imported_question(q) -> dict:
 
 
 def build_payload_from_draft(row: dict) -> dict:
+    """Merge a question row's fields with its stored payload JSON, preferring row over payload."""
     payload = dict(row.get("payload") or {})
     payload["type"] = row.get("question_type") or payload.get("type")
     payload["difficulty_level"] = int(row.get("difficulty") or payload.get("difficulty_level") or 2)
@@ -239,7 +246,10 @@ def build_payload_from_draft(row: dict) -> dict:
 
 
 def sync_question_row_from_payload(row: dict) -> dict:
-    """Returns {row, error}."""
+    """Sync a question row's metadata columns from its payload, re-normalizing along the way.
+
+    Returns a dict with keys: row (merged result) and error (validation error message, if any).
+    """
     payload = build_payload_from_draft(row)
     normalized = normalize_imported_question(payload)
     if not normalized.get("valid") or not normalized.get("insert"):

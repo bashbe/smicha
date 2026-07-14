@@ -53,6 +53,7 @@ _CONTENT_D0 = {1: 3.0, 2: 5.5, 3: 8.0}
 
 
 def _sigmoid(x: float) -> float:
+    """Compute logistic sigmoid with numerical stability (clamps extreme values)."""
     if x < -60:
         return 0.0
     if x > 60:
@@ -99,6 +100,7 @@ def update_running_logrt(
 # ---------------------------------------------------------------------------
 
 def _z(logrt: float, mean: float | None, sd: float | None, n: int) -> float | None:
+    """Compute z-score from a log(rt), or None if the distribution isn't calibrated yet."""
     if mean is None or not sd or sd <= 0 or n < MIN_N_FOR_Z:
         return None
     return (logrt - mean) / sd
@@ -119,8 +121,10 @@ def normalize_latency(rt_ms: int, item_stats, user_speed) -> tuple[float | None,
 
 
 def _effective_z(z_item: float | None, z_user: float | None) -> float | None:
-    """Prefer the per-item z (neutralises question length); fall back to the
-    per-user z (neutralises reading speed)."""
+    """Select the most informative z-score: per-item (if available), then per-user.
+
+    Per-item z neutralises question length; per-user z neutralises reading speed.
+    """
     if z_item is not None:
         return z_item
     return z_user
@@ -129,8 +133,11 @@ def _effective_z(z_item: float | None, z_user: float | None) -> float | None:
 def bucket_from_z(
     z_item: float | None, z_user: float | None, difficulty: int, rt_ms: int
 ) -> str:
-    """Speed bucket from z-scores; falls back to the absolute thresholds when
-    neither the item nor the user is calibrated yet (backward compatible)."""
+    """Map z-scores to a speed bucket (fast/medium/slow), with absolute-threshold fallback.
+
+    When z-scores aren't available (uncalibrated item/user), falls back to the
+    absolute ms thresholds per difficulty level for backward compatibility.
+    """
     z = _effective_z(z_item, z_user)
     if z is None:
         return speed_bucket(difficulty, rt_ms)
@@ -194,6 +201,7 @@ def update_elo(
 # ---------------------------------------------------------------------------
 
 def _d0_from_content(hidden_difficulty: int | None) -> float:
+    """Map the question's content-tagged difficulty (1, 2, 3) to an FSRS 1..10 prior."""
     return _CONTENT_D0.get(hidden_difficulty or 2, 5.5)
 
 
@@ -203,13 +211,20 @@ def _d0_from_elo(elo_difficulty: float) -> float:
 
 
 def _s0_from_d0(d0: float) -> float:
-    """Harder item -> shorter initial stability. Multiplier 2.0 (easy) .. 0.4 (hard)."""
+    """Derive initial stability from difficulty: harder → shorter stability.
+
+    Uses a linear interpolation from 2.0× (easy) to 0.4× (hard).
+    """
     mult = 2.0 - (d0 - 1.0) / 9.0 * 1.6
     return _S0_GOOD_DEFAULT * mult
 
 
 def _alpha(n_responses: int) -> float:
-    """Confidence-gated, hard-capped blend weight (never reaches 1.0)."""
+    """Compute the blend weight α for mixing collective prior with FSRS defaults.
+
+    Starts low (ALPHA_CONTENT) when data is scarce, ramps up to ALPHA_MAX
+    (capped at 0.6 so the collective signal never fully dominates).
+    """
     if n_responses < N_MIN_PRIOR:
         return ALPHA_CONTENT
     ramp = min(1.0, (n_responses - N_MIN_PRIOR) / (N_FULL_PRIOR - N_MIN_PRIOR))
@@ -217,7 +232,7 @@ def _alpha(n_responses: int) -> float:
 
 
 def derive_priors(item_stats) -> tuple[float, float]:
-    """Return (d0_prior, s0_prior_good) for an ItemStats row (for the batch job)."""
+    """Derive (d0_prior, s0_prior_good) from an ItemStats row (called by the batch job)."""
     hidden = getattr(item_stats, "hidden_difficulty", None)
     n = item_stats.n_responses or 0
     d0_content = _d0_from_content(hidden)

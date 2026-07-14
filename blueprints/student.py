@@ -53,7 +53,7 @@ def _learned_question_ids(user_id: str) -> list[str]:
 
 
 def _to_section_list(section) -> list[str]:
-    """Normalize a section value (str or list) to a list."""
+    """Normalize a section value (str or list) to a list, defaulting to shulchan_aruch."""
     if isinstance(section, list):
         return section or ["shulchan_aruch"]
     if isinstance(section, str) and section:
@@ -63,7 +63,8 @@ def _to_section_list(section) -> list[str]:
 
 def allowed_sections(sections) -> set[str]:
     """Return the set of section values the student has access to.
-    shulchan_aruch is always included.
+
+    shulchan_aruch is always included (mandatory baseline).
     """
     if not sections:
         sections = ["shulchan_aruch"]
@@ -76,11 +77,15 @@ def allowed_sections(sections) -> set[str]:
 
 
 def question_in_sections(q, allowed: set[str]) -> bool:
-    """Return True if ALL of the question's sections are in the allowed set."""
+    """Return True if ALL of the question's sections are in the allowed set.
+
+    A question is only shown if its section list is a subset of the student's allowed sections.
+    """
     return set(_to_section_list(q.section)) <= allowed
 
 
 def get_profile() -> StudentProfile:
+    """Get or create the StudentProfile for the current user."""
     user = current_user()
     sp = StudentProfile.query.get(user.id)
     if sp is None:
@@ -91,6 +96,10 @@ def get_profile() -> StudentProfile:
 
 
 def days_to_exam(exam_date) -> int | None:
+    """Return the number of days from today to the exam date, or None if no exam date set.
+
+    Returned value is always >= 0 (past exam dates become 0).
+    """
     if not exam_date:
         return None
     return max(0, (exam_date - date.today()).days)
@@ -191,6 +200,7 @@ def _exam_cards(actifs: list[StudentParcours]) -> list[dict]:
 @bp.route("/")
 @login_required
 def index():
+    """Redirect to onboarding (if needed) or the home dashboard."""
     sp = get_profile()
     if not sp.onboarded:
         return redirect(url_for("student.onboarding"))
@@ -200,6 +210,7 @@ def index():
 @bp.route("/onboarding", methods=["GET", "POST"])
 @login_required
 def onboarding():
+    """Initial setup: student sets exam date, target stability, and study sections."""
     sp = get_profile()
     ctx = dict(
         valid_parcours=VALID_PARCOURS,

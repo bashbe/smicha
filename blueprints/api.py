@@ -62,6 +62,27 @@ bp = Blueprint("api", __name__, url_prefix="/api")
 
 @bp.post("/answer")
 def answer():
+    """Submit an answer to a question and update FSRS scheduling + stats.
+
+    Request body:
+        - question_id: UUID of the question
+        - given_answer: student's answer
+        - response_time_ms: milliseconds taken to answer
+        - combo: current combo multiplier (from client)
+        - mode: study mode (default "study"; also "revision_daily", "revision_siman", etc)
+
+    Returns:
+        - is_correct, correct_key, points, new_combo, streak, total_points
+        - explanation, rating_badge, daily_bonus (if applicable)
+
+    Side effects:
+        1. Record UserAnswer (with calibration fields: z_item, z_user, auto_grade)
+        2. Update FsrsCard (FSRS scheduling + prior blending)
+        3. Update ItemStats (Elo + log-RT distribution)
+        4. Update UserSpeed (per-user reading speed)
+        5. Update Progression (subject/siman completion)
+        6. Update StudentProfile (points, streak, daily bonus)
+    """
     user = current_user()
     if user is None:
         return jsonify({"error": "unauthorized"}), 401
