@@ -228,11 +228,50 @@ button { font-family: inherit; cursor: pointer; }
   margin-bottom: var(--space-3);
 }
 
+/* Carte de connexion — même langage visuel que la flashcard de révision :
+   feuille quadrillée + pile de cartes légèrement pivotées derrière elle. */
 .auth-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  position: relative;
+  z-index: 1;
+  background-color: var(--surface);
+  background-image:
+    linear-gradient(to right, rgba(194,113,12,0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(194,113,12,0.07) 1px, transparent 1px);
+  background-size: 20px 20px;
   border-radius: var(--radius-card);
   padding: var(--space-4) var(--space-3);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.11), 0 2px 6px rgba(0,0,0,0.06);
+}
+[data-theme="dark"] .auth-card {
+  background-image:
+    linear-gradient(to right, rgba(232,146,15,0.09) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(232,146,15,0.09) 1px, transparent 1px);
+  box-shadow: 0 6px 28px rgba(0,0,0,0.38);
+}
+.auth-card::before,
+.auth-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-card);
+  background-size: 20px 20px;
+  z-index: -1;
+}
+.auth-card::before {
+  background-color: color-mix(in srgb, var(--surface), var(--border) 40%);
+  background-image:
+    linear-gradient(to right, rgba(194,113,12,0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(194,113,12,0.05) 1px, transparent 1px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.14);
+  transform: rotate(-3.5deg) translateY(10px) translateX(-2px);
+}
+.auth-card::after {
+  background-color: color-mix(in srgb, var(--surface), var(--border) 18%);
+  background-image:
+    linear-gradient(to right, rgba(194,113,12,0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(194,113,12,0.04) 1px, transparent 1px);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.10);
+  transform: rotate(-1.8deg) translateY(5px) translateX(-1px);
 }
 
 .auth-title {
@@ -247,6 +286,26 @@ button { font-family: inherit; cursor: pointer; }
 
 .auth-submit {
   margin-top: var(--space-3);
+}
+
+.auth-remember {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--text-sm);
+  font-weight: 400;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  margin-top: var(--space-1);
+}
+.auth-remember input[type="checkbox"] {
+  width: 1.15rem;
+  height: 1.15rem;
+  min-height: 0;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
 }
 
 .auth-toggle {

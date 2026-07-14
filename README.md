@@ -947,6 +947,11 @@ Le format JSON d'import accepte un tableau d'objets. Chaque objet est normalisé
 
 **Mécanisme** : session Flask (`session["user_id"]`) + chargement dans `g.user` avant chaque requête via `@app.before_request`.
 
+**Rester connecté** : la case « הישאר מחובר » du formulaire `/auth` (`remember`) est transmise à
+`login_user(user, remember=...)` (`auth_helpers.py`), qui positionne `session.permanent`. Décochée
+(défaut) → cookie de session, effacé à la fermeture du navigateur. Cochée → cookie persistant, durée
+`PERMANENT_SESSION_LIFETIME` (`config.py`, 30 jours par défaut).
+
 | Rôle | Accès | Attribution |
 |---|---|---|
 | `student` | `/app/*` — signaler une question (🚩) ne la retire que pour lui-même (`QuestionReport`) | Par défaut à l'inscription |

@@ -21,8 +21,9 @@ def db_get_user(user_id: str) -> User | None:
     return User.query.get(user_id) if user_id else None
 
 
-def login_user(user: User) -> None:
+def login_user(user: User, remember: bool = False) -> None:
     session["user_id"] = user.id
+    session.permanent = remember
     g.user = user
 
 
