@@ -224,8 +224,28 @@
   async function reportQuestion(qId, btn) {
     if (state.reportedIds.has(qId)) return;
     const reason = window.prompt("מה הבעיה בשאלה? (אופציונלי)") || "";
-    state.reportedIds.add(qId);
     btn.disabled = true;
+
+    let ok = false;
+    try {
+      const res = await fetch(cfg.report, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question_id: qId, reason: reason.trim() }),
+      });
+      ok = res.ok;
+    } catch (e) { ok = false; }
+
+    if (!ok) {
+      // Le serveur n'a pas confirmé le signalement (session expirée, erreur
+      // réseau...) — on ne masque pas l'échec : la question doit rester
+      // signalable et continuer d'apparaître dans la file.
+      btn.disabled = false;
+      window.alert("הדיווח נכשל, נסה שוב");
+      return;
+    }
+
+    state.reportedIds.add(qId);
     btn.title = "השאלה דווחה, תודה";
     btn.innerHTML = "";
     btn.appendChild(icon("check", 16));
@@ -234,13 +254,6 @@
     for (let i = queue.length - 1; i > state.idx; i--) {
       if (queue[i].id === qId) queue.splice(i, 1);
     }
-    try {
-      await fetch(cfg.report, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question_id: qId, reason: reason.trim() }),
-      });
-    } catch (e) { /* best-effort — no need to block the player */ }
   }
 
   function nextButton() {
