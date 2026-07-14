@@ -1,13 +1,16 @@
 {% extends "student/_layout.html" %}
-{% from "_icons.html" import icon_coin, icon_flame %}
+{% from "_icons.html" import icon_coin, icon_flame, icon_calendar, icon_repeat %}
 {% block title %}בית — קניין הלכה{% endblock %}
 {% block content %}
 {% set first_name = (profile.full_name or "תלמיד").split(" ")[0] %}
 <div class="stack animate-slide-up">
 
-  <!-- En-tête minimaliste : prénom + stats discrètes -->
+  <!-- En-tête : salutation + message contextuel + stats discrètes -->
   <header class="home-header">
-    <div class="home-greeting">שלום, {{ first_name }}</div>
+    <div>
+      <div class="home-greeting">שלום, {{ first_name }}</div>
+      <div class="home-greeting-sub">{{ greeting }}</div>
+    </div>
     <div class="home-meta">
       <span class="home-stat {{ 'home-stat-active' if profile.streak_days }}">
         {{ icon_flame(14) }}
@@ -20,33 +23,6 @@
     </div>
   </header>
 
-  <!-- Grand compteur : מבחן le plus proche parmi les parcours actifs -->
-  <div class="home-folio">
-    {% if nearest %}
-      <div class="folio-big-number">{{ nearest.days }}</div>
-      <div class="folio-sublabel">ימים עד המבחן{% if exam_cards | length > 1 %} · {{ nearest.label }}{% endif %}</div>
-      <div class="folio-progress">
-        <div class="folio-progress-fill" style="width:{{ nearest.pct }}%;"></div>
-      </div>
-      {% set others = exam_cards | rejectattr('code', 'equalto', nearest.code) | selectattr('days', 'ne', none) | list %}
-      {% if others %}
-      <div class="stack-sm" style="margin-top:var(--space-3);">
-        {% for c in others %}
-        <div class="row between">
-          <span class="text-sm muted">{{ c.label }}</span>
-          <span class="text-sm bold">{{ c.days }} ימים</span>
-        </div>
-        {% endfor %}
-      </div>
-      {% endif %}
-    {% else %}
-      <div class="folio-big-number folio-big-number-empty">—</div>
-      <div class="folio-sublabel">
-        <a href="{{ url_for('student.settings') }}" style="color:var(--accent);">הגדר תאריך בחינה</a>
-      </div>
-    {% endif %}
-  </div>
-
   <!-- Activité de la semaine -->
   <div class="week-strip">
     {% for active in days7 %}
@@ -55,49 +31,88 @@
     <span class="week-label">7 ימים אחרונים</span>
   </div>
 
-  <!-- Actions : cartes folio avec signet ambre -->
-  <div class="stack-sm">
-    {% if next_chapter %}
-      {% set continue_url = url_for('student.chapitre', subject=next_chapter.subject, siman=next_chapter.siman) %}
+  <!-- Une section par מסלול actif -->
+  {% for s in parcours_sections %}
+  <section class="parcours-section">
+    <header class="row between">
+      <h3 class="parcours-section-title">{{ s.label }}</h3>
+      {% if s.days is not none %}
+        <div class="parcours-countdown">
+          <span class="parcours-countdown-num">{{ s.days }}</span>
+          <span class="parcours-countdown-label">ימים למבחן</span>
+        </div>
+      {% endif %}
+    </header>
+
+    {% if s.exam_date %}
+    <div class="folio-progress" style="margin-inline:0;max-width:none;">
+      <div class="folio-progress-fill" style="width:{{ s.pct }}%;"></div>
+    </div>
     {% else %}
-      {% set continue_url = url_for('student.parcours') %}
+    <div class="parcours-no-exam">
+      <a href="{{ url_for('student.settings') }}">הגדר תאריך בחינה</a>
+    </div>
     {% endif %}
 
-    <a href="{{ continue_url }}" class="folio-action folio-action-primary">
-      <div class="folio-action-body">
-        <div class="folio-action-title">המשך הלמידה</div>
-        <div class="folio-action-sub">
-          {% if next_chapter %}
-            {{ next_chapter.subject }} · סימן {{ next_chapter.siman | to_hebrew }}
-          {% else %}
-            התחל את המסלול
-          {% endif %}
-        </div>
+    <div class="parcours-stats-row">
+      <div class="parcours-stat">
+        <span class="parcours-stat-num">{{ s.accuracy ~ '%' if s.accuracy is not none else '—' }}</span>
+        <span class="parcours-stat-label">דיוק</span>
       </div>
-      <div class="folio-action-arrow">‹</div>
-    </a>
+      <div class="parcours-stat">
+        <span class="parcours-stat-num">{{ s.answered }}</span>
+        <span class="parcours-stat-label">נענו</span>
+      </div>
+      <div class="parcours-stat">
+        <span class="parcours-stat-num">{{ s.due_count }}</span>
+        <span class="parcours-stat-label">ממתינים היום</span>
+      </div>
+    </div>
 
-    <a href="{{ url_for('student.revision_jour') }}" class="folio-action">
-      <div class="folio-action-body">
-        <div class="folio-action-title row gap-1">
-          חזרה יומית
-          {% if due_count > 0 %}<span class="badge">{{ due_count }}</span>{% endif %}
+    <div class="stack-sm">
+      {% if s.next_chapter %}
+        {% set continue_url = url_for('student.chapitre', subject=s.next_chapter.subject, siman=s.next_chapter.siman) %}
+      {% else %}
+        {% set continue_url = url_for('student.parcours') %}
+      {% endif %}
+      <a href="{{ continue_url }}" class="folio-action folio-action-primary">
+        <div class="folio-action-body">
+          <div class="folio-action-title">המשך הלמידה</div>
+          <div class="folio-action-sub">
+            {% if s.next_chapter %}
+              {{ s.next_chapter.subject }} · סימן {{ s.next_chapter.siman | to_hebrew }}
+            {% else %}
+              התחל את המסלול
+            {% endif %}
+          </div>
         </div>
-        <div class="folio-action-sub">
-          {% if due_count > 0 %}
-            {{ due_count }} כרטיסים ממתינים היום
-          {% elif next_due_days == 1 %}
-            מחר — {{ next_due_count }} כרטיסים
-          {% elif next_due_days %}
-            בעוד {{ next_due_days }} ימים — {{ next_due_count }} כרטיסים
-          {% else %}
-            אין כרטיסים מתוזמנים
-          {% endif %}
+        <div class="icon-box icon-box-primary">{{ icon_repeat(20) }}</div>
+      </a>
+
+      <a href="{{ url_for('student.revision_jour_session', parcours_code=s.code) }}" class="folio-action">
+        <div class="folio-action-body">
+          <div class="folio-action-title row gap-1">
+            חזרה יומית
+            {% if s.due_count > 0 %}<span class="badge">{{ s.due_count }}</span>{% endif %}
+          </div>
+          <div class="folio-action-sub">
+            {% if s.due_count > 0 %}
+              {{ s.due_count }} כרטיסים ממתינים היום
+            {% else %}
+              אין כרטיסים ממתינים היום
+            {% endif %}
+          </div>
         </div>
-      </div>
-      <div class="folio-action-arrow">‹</div>
-    </a>
+        <div class="icon-box">{{ icon_calendar(20) }}</div>
+      </a>
+    </div>
+  </section>
+  {% else %}
+  <div class="card center-text muted">
+    <p>לא נבחר עדיין מסלול פעיל.</p>
+    <a href="{{ url_for('student.settings') }}" style="color:var(--accent);">הפעל מסלול</a>
   </div>
+  {% endfor %}
 
 </div>
 {% endblock %}

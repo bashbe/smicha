@@ -226,6 +226,18 @@ def onboarding():
     return render_template("student/onboarding.html", **ctx)
 
 
+def _home_greeting(due_count: int, nearest: dict | None, streak: int) -> str:
+    """Message contextuel affiché sous le prénom, selon la situation de
+    l'étudiant : examen imminent > cartes en attente > série active > défaut."""
+    if nearest and nearest.get("days") is not None and nearest["days"] <= 7:
+        return "המבחן מתקרב — הגיע הזמן להתמקד!"
+    if due_count > 0:
+        return "הגיע הזמן לחזור על החומר"
+    if streak > 0:
+        return "כל הכבוד — בואו נמשיך את ההתקדמות!"
+    return "מוכנים להתחיל?"
+
+
 @bp.route("/home")
 @login_required
 def home():
@@ -237,54 +249,73 @@ def home():
     hidden_ids = _hidden_question_ids(sp.id)
     actifs = get_active_parcours(sp.id)
     codes = [r.parcours for r in actifs]
+    today = date.today()
+
     all_qs = (
         Question.query.filter(Question.status == "approved", Question.parcours.in_(codes))
-        .with_entities(Question.id, Question.subject, Question.siman, Question.section)
+        .with_entities(Question.id, Question.parcours, Question.subject, Question.siman, Question.section)
         .all()
     )
-    qs = [(subject, siman) for qid, subject, siman, section in all_qs
-          if set(_to_section_list(section)) & allowed and qid not in hidden_ids]
     prog = {f"{p.subject}|{p.siman}": p for p in Progression.query.filter_by(user_id=sp.id).all()}
 
-    seen, unique = set(), []
-    for subject, siman in qs:
+    # Sujets/simanim uniques par parcours (mêmes règles que /app/parcours : sections
+    # autorisées + signalements personnels exclus), pour déterminer le prochain
+    # chapitre à étudier PAR parcours.
+    unique_by_code: dict[str, list[dict]] = {c: [] for c in codes}
+    seen_by_code: dict[str, set] = {c: set() for c in codes}
+    for qid, code, subject, siman, section in all_qs:
         if not subject or siman is None:
             continue
-        key = f"{subject}|{siman}"
-        if key in seen:
+        if not (set(_to_section_list(section)) & allowed) or qid in hidden_ids:
             continue
-        seen.add(key)
-        unique.append({"subject": subject, "siman": siman})
-    unique.sort(key=lambda u: (u["subject"], u["siman"]))
-    next_chapter = next(
-        (u for u in unique if not prog.get(f"{u['subject']}|{u['siman']}") or prog[f"{u['subject']}|{u['siman']}"].status != "completed"),
-        unique[0] if unique else None,
+        key = f"{subject}|{siman}"
+        if key in seen_by_code[code]:
+            continue
+        seen_by_code[code].add(key)
+        unique_by_code[code].append({"subject": subject, "siman": siman})
+
+    # Précision / volume de réponses par parcours — quelques stats rapides par section.
+    answer_rows = (
+        db.session.query(Question.parcours, UserAnswer.is_correct)
+        .join(UserAnswer, UserAnswer.question_id == Question.id)
+        .filter(UserAnswer.user_id == sp.id, Question.parcours.in_(codes))
+        .all()
+        if codes else []
     )
+    stats_by_code: dict[str, dict] = {c: {"total": 0, "correct": 0} for c in codes}
+    for code, is_correct in answer_rows:
+        stats_by_code[code]["total"] += 1
+        if is_correct:
+            stats_by_code[code]["correct"] += 1
 
-    today = date.today()
-    # Badge de la carte "חזרה יומית" — même périmètre que la file réellement
-    # servie (parcours actifs, questions approuvées, signalements exclus).
-    due_count = sum(_due_counts_by_parcours(sp.id, codes, hidden_ids).values())
-
-    # Next scheduled revision: earliest future due_date and how many cards are due that day
-    next_due_q = (
-        db.session.query(FsrsCard.due_date, func.count(FsrsCard.id))
-        .join(Question, Question.id == FsrsCard.question_id)
-        .filter(
-            FsrsCard.user_id == sp.id,
-            FsrsCard.due_date > today,
-            Question.status == "approved",
-            Question.parcours.in_(codes),
-        )
-    )
-    if hidden_ids:
-        next_due_q = next_due_q.filter(Question.id.notin_(hidden_ids))
-    next_due_row = next_due_q.group_by(FsrsCard.due_date).order_by(FsrsCard.due_date.asc()).first()
-    next_due_date = next_due_row[0] if next_due_row else None
-    next_due_count = next_due_row[1] if next_due_row else 0
-    next_due_days = (next_due_date - today).days if next_due_date else None
-
+    due_by_code = _due_counts_by_parcours(sp.id, codes, hidden_ids)
     exam_cards = _exam_cards(actifs)
+    exam_by_code = {c["code"]: c for c in exam_cards}
+
+    parcours_sections = []
+    for r in actifs:
+        code = r.parcours
+        unique = sorted(unique_by_code.get(code, []), key=lambda u: (u["subject"], u["siman"]))
+        next_chapter = next(
+            (u for u in unique if not prog.get(f"{u['subject']}|{u['siman']}") or prog[f"{u['subject']}|{u['siman']}"].status != "completed"),
+            unique[0] if unique else None,
+        )
+        stat = stats_by_code.get(code, {"total": 0, "correct": 0})
+        accuracy = round((stat["correct"] / stat["total"]) * 100) if stat["total"] else None
+        exam = exam_by_code.get(code, {})
+        parcours_sections.append({
+            "code": code,
+            "label": PARCOURS_LABELS.get(code, code),
+            "exam_date": r.exam_date,
+            "days": exam.get("days"),
+            "pct": exam.get("pct", 0),
+            "due_count": due_by_code.get(code, 0),
+            "next_chapter": next_chapter,
+            "answered": stat["total"],
+            "accuracy": accuracy,
+        })
+
+    due_count = sum(due_by_code.values())
     dated = [c for c in exam_cards if c["days"] is not None]
     nearest = min(dated, key=lambda c: c["days"]) if dated else None
 
@@ -300,12 +331,9 @@ def home():
     return render_template(
         "student/home.html",
         profile=sp,
-        next_chapter=next_chapter,
+        parcours_sections=parcours_sections,
         due_count=due_count,
-        next_due_days=next_due_days,
-        next_due_count=next_due_count,
-        exam_cards=exam_cards,
-        nearest=nearest,
+        greeting=_home_greeting(due_count, nearest, streak),
         days7=days7,
     )
 
