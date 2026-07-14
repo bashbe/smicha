@@ -105,9 +105,24 @@
     if (!root) return;
 
     var track = root.querySelector("[data-landing-track]");
-    var slides = Array.prototype.slice.call(root.querySelectorAll("[data-landing-slide]"));
     var dots = Array.prototype.slice.call(root.querySelectorAll("[data-landing-dot]"));
-    var current = 0;
+    var originals = Array.prototype.slice.call(root.querySelectorAll("[data-landing-slide]"));
+    var count = originals.length;
+    if (count < 2) return;
+
+    // Clone the first/last slide onto the opposite ends of the track so wrapping
+    // from the last slide to the first (or vice versa) keeps sliding in the same
+    // visual direction instead of snapping backwards through the whole track.
+    var leadingClone = originals[count - 1].cloneNode(true);
+    var trailingClone = originals[0].cloneNode(true);
+    leadingClone.setAttribute("data-landing-clone", "");
+    trailingClone.setAttribute("data-landing-clone", "");
+    track.insertBefore(leadingClone, originals[0]);
+    track.appendChild(trailingClone);
+
+    var slides = Array.prototype.slice.call(root.querySelectorAll("[data-landing-slide]"));
+    // slides[0] = clone of last, slides[1..count] = real slides, slides[count + 1] = clone of first.
+    var current = 1;
     var timer = null;
     var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -119,18 +134,37 @@
 
     function render() {
       track.style.transform = "translateX(" + (current * 100) + "%)";
+      var realIndex = current - 1;
       slides.forEach(function (slide, i) {
-        slide.classList.toggle("is-active", i === current);
-        slide.setAttribute("aria-hidden", i === current ? "false" : "true");
+        var active = i === current;
+        slide.classList.toggle("is-active", active);
+        slide.setAttribute("aria-hidden", (active && !slide.hasAttribute("data-landing-clone")) ? "false" : "true");
       });
       dots.forEach(function (dot, i) {
-        dot.classList.toggle("is-active", i === current);
-        dot.setAttribute("aria-current", i === current ? "true" : "false");
+        dot.classList.toggle("is-active", i === realIndex);
+        dot.setAttribute("aria-current", i === realIndex ? "true" : "false");
       });
     }
 
-    function goTo(index) {
-      current = (index + slides.length) % slides.length;
+    // Instantly (no transition) re-anchor the track onto the matching real slide
+    // once a wrap-around transition onto a clone has finished playing.
+    function settleClone() {
+      var target = current === 0 ? count : current === count + 1 ? 1 : null;
+      if (target === null) return;
+      track.style.transition = "none";
+      current = target;
+      render();
+      void track.offsetWidth;
+      track.style.transition = "";
+    }
+
+    function step(delta) {
+      current += delta;
+      render();
+    }
+
+    function goTo(realIndex) {
+      current = ((realIndex % count) + count) % count + 1;
       render();
     }
 
@@ -141,8 +175,12 @@
 
     function startAutoplay() {
       if (timer || reducedMotion.matches) return;
-      timer = window.setInterval(function () { goTo(current + 1); }, 6200);
+      timer = window.setInterval(function () { step(1); }, 6200);
     }
+
+    track.addEventListener("transitionend", function (e) {
+      if (e.propertyName === "transform") settleClone();
+    });
 
     dots.forEach(function (dot, i) {
       dot.addEventListener("click", function () {
@@ -166,11 +204,7 @@
     track.addEventListener("pointermove", function (e) {
       if (!dragging || e.pointerId !== dragPointerId || !trackWidth) return;
       dragDeltaX = e.clientX - dragStartX;
-      var resisted = dragDeltaX;
-      if ((current === 0 && dragDeltaX < 0) || (current === slides.length - 1 && dragDeltaX > 0)) {
-        resisted = dragDeltaX * 0.35;
-      }
-      var percent = (resisted / trackWidth) * 100;
+      var percent = (dragDeltaX / trackWidth) * 100;
       track.style.transform = "translateX(calc(" + (current * 100) + "% + " + percent + "%))";
     });
 
@@ -180,10 +214,10 @@
       track.classList.remove("is-dragging");
       var threshold = trackWidth * 0.18;
       if (Math.abs(dragDeltaX) > threshold) {
-        if (dragDeltaX > 0) current = (current + 1) % slides.length;
-        else current = (current - 1 + slides.length) % slides.length;
+        step(dragDeltaX > 0 ? 1 : -1);
+      } else {
+        render();
       }
-      render();
       startAutoplay();
     }
 
