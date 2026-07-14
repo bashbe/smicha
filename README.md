@@ -105,9 +105,9 @@ Toutes les variables se trouvent dans `config.py` et sont surchargeables par var
 | `SUPER_ADMIN_EMAIL` | `bcbeneghmos@gmail.com` | Email automatiquement promu `super_admin` à l'inscription |
 | `FLASK_PORT` | `5000` | Port d'écoute (lu dans `app.py`) |
 | `GITHUB_WEBHOOK_SECRET` | `None` | Secret HMAC-SHA256 partagé avec le webhook GitHub — voir [Déploiement continu](#déploiement-continu-pythonanywhere). `None` désactive l'endpoint |
-| `PYTHONANYWHERE_API_TOKEN` | `None` | Token API PythonAnywhere (Account → API Token) — optionnel, déclenche un reload automatique du web app après le `git pull` |
-| `PYTHONANYWHERE_USERNAME` | `None` | Nom d'utilisateur PythonAnywhere — requis avec `PYTHONANYWHERE_API_TOKEN` pour le reload automatique |
+| `PYTHONANYWHERE_USERNAME` | `None` | Nom d'utilisateur PythonAnywhere — seul requis pour le reload automatique via `touch` du fichier WSGI (fonctionne sur tous les plans, y compris gratuit) |
 | `PYTHONANYWHERE_DOMAIN` | `<USERNAME>.pythonanywhere.com` | Domaine du web app à recharger (à surcharger pour un domaine personnalisé) |
+| `PYTHONANYWHERE_API_TOKEN` | `None` | Token API PythonAnywhere (Account → API Token) — optionnel, fallback si le `touch` échoue ; **403 sur les comptes gratuits** (Beginner), réservé aux plans payants |
 
 Exemple production :
 
@@ -1080,13 +1080,21 @@ connectivité sans attendre un vrai push.
 ### 4. (Optionnel) Recharger automatiquement le web app après le `pull`
 
 Sur PythonAnywhere, un `git pull` seul ne suffit pas : le process WSGI doit être rechargé pour
-servir le nouveau code. Deux options :
+servir le nouveau code. `_reload_pythonanywhere()` (`blueprints/webhook.py`) essaie deux mécanismes,
+dans cet ordre :
 
-- **Automatique** — renseigner `PYTHONANYWHERE_API_TOKEN` (Account → **API Token**) et
-  `PYTHONANYWHERE_USERNAME` : `blueprints/webhook.py` appelle alors l'API PythonAnywhere
-  (`POST /api/v0/user/<username>/webapps/<domain>/reload/`) juste après le `pull` réussi.
-- **Manuel** — sans ces variables, le reload est ignoré (`reloaded: false` dans la réponse JSON) ;
-  il faut alors cliquer sur **Reload** dans l'onglet **Web** après chaque déploiement.
+1. **`touch` du fichier WSGI** (`/var/www/<domain-avec-underscores>_wsgi.py`) — PythonAnywhere
+   recharge automatiquement une webapp dès que ce fichier est modifié. Fonctionne sur **tous les
+   plans, y compris gratuit** ; seul `PYTHONANYWHERE_USERNAME` (et éventuellement
+   `PYTHONANYWHERE_DOMAIN` si différent de `<username>.pythonanywhere.com`) est requis.
+2. **Fallback API** — si le `touch` échoue (chemin WSGI non standard, environnement non
+   PythonAnywhere…) et que `PYTHONANYWHERE_API_TOKEN` est renseigné, appelle
+   `POST /api/v0/user/<username>/webapps/<domain>/reload/`. **Attention** : cet endpoint répond
+   `403 "You do not have permission to perform this action"` sur les comptes gratuits (Beginner) —
+   réservé aux plans payants. Ne pas s'y fier comme seul mécanisme sur un compte gratuit.
+
+Sans `PYTHONANYWHERE_USERNAME` du tout, le reload est ignoré (`reloaded: false`) et il faut cliquer
+sur **Reload** dans l'onglet **Web** après chaque déploiement.
 
 ### Vérification
 
