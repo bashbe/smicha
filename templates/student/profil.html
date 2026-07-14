@@ -1,5 +1,5 @@
 {% extends "student/_layout.html" %}
-{% from "_icons.html" import icon_settings, icon_logout %}
+{% from "_icons.html" import icon_settings, icon_logout, icon_shield %}
 {% block title %}פרופיל — קניין הלכה{% endblock %}
 {% block content %}
 {% set first_name = (profile.full_name or "תלמיד").split(" ")[0] %}
@@ -58,6 +58,12 @@
   <a href="{{ url_for('student.settings') }}" class="btn btn-ghost btn-block row gap-2 center">
     {{ icon_settings(16) }} ערוך הגדרות
   </a>
+
+  {% if current_user.is_staff() %}
+  <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline btn-block row gap-2 center">
+    {{ icon_shield(16) }} ניהול (Back-office)
+  </a>
+  {% endif %}
 
   <!-- Toggle light/dark -->
   <button type="button" id="theme-toggle" class="btn btn-ghost btn-block row gap-2 center">
