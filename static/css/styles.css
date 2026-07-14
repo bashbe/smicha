@@ -1811,3 +1811,57 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   font-weight: 700;
   cursor: pointer;
 }
+
+/* ---- Modale de signalement de question ---- */
+.report-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2);
+}
+.report-modal {
+  width: 100%;
+  max-width: 22rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--space-3);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+[data-theme="dark"] .report-modal {
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+}
+.report-modal-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--destructive), transparent 88%);
+  color: var(--destructive);
+  margin-bottom: var(--space-1);
+}
+.report-modal-title {
+  margin: 0 0 0.25rem;
+}
+.report-modal-subtitle {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  line-height: 1.5;
+}
+.report-modal-textarea {
+  width: 100%;
+  min-height: 5.5rem;
+}
+.report-modal-actions {
+  display: flex;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+.report-modal-actions .btn { flex: 1; }

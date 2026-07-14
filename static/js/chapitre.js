@@ -221,9 +221,54 @@
     }, 800);
   }
 
+  // Modale de signalement : remplace window.prompt par un dialogue habillé,
+  // cohérent avec le reste de l'UI. Résout avec le motif saisi (peut être
+  // vide) ou `null` si l'utilisateur annule.
+  function openReportModal() {
+    return new Promise((resolve) => {
+      const backdrop = el("div", "report-modal-backdrop");
+      const modal = el("div", "report-modal animate-pop-in");
+      modal.appendChild(el("div", "report-modal-icon", icon("flag", 20)));
+      modal.appendChild(el("h3", "report-modal-title", "דיווח על שאלה"));
+      modal.appendChild(el("p", "report-modal-subtitle", "מה הבעיה בשאלה הזו? הדיווח יסתיר אותה עבורך מיד."));
+
+      const textarea = document.createElement("textarea");
+      textarea.className = "report-modal-textarea";
+      textarea.placeholder = "לדוגמה: הניסוח לא ברור, התשובה הנכונה שגויה... (אופציונלי)";
+      textarea.rows = 3;
+      modal.appendChild(textarea);
+
+      const actions = el("div", "report-modal-actions");
+      const cancelBtn = el("button", "btn btn-outline", "ביטול");
+      cancelBtn.type = "button";
+      const submitBtn = el("button", "btn btn-primary", "שלח דיווח");
+      submitBtn.type = "button";
+      actions.appendChild(submitBtn);
+      actions.appendChild(cancelBtn);
+      modal.appendChild(actions);
+      backdrop.appendChild(modal);
+
+      function close(result) {
+        document.removeEventListener("keydown", onKey);
+        backdrop.remove();
+        resolve(result);
+      }
+      function onKey(e) { if (e.key === "Escape") close(null); }
+      document.addEventListener("keydown", onKey);
+      backdrop.addEventListener("click", (e) => { if (e.target === backdrop) close(null); });
+      cancelBtn.addEventListener("click", () => close(null));
+      submitBtn.addEventListener("click", () => close(textarea.value.trim()));
+
+      document.body.appendChild(backdrop);
+      textarea.focus();
+    });
+  }
+
   async function reportQuestion(qId, btn) {
     if (state.reportedIds.has(qId)) return;
-    const reason = window.prompt("מה הבעיה בשאלה? (אופציונלי)") || "";
+    const reason = await openReportModal();
+    if (reason === null) return; // annulé
+
     btn.disabled = true;
 
     let ok = false;
@@ -231,7 +276,7 @@
       const res = await fetch(cfg.report, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question_id: qId, reason: reason.trim() }),
+        body: JSON.stringify({ question_id: qId, reason }),
       });
       ok = res.ok;
     } catch (e) { ok = false; }
@@ -246,14 +291,14 @@
     }
 
     state.reportedIds.add(qId);
-    btn.title = "השאלה דווחה, תודה";
-    btn.innerHTML = "";
-    btn.appendChild(icon("check", 16));
     // Retire toute copie déjà remise en file (retry suite à une mauvaise
     // réponse) pour qu'elle ne réapparaisse pas plus tard dans cette session.
     for (let i = queue.length - 1; i > state.idx; i--) {
       if (queue[i].id === qId) queue.splice(i, 1);
     }
+    // La question signalée disparaît immédiatement — pas d'attente d'une
+    // réponse ni d'une prochaine ouverture du paquet.
+    if (queue[state.idx] && queue[state.idx].id === qId) next();
   }
 
   function nextButton() {
