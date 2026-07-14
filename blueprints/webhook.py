@@ -3,8 +3,6 @@
 PythonAnywhere (plan gratuit) n'autorise aucun processus persistant en dehors du
 serveur WSGI de l'app — c'est donc l'app Flask elle-même (toujours active) qui
 sert de récepteur de webhook.
-
-# ping de test — à retirer une fois le diagnostic du reload confirmé
 """
 
 from __future__ import annotations
@@ -31,12 +29,31 @@ def _verify_signature(secret: str, payload: bytes, signature_header: str | None)
 
 
 def _reload_pythonanywhere() -> tuple[bool, str]:
-    """Rechargement best-effort via l'API PythonAnywhere (no-op si non configuré)."""
-    token = os.environ.get("PYTHONANYWHERE_API_TOKEN")
+    """Rechargement best-effort (no-op si non configuré).
+
+    PythonAnywhere recharge automatiquement une webapp quand son fichier WSGI
+    est modifié (mtime) — ce mécanisme fonctionne même sur un compte gratuit,
+    contrairement à l'API `/webapps/.../reload/` qui répond 403 "You do not
+    have permission to perform this action" sur ces comptes. Le `touch` est
+    donc tenté en premier ; l'API reste un fallback (comptes payants, ou si le
+    chemin WSGI ne correspond pas à la convention par défaut).
+    """
     username = os.environ.get("PYTHONANYWHERE_USERNAME")
-    if not token or not username:
-        return False, "reload ignoré (PYTHONANYWHERE_API_TOKEN / PYTHONANYWHERE_USERNAME non définis)"
+    if not username:
+        return False, "reload ignoré (PYTHONANYWHERE_USERNAME non défini)"
     domain = os.environ.get("PYTHONANYWHERE_DOMAIN", f"{username}.pythonanywhere.com")
+
+    wsgi_path = f"/var/www/{domain.replace('.', '_')}_wsgi.py"
+    try:
+        os.utime(wsgi_path, None)
+        return True, f"reload via touch {wsgi_path}"
+    except OSError as exc:
+        touch_error = f"touch échoué ({wsgi_path}) : {exc}"
+
+    token = os.environ.get("PYTHONANYWHERE_API_TOKEN")
+    if not token:
+        return False, f"{touch_error} — et PYTHONANYWHERE_API_TOKEN non défini pour le fallback API"
+
     url = f"https://www.pythonanywhere.com/api/v0/user/{username}/webapps/{domain}/reload/"
     req = urllib.request.Request(url, method="POST", headers={"Authorization": f"Token {token}"})
     try:
@@ -44,9 +61,9 @@ def _reload_pythonanywhere() -> tuple[bool, str]:
             return resp.status == 200, f"reload HTTP {resp.status}"
     except urllib.error.HTTPError as exc:
         body = exc.read().decode("utf-8", errors="replace")[:500]
-        return False, f"reload échoué : HTTP {exc.code} {exc.reason} — {body}"
+        return False, f"{touch_error} — reload API échoué : HTTP {exc.code} {exc.reason} — {body}"
     except urllib.error.URLError as exc:
-        return False, f"reload échoué : {exc}"
+        return False, f"{touch_error} — reload API échoué : {exc}"
 
 
 @bp.route("/deploy", methods=["POST"])
