@@ -194,7 +194,9 @@
     if (data.is_correct) {
       state.sessionPoints += data.points;
       if (prevResult !== "correct") state.correctCount++;
-    } else {
+    } else if (!state.reportedIds.has(q.id)) {
+      // Ne pas remettre en file une question déjà signalée : sinon elle
+      // réapparaît plus tard dans la même session malgré le signalement.
       queue.push(q);
     }
 
@@ -227,6 +229,11 @@
     btn.title = "השאלה דווחה, תודה";
     btn.innerHTML = "";
     btn.appendChild(icon("check", 16));
+    // Retire toute copie déjà remise en file (retry suite à une mauvaise
+    // réponse) pour qu'elle ne réapparaisse pas plus tard dans cette session.
+    for (let i = queue.length - 1; i > state.idx; i--) {
+      if (queue[i].id === qId) queue.splice(i, 1);
+    }
     try {
       await fetch(cfg.report, {
         method: "POST",
