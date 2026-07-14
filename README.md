@@ -1007,6 +1007,20 @@ sqlite3 smiha.db "SELECT email, role FROM users JOIN user_roles ON users.id=user
 export SECRET_KEY="..." DATABASE_URL="postgresql+psycopg://..." SUPER_ADMIN_EMAIL="..."
 python app.py
 
+# Synchroniser la base locale avec la base de prod (PythonAnywhere)
+# Nécessite PA_USERNAME + PA_API_TOKEN (Account > API Token sur pythonanywhere.com)
+# PA_DB_PATH optionnel si le chemin diffère de /home/<PA_USERNAME>/smiha-flask/smiha.db
+# Ces variables peuvent être mises dans un fichier .env à la racine (chargé automatiquement,
+# non commit — voir .gitignore) plutôt que exportées manuellement.
+export PA_USERNAME="..." PA_API_TOKEN="..."          # Bash
+$env:PA_USERNAME="..."; $env:PA_API_TOKEN="..."      # PowerShell
+python -m scripts.sync_prod_db && python app.py
+
+# Synchronisation automatique au démarrage (flask run / python app.py)
+# Ajouter AUTO_SYNC_DB=1 dans le .env (avec PA_USERNAME/PA_API_TOKEN) : app.py appelle
+# alors scripts/sync_prod_db.py avant de servir. Désactivé par défaut (opt-in) pour ne
+# jamais déclencher de téléchargement en prod.
+
 # Git — sauvegarder les credentials GitHub une seule fois (ex. sur PythonAnywhere)
 git config --global credential.helper store
 ```
