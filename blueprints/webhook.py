@@ -3,12 +3,11 @@
 PythonAnywhere (plan gratuit) n'autorise aucun processus persistant en dehors du
 serveur WSGI de l'app — c'est donc l'app Flask elle-même (toujours active) qui
 sert de récepteur de webhook.
-
-# ping de test — reload via touch WSGI — à retirer après vérification
 """
 
 from __future__ import annotations
 
+import glob
 import hashlib
 import hmac
 import os
@@ -39,18 +38,28 @@ def _reload_pythonanywhere() -> tuple[bool, str]:
     have permission to perform this action" sur ces comptes. Le `touch` est
     donc tenté en premier ; l'API reste un fallback (comptes payants, ou si le
     chemin WSGI ne correspond pas à la convention par défaut).
+
+    Le chemin WSGI dérivé du domaine peut être faux si `PYTHONANYWHERE_DOMAIN`
+    est mal renseignée — dans ce cas on retombe sur le(s) fichier(s)
+    `/var/www/*_wsgi.py` réellement présents (un compte gratuit n'héberge
+    qu'une seule webapp, donc un seul candidat).
     """
     username = os.environ.get("PYTHONANYWHERE_USERNAME")
     if not username:
         return False, "reload ignoré (PYTHONANYWHERE_USERNAME non défini)"
     domain = os.environ.get("PYTHONANYWHERE_DOMAIN", f"{username}.pythonanywhere.com")
+    resolved = f"username={username!r}, domain={domain!r}"
 
-    wsgi_path = f"/var/www/{domain.replace('.', '_')}_wsgi.py"
-    try:
-        os.utime(wsgi_path, None)
-        return True, f"reload via touch {wsgi_path}"
-    except OSError as exc:
-        touch_error = f"touch échoué ({wsgi_path}) : {exc}"
+    candidates = [f"/var/www/{domain.replace('.', '_')}_wsgi.py"]
+    candidates += [p for p in sorted(glob.glob("/var/www/*_wsgi.py")) if p not in candidates]
+    touch_errors = []
+    for wsgi_path in candidates:
+        try:
+            os.utime(wsgi_path, None)
+            return True, f"reload via touch {wsgi_path}"
+        except OSError as exc:
+            touch_errors.append(f"touch échoué ({wsgi_path}) : {exc}")
+    touch_error = f"{' ; '.join(touch_errors)} [{resolved}]"
 
     token = os.environ.get("PYTHONANYWHERE_API_TOKEN")
     if not token:
