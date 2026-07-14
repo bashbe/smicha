@@ -11,6 +11,11 @@
     {% include "_flash.html" %}
 
     <div class="auth-card">
+      <div class="auth-tabs" role="tablist">
+        <button type="button" class="auth-tab" data-mode="login" id="tab-login" role="tab" aria-selected="false">כניסה</button>
+        <button type="button" class="auth-tab" data-mode="signup" id="tab-signup" role="tab" aria-selected="false">הרשמה</button>
+      </div>
+
       <h1 id="title" class="auth-title">כניסה לאפליקציה</h1>
       <p id="subtitle" class="auth-subtitle">ברוך הבא חזרה</p>
 
@@ -35,29 +40,27 @@
         </label>
         <button type="submit" class="btn btn-primary btn-block btn-lg auth-submit" id="submit-btn">כניסה</button>
       </form>
-
-      <button type="button" id="toggle" class="auth-toggle">
-        אין לך חשבון? <span class="auth-toggle-accent">הרשמה</span>
-      </button>
     </div>
 
   </div>
 </div>
 
 <script>
-  let mode = "login";
-  const t = document.getElementById("toggle");
-  t.addEventListener("click", () => {
-    mode = mode === "login" ? "signup" : "login";
+  const tabs = document.querySelectorAll(".auth-tab");
+  function setMode(mode) {
     document.getElementById("mode").value = mode;
     const signup = mode === "signup";
     document.getElementById("name-field").classList.toggle("hidden", !signup);
     document.getElementById("title").textContent = signup ? "הרשמה חדשה" : "כניסה לאפליקציה";
     document.getElementById("subtitle").textContent = signup ? "צור חשבון להתחיל ללמוד" : "ברוך הבא חזרה";
     document.getElementById("submit-btn").textContent = signup ? "הרשמה" : "כניסה";
-    t.innerHTML = signup
-      ? 'כבר יש לי חשבון? <span class="auth-toggle-accent">כניסה</span>'
-      : 'אין לך חשבון? <span class="auth-toggle-accent">הרשמה</span>';
-  });
+    tabs.forEach((btn) => {
+      const active = btn.dataset.mode === mode;
+      btn.classList.toggle("active", active);
+      btn.setAttribute("aria-selected", active ? "true" : "false");
+    });
+  }
+  tabs.forEach((btn) => btn.addEventListener("click", () => setMode(btn.dataset.mode)));
+  setMode("{{ mode|default('login') }}");
 </script>
 {% endblock %}

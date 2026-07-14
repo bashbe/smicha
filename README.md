@@ -103,6 +103,7 @@ Toutes les variables se trouvent dans `config.py` et sont surchargeables par var
 | `SECRET_KEY` | `"dev-change-me-in-production"` | Clé de signature des sessions Flask — **changer impérativement en prod** |
 | `DATABASE_URL` | `sqlite:///smiha.db` | URL de connexion SQLAlchemy. Passer `postgresql+psycopg://...` pour Postgres |
 | `SUPER_ADMIN_EMAIL` | `bcbeneghmos@gmail.com` | Email automatiquement promu `super_admin` à l'inscription |
+| `ALLOWED_SIGNUP_EMAILS` | *(vide → `SUPER_ADMIN_EMAIL` seul)* | Liste blanche d'emails autorisés à s'inscrire via `/auth` (séparés par des virgules). Restriction temporaire — voir [Rôles et authentification](#rôles-et-authentification). Ne s'applique pas aux comptes créés par `seed.py` |
 | `FLASK_PORT` | `5000` | Port d'écoute (lu dans `app.py`) |
 | `GITHUB_WEBHOOK_SECRET` | `None` | Secret HMAC-SHA256 partagé avec le webhook GitHub — voir [Déploiement continu](#déploiement-continu-pythonanywhere). `None` désactive l'endpoint |
 | `PYTHONANYWHERE_USERNAME` | `None` | Nom d'utilisateur PythonAnywhere — seul requis pour le reload automatique via `touch` du fichier WSGI (fonctionne sur tous les plans, y compris gratuit) |
@@ -531,7 +532,7 @@ Retourne uniquement un tableau JSON valide, sans texte avant ou après.
 | Méthode | Route | Description |
 |---|---|---|
 | GET | `/` | Landing page |
-| GET/POST | `/auth` | Login ou signup étudiant (formulaire double mode) |
+| GET/POST | `/auth` | Login ou signup étudiant (formulaire double mode, sélecteur d'onglets כניסה/הרשמה) — `?mode=signup` ouvre directement l'onglet inscription |
 | GET | `/logout` | Déconnexion |
 
 ---
@@ -951,6 +952,13 @@ Le format JSON d'import accepte un tableau d'objets. Chaque objet est normalisé
 `login_user(user, remember=...)` (`auth_helpers.py`), qui positionne `session.permanent`. Décochée
 (défaut) → cookie de session, effacé à la fermeture du navigateur. Cochée → cookie persistant, durée
 `PERMANENT_SESSION_LIFETIME` (`config.py`, 30 jours par défaut).
+
+**Restriction temporaire de l'inscription** : `/auth` en mode `signup` (`blueprints/auth.py`)
+n'autorise la création de compte que pour les emails listés dans `ALLOWED_SIGNUP_EMAILS`
+(`config.py`, liste blanche séparée par des virgules ; vide/non défini = seul `SUPER_ADMIN_EMAIL`
+peut s'inscrire). Toute autre adresse reçoit un message d'erreur (« ההרשמה סגורה כרגע ») sans créer
+de compte. Cette restriction ne s'applique pas aux comptes créés par `seed.py` (appelle
+`create_account()` directement, en dehors du formulaire).
 
 | Rôle | Accès | Attribution |
 |---|---|---|

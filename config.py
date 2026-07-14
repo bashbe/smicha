@@ -22,6 +22,14 @@ class Config:
     # handle_new_user trigger).
     SUPER_ADMIN_EMAIL = os.environ.get("SUPER_ADMIN_EMAIL", "bcbeneghmos@gmail.com")
 
+    # Restriction temporaire de l'inscription (/auth, mode=signup) : liste blanche
+    # d'emails séparés par des virgules. Non défini/vide => seul SUPER_ADMIN_EMAIL
+    # peut créer un compte. Ne s'applique pas aux comptes créés par seed.py.
+    ALLOWED_SIGNUP_EMAILS = (
+        {e.strip().lower() for e in os.environ.get("ALLOWED_SIGNUP_EMAILS", "").split(",") if e.strip()}
+        or {SUPER_ADMIN_EMAIL.lower()}
+    )
+
     # Secret partagé avec le webhook GitHub (POST /webhook/deploy) pour vérifier
     # la signature HMAC-SHA256 de chaque requête. None = endpoint désactivé (401/500).
     GITHUB_WEBHOOK_SECRET = os.environ.get("GITHUB_WEBHOOK_SECRET")
