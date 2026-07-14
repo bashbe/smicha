@@ -3,6 +3,8 @@
 PythonAnywhere (plan gratuit) n'autorise aucun processus persistant en dehors du
 serveur WSGI de l'app — c'est donc l'app Flask elle-même (toujours active) qui
 sert de récepteur de webhook.
+
+# ping de test — vérification du reload via glob *_wsgi.py — à retirer
 """
 
 from __future__ import annotations
