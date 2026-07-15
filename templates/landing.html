@@ -61,17 +61,13 @@
 
 <script>
   (function () {
-    // Corrige le décalage entre 100vh et la hauteur réellement visible
-    // (barre d'adresse mobile), puis réduit le contenu si besoin pour
-    // qu'il tienne toujours dans la hauteur visible, sans scroll vertical.
+    // --vh (décalage 100vh / hauteur réellement visible sur mobile) est déjà
+    // recalculé globalement par base.html. Ici on réduit en plus le contenu si
+    // besoin pour qu'il tienne toujours dans la hauteur visible, sans scroll vertical.
     var shell = document.querySelector(".landing-shell");
     var page = document.querySelector(".landing");
     var canZoom = shell && "zoom" in shell.style;
     var fitPending = false;
-
-    function setViewportHeight() {
-      document.documentElement.style.setProperty("--vh", window.innerHeight * 0.01 + "px");
-    }
 
     function fitToScreen() {
       if (!canZoom) return;
@@ -90,7 +86,6 @@
     }
 
     function refresh() {
-      setViewportHeight();
       fitToScreen();
     }
 

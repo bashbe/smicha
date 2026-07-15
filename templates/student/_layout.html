@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "_icons.html" import icon_home, icon_list, icon_repeat, icon_user %}
 {% block body %}
-<div class="app-shell {{ 'has-nav' if show_nav | default(true) }}" style="min-height:100vh;">
+<div class="app-shell {{ 'has-nav' if show_nav | default(true) }}" style="min-height:calc(var(--vh, 1vh) * 100);">
   <main class="container">
     {% include "_flash.html" %}
     {% block content %}{% endblock %}
