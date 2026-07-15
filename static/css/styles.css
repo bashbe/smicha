@@ -1326,6 +1326,69 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   padding: var(--space-2) 0 var(--space-1);
 }
 
+/* Sélecteur de parcours : n'apparaît que lorsqu'au moins deux parcours sont activés.
+   Affiche le parcours courant + une icône de bascule ; ouvre un menu (pur CSS) pour
+   choisir un autre parcours. Remplace visuellement .toc-group-subject dans ce cas. */
+.parcours-switch {
+  position: relative;
+  margin: var(--space-2) auto var(--space-1);
+  max-width: 320px;
+}
+.parcours-switch > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--card);
+}
+.parcours-switch > summary::-webkit-details-marker { display: none; }
+.parcours-switch-current {
+  font-family: 'Secular One', sans-serif;
+  font-size: var(--text-lg);
+  color: var(--accent);
+  line-height: 1.2;
+}
+.parcours-switch-icon {
+  display: flex;
+  align-items: center;
+  color: var(--muted);
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.parcours-switch[open] .parcours-switch-icon { transform: rotate(180deg); }
+.parcours-switch-menu {
+  position: absolute;
+  z-index: 20;
+  inset-inline: 0;
+  margin-top: var(--space-1);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md, 0 8px 24px rgba(0, 0, 0, 0.25));
+  overflow: hidden;
+}
+.parcours-switch-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  color: var(--fg);
+  font-family: 'Noto Sans Hebrew', sans-serif;
+  font-size: var(--text-sm);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border);
+}
+.parcours-switch-opt:last-child { border-bottom: none; }
+.parcours-switch-opt:hover { background: var(--bg-subtle, rgba(127, 127, 127, 0.08)); }
+.parcours-switch-opt.is-active { color: var(--accent); }
+.parcours-switch-check { color: var(--success); }
+
 /* Seifim : pilules « surligneur » qui s'enchaînent comme du texte. Les sujets coulent
    inline les uns à la suite des autres (une pilule peut commencer au milieu d'une ligne,
    là où finit la précédente) et se coupent naturellement en fin de ligne. */

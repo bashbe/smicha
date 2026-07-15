@@ -546,7 +546,7 @@ Retourne uniquement un tableau JSON valide, sans texte avant ou après.
 | GET | `/app/` | Redirige vers onboarding ou home |
 | GET/POST | `/app/onboarding` | Choix des **parcours** (multi-select, ≥ 1 requis), date de מבחן **par parcours** (optionnelle), niveau cible, sections |
 | GET | `/app/home` | Dashboard : salutation + message contextuel (examen imminent ≤ 7 j > cartes dues > série active > défaut), streak, puis **une section par parcours activé** (compte à rebours du מבחן du parcours, barre de préparation, stats rapides — précision/nb réponses/cartes dues — et **deux tuiles d'action carrées côte à côte** « המשך הלמידה » / « חזרה יומית » scopées à ce parcours) |
-| GET | `/app/parcours` | Table des matières : parcours **activés** → simanim rétractables → cartes par sujet (plage de seifim indicative) |
+| GET | `/app/parcours` | Table des matières : **un seul parcours affiché à la fois** (sélectionné par `?p=<code>`, défaut = premier parcours activé) → simanim rétractables → cartes par sujet (plage de seifim indicative). Avec ≥ 2 parcours activés, un sélecteur en tête de page (icône de bascule + menu) permet de changer de parcours ; un code inconnu retombe sur le premier |
 | GET | `/app/chapitre/<subject>/<siman>[/<seif>]` | Session d'étude sur un sujet du siman — restreinte aux parcours activés (la variante `/<seif>` reste supportée mais n'est plus liée depuis le sélecteur) |
 | GET | `/app/revision` | Hub de révision : 4 cartes (jour / siman / sujet / aléatoire) avec compteurs (parcours activés uniquement) |
 | GET | `/app/revision/jour` | Révision du jour : session directe si ≤ 1 parcours actif, sinon **écran de choix du parcours** (compteur de cartes dues par parcours + option « הכל ») |
@@ -835,6 +835,14 @@ Convertit un entier en notation hébraïque (gematria) avec geresh/gershayim :
 
 ### Page Parcours (`/app/parcours`)
 
+- **Un seul parcours affiché à la fois.** Le parcours actif est choisi par le paramètre
+  `?p=<code>` (défaut : le premier parcours activé, ordre alphabétique). Un code inconnu ou non
+  activé retombe silencieusement sur le premier.
+- **Sélecteur de parcours** (visible uniquement quand ≥ 2 parcours sont activés) : en tête de page,
+  une pastille affiche le libellé du parcours courant + une icône de bascule ; l'ouvrir déroule un
+  menu (pur HTML/CSS via `<details>`, sans JS) listant tous les parcours activés — chaque entrée est
+  un lien `?p=<code>` qui recharge la page sur le parcours choisi (coche ✓ sur le parcours courant).
+  Avec un seul parcours activé, le sélecteur est remplacé par le simple en-tête `.toc-group-subject`.
 - En-tête par **parcours** (ex : `בשר בחלב`, libellé dans `PARCOURS_LABELS` de `question_types.py`)
 - Chaque **siman** est un `<details>` rétractable avec son numéro en hébreu (פ״ט, צ׳, …) et son titre (édité dans `/admin/topics`, indexé par parcours dans `siman_seif_topics.json`)
 - À l'intérieur : **cartes par sujet** (`Question.subject`) cliquables avec indicateur ✓ si complété, compteur de questions et plage indicative des seifim couverts (ex : `א–ג`)
