@@ -1,5 +1,5 @@
 {% extends "student/_layout.html" %}
-{% from "_icons.html" import icon_book, icon_check, icon_chevron_left %}
+{% from "_icons.html" import icon_book, icon_check, icon_chevron_left, icon_repeat %}
 {% block title %}מסלול — קניין הלכה{% endblock %}
 {% block content %}
 <div class="animate-slide-up">
@@ -24,9 +24,31 @@
       </div>
     </div>
   {% else %}
-    {% for g in groups %}
+    {% set g = active_group %}
+
+    {% if groups | length > 1 %}
+    <!-- Sélecteur de parcours : un seul parcours affiché, bascule via l'icône. Le menu
+         est un <details> (pur HTML/CSS, sans JS) qui liste les autres parcours ; choisir
+         recharge la page avec ?p=<code>. -->
+    <details class="parcours-switch">
+      <summary>
+        <span class="parcours-switch-current">{{ g.label }}</span>
+        <span class="parcours-switch-icon" aria-label="החלף מסלול">{{ icon_repeat(18) }}</span>
+      </summary>
+      <div class="parcours-switch-menu">
+        {% for opt in groups %}
+        <a href="{{ url_for('student.parcours', p=opt.parcours) }}"
+           class="parcours-switch-opt {{ 'is-active' if opt.parcours == g.parcours }}">
+          {{ opt.label }}
+          {% if opt.parcours == g.parcours %}<span class="parcours-switch-check">✓</span>{% endif %}
+        </a>
+        {% endfor %}
+      </div>
+    </details>
+    {% else %}
     <!-- Zone 1 : nom du parcours, une fois par groupe -->
     <div class="toc-group-subject">{{ g.label }}</div>
+    {% endif %}
 
     {% for s in g.simanim %}
     <details class="siman-item" {{ 'open' if loop.first and loop.index0 == 0 }}>
@@ -53,7 +75,6 @@
         {% endif %}
       </div>
     </details>
-    {% endfor %}
     {% endfor %}
   {% endif %}
 

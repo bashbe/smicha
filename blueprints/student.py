@@ -427,7 +427,17 @@ def parcours():
             "total": sum(s["count"] for s in simanim),
         })
 
-    return render_template("student/parcours.html", groups=groups, profile=sp)
+    # Un seul parcours affiché à la fois : le parcours actif est choisi par ?p=<code>
+    # (icône de bascule en tête de page), sinon le premier groupe. Un code inconnu
+    # retombe sur le premier groupe disponible.
+    active_group = None
+    if groups:
+        requested = request.args.get("p")
+        active_group = next((g for g in groups if g["parcours"] == requested), groups[0])
+
+    return render_template(
+        "student/parcours.html", groups=groups, active_group=active_group, profile=sp
+    )
 
 
 def _load_chapitre(sp, base_filters: list, allowed: set[str] | None = None) -> list | None:
