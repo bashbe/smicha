@@ -69,41 +69,37 @@
       </div>
     </div>
 
-    <div class="stack-sm">
-      {% if s.next_chapter %}
-        {% set continue_url = url_for('student.chapitre', subject=s.next_chapter.subject, siman=s.next_chapter.siman) %}
-      {% else %}
-        {% set continue_url = url_for('student.parcours') %}
-      {% endif %}
-      <a href="{{ continue_url }}" class="folio-action folio-action-primary">
-        <div class="folio-action-body">
-          <div class="folio-action-title">המשך הלמידה</div>
-          <div class="folio-action-sub">
-            {% if s.next_chapter %}
-              {{ s.next_chapter.subject }} · סימן {{ s.next_chapter.siman | to_hebrew }}
-            {% else %}
-              התחל את המסלול
-            {% endif %}
-          </div>
-        </div>
+    {% if s.next_chapter %}
+      {% set continue_url = url_for('student.chapitre', subject=s.next_chapter.subject, siman=s.next_chapter.siman) %}
+    {% else %}
+      {% set continue_url = url_for('student.parcours') %}
+    {% endif %}
+    <div class="folio-tiles">
+      <a href="{{ continue_url }}" class="folio-tile folio-tile-primary">
         <div class="icon-box icon-box-primary">{{ icon_repeat(20) }}</div>
+        <div class="folio-tile-title">המשך הלמידה</div>
+        <div class="folio-tile-sub">
+          {% if s.next_chapter %}
+            {{ s.next_chapter.subject }} · סימן {{ s.next_chapter.siman | to_hebrew }}
+          {% else %}
+            התחל את המסלול
+          {% endif %}
+        </div>
       </a>
 
-      <a href="{{ url_for('student.revision_jour_session', parcours_code=s.code) }}" class="folio-action">
-        <div class="folio-action-body">
-          <div class="folio-action-title row gap-1">
-            חזרה יומית
-            {% if s.due_count > 0 %}<span class="badge">{{ s.due_count }}</span>{% endif %}
-          </div>
-          <div class="folio-action-sub">
-            {% if s.due_count > 0 %}
-              {{ s.due_count }} כרטיסים ממתינים היום
-            {% else %}
-              אין כרטיסים ממתינים היום
-            {% endif %}
-          </div>
+      <a href="{{ url_for('student.revision_jour_session', parcours_code=s.code) }}" class="folio-tile">
+        <div class="icon-box">
+          {{ icon_calendar(20) }}
+          {% if s.due_count > 0 %}<span class="folio-tile-badge">{{ s.due_count }}</span>{% endif %}
         </div>
-        <div class="icon-box">{{ icon_calendar(20) }}</div>
+        <div class="folio-tile-title">חזרה יומית</div>
+        <div class="folio-tile-sub">
+          {% if s.due_count > 0 %}
+            {{ s.due_count }} ממתינים היום
+          {% else %}
+            אין כרטיסים היום
+          {% endif %}
+        </div>
       </a>
     </div>
   </section>
