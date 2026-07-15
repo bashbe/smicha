@@ -1,5 +1,5 @@
 {% extends "student/_layout.html" %}
-{% from "_icons.html" import icon_settings, icon_logout, icon_shield %}
+{% from "_icons.html" import icon_settings, icon_logout, icon_shield, icon_coin, icon_flame, icon_book, icon_target %}
 {% block title %}פרופיל — קניין הלכה{% endblock %}
 {% block content %}
 {% set first_name = (profile.full_name or "תלמיד").split(" ")[0] %}
@@ -16,44 +16,168 @@
   <!-- Stat principale en grand : l'exactitude -->
   <div class="profile-display-stat">
     <div class="profile-display-number">{{ accuracy }}%</div>
-    <div class="profile-display-label">דיוק כללי</div>
+    <div class="profile-display-label">דיוק כללי · {{ stats.total_reviews }} תשובות</div>
   </div>
 
-  <!-- Stats empilées, typographiques -->
-  <div>
-    <div class="stat-row">
-      <span class="stat-label">נקודות</span>
-      <span class="stat-value">{{ "{:,}".format(profile.total_points or 0) }}</span>
+  <!-- KPI tiles -->
+  <div class="kpi-grid">
+    <div class="kpi-tile">
+      <span class="kpi-icon">{{ icon_coin(18) }}</span>
+      <span class="kpi-num">{{ "{:,}".format(profile.total_points or 0) }}</span>
+      <span class="kpi-label">נקודות</span>
     </div>
-    <div class="stat-row">
-      <span class="stat-label">רצף ימים</span>
-      <span class="stat-value">{{ profile.streak_days or 0 }}</span>
+    <div class="kpi-tile">
+      <span class="kpi-icon {{ 'kpi-icon-hot' if profile.streak_days }}">{{ icon_flame(18) }}</span>
+      <span class="kpi-num">{{ profile.streak_days or 0 }}</span>
+      <span class="kpi-label">רצף נוכחי</span>
     </div>
-    <div class="stat-row">
-      <span class="stat-label">דיוק</span>
-      <span class="stat-value">{{ accuracy }}%</span>
+    <div class="kpi-tile">
+      <span class="kpi-icon">{{ icon_target(18) }}</span>
+      <span class="kpi-num">{{ stats.longest_streak }}</span>
+      <span class="kpi-label">רצף שיא</span>
     </div>
-    {% for c in exam_cards %}
-    <div class="stat-row">
-      <span class="stat-label">ימים למבחן · {{ c.label }}</span>
-      <span class="stat-value">{{ c.days if c.days is not none else "—" }}</span>
+    <div class="kpi-tile">
+      <span class="kpi-icon">{{ icon_book(18) }}</span>
+      <span class="kpi-num">{{ stats.total_cards }}</span>
+      <span class="kpi-label">כרטיסים נלמדו</span>
     </div>
-    {% endfor %}
-    <div class="stat-row">
-      <span class="stat-label">סך שאלות שעניתי</span>
-      <span class="stat-value">{{ total }}</span>
-    </div>
-    <div class="stat-row">
-      <span class="stat-label">יעד שליטה</span>
-      <span class="stat-value">{{ (profile.target_stability * 100) | round | int }}%</span>
-    </div>
-    {% for c in exam_cards %}
-    <div class="stat-row" {% if loop.last %}style="border-bottom:none;"{% endif %}>
-      <span class="stat-label">תאריך מבחן · {{ c.label }}</span>
-      <span class="stat-value" style="font-size:var(--text-base);font-family:'Noto Sans Hebrew',sans-serif;font-weight:600;">{{ c.exam_date or "—" }}</span>
-    </div>
-    {% endfor %}
   </div>
+
+  <!-- Maturité des cartes (à la Anki) -->
+  <section class="profile-section">
+    <div class="row between profile-section-head">
+      <h3 class="profile-section-title">בשלות הכרטיסים</h3>
+      <span class="profile-section-note">{{ stats.mature_cards }} בשלים</span>
+    </div>
+    {% if stats.total_cards %}
+    <div class="maturity-bar">
+      {% for m in stats.maturity %}
+        {% if m.count %}
+        <div class="maturity-seg maturity-{{ m.state }}" style="flex:{{ m.count }};"
+             title="{{ m.label }}: {{ m.count }}"></div>
+        {% endif %}
+      {% endfor %}
+    </div>
+    <div class="maturity-legend">
+      {% for m in stats.maturity %}
+      <div class="maturity-legend-item">
+        <span class="maturity-dot maturity-{{ m.state }}"></span>
+        <span class="maturity-legend-label">{{ m.label }}</span>
+        <span class="maturity-legend-count">{{ m.count }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="muted center-text" style="margin:var(--space-2) 0;">עדיין אין כרטיסים — התחילו ללמוד כדי לצבור קלפים.</p>
+    {% endif %}
+  </section>
+
+  <!-- Force de mémoire + volumes -->
+  <section class="profile-section">
+    <h3 class="profile-section-title">זיכרון ופעילות</h3>
+    <div class="mini-stat-grid">
+      <div class="mini-stat">
+        <span class="mini-stat-num">{{ stats.avg_stability }}<span class="mini-stat-unit">ימ׳</span></span>
+        <span class="mini-stat-label">עוצמת זיכרון ממוצעת</span>
+      </div>
+      <div class="mini-stat">
+        <span class="mini-stat-num">{{ stats.reviews_week }}</span>
+        <span class="mini-stat-label">חזרות השבוע</span>
+      </div>
+      <div class="mini-stat">
+        <span class="mini-stat-num">{{ stats.due_today }}</span>
+        <span class="mini-stat-label">ממתינים היום</span>
+      </div>
+      <div class="mini-stat">
+        <span class="mini-stat-num">{{ stats.due_week }}</span>
+        <span class="mini-stat-label">בשבוע הקרוב</span>
+      </div>
+      <div class="mini-stat">
+        <span class="mini-stat-num">{{ stats.completed_subjects }}</span>
+        <span class="mini-stat-label">נושאים שהושלמו</span>
+      </div>
+      <div class="mini-stat">
+        <span class="mini-stat-num">{{ stats.active_days }}</span>
+        <span class="mini-stat-label">ימי לימוד</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Calendrier d'activité -->
+  <section class="profile-section">
+    <div class="row between profile-section-head">
+      <h3 class="profile-section-title">יומן פעילות</h3>
+      <span class="profile-section-note">12 שבועות אחרונים</span>
+    </div>
+    <div class="heatmap">
+      {% for col in stats.heatmap %}
+      <div class="heatmap-col">
+        {% for cell in col %}
+          {% if cell.level < 0 %}
+          <span class="heatmap-cell heatmap-empty"></span>
+          {% else %}
+          <span class="heatmap-cell heatmap-l{{ cell.level }}"
+                title="{{ cell.date }} · {{ cell.count }}"></span>
+          {% endif %}
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+    <div class="heatmap-scale">
+      <span class="muted" style="font-size:var(--text-xs);">פחות</span>
+      <span class="heatmap-cell heatmap-l0"></span>
+      <span class="heatmap-cell heatmap-l1"></span>
+      <span class="heatmap-cell heatmap-l2"></span>
+      <span class="heatmap-cell heatmap-l3"></span>
+      <span class="heatmap-cell heatmap-l4"></span>
+      <span class="muted" style="font-size:var(--text-xs);">יותר</span>
+    </div>
+  </section>
+
+  <!-- Récap par מסלול -->
+  {% if stats.per_parcours %}
+  <section class="profile-section">
+    <h3 class="profile-section-title">לפי מסלול</h3>
+    <div class="stack-sm">
+      {% for p in stats.per_parcours %}
+      <div class="parcours-recap">
+        <div class="parcours-recap-head">
+          <span class="parcours-recap-label">{{ p.label }}</span>
+          {% if p.due %}<span class="badge">{{ p.due }} ממתינים</span>{% endif %}
+        </div>
+        <div class="parcours-recap-stats">
+          <span><b>{{ p.cards }}</b> כרטיסים</span>
+          <span><b>{{ p.accuracy ~ '%' if p.accuracy is not none else '—' }}</b> דיוק</span>
+          <span><b>{{ p.answered }}</b> תשובות</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Objectifs / dates d'examen -->
+  <section class="profile-section">
+    <h3 class="profile-section-title">יעדים ומבחנים</h3>
+    <div>
+      <div class="stat-row">
+        <span class="stat-label">יעד שליטה</span>
+        <span class="stat-value">{{ (profile.target_stability * 100) | round | int }}%</span>
+      </div>
+      {% for c in exam_cards %}
+      <div class="stat-row">
+        <span class="stat-label">ימים למבחן · {{ c.label }}</span>
+        <span class="stat-value">{{ c.days if c.days is not none else "—" }}</span>
+      </div>
+      {% endfor %}
+      {% for c in exam_cards %}
+      <div class="stat-row" {% if loop.last %}style="border-bottom:none;"{% endif %}>
+        <span class="stat-label">תאריך מבחן · {{ c.label }}</span>
+        <span class="stat-value" style="font-size:var(--text-base);font-family:'Noto Sans Hebrew',sans-serif;font-weight:600;">{{ c.exam_date or "—" }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
 
   <a href="{{ url_for('student.settings') }}" class="btn btn-ghost btn-block row gap-2 center">
     {{ icon_settings(16) }} ערוך הגדרות
@@ -64,8 +188,6 @@
     {{ icon_shield(16) }} ניהול (Back-office)
   </a>
   {% endif %}
-
-  <!-- Toggle light/dark retiré temporairement (mode sombre bloqué sur demande, voir templates/base.html) -->
 
   <details class="danger-zone">
     <summary style="font-size:var(--text-sm);color:var(--muted);cursor:pointer;list-style:none;">

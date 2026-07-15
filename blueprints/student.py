@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import random
+from collections import defaultdict
 from datetime import date, datetime, timedelta
 
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
@@ -883,20 +884,193 @@ def reset_progress():
     return redirect(url_for("student.profil"))
 
 
+# Seuil de « maturité » d'une carte, à la manière d'Anki (intervalle ≥ 21 jours) :
+# une carte dont la stabilité FSRS dépasse ce seuil est considérée bien ancrée.
+MATURE_STABILITY_DAYS = 21
+
+# Libellés hébreux des états FSRS pour la barre de maturité du profil.
+STATE_LABELS = {
+    "new": "חדש",
+    "learning": "בלמידה",
+    "review": "בשליטה",
+    "relearning": "חזרה מחדש",
+}
+STATE_ORDER = ["review", "learning", "relearning", "new"]
+
+
+def _heatmap_level(count: int) -> int:
+    """Intensité 0..4 d'une case du calendrier d'activité (nb de réponses/jour)."""
+    if count <= 0:
+        return 0
+    if count <= 2:
+        return 1
+    if count <= 5:
+        return 2
+    if count <= 10:
+        return 3
+    return 4
+
+
+def _activity_heatmap(day_counts: dict, today: date, weeks: int = 12) -> list:
+    """Grille type « contributions » : `weeks` colonnes (semaines dim.→sam.),
+    la plus récente en premier (côté départ en RTL). Chaque case = un jour."""
+    offset = (today.weekday() + 1) % 7  # jours écoulés depuis le dernier dimanche
+    this_sunday = today - timedelta(days=offset)
+    start = this_sunday - timedelta(weeks=weeks - 1)
+    cols = []
+    for w in range(weeks):
+        col_start = start + timedelta(weeks=w)
+        days = []
+        for d in range(7):
+            day = col_start + timedelta(days=d)
+            if day > today:
+                days.append({"date": None, "count": 0, "level": -1})
+            else:
+                c = day_counts.get(day, 0)
+                days.append({"date": day.isoformat(), "count": c, "level": _heatmap_level(c)})
+        cols.append(days)
+    cols.reverse()  # semaine courante en premier → à droite en RTL
+    return cols
+
+
+def _profile_stats(sp, codes: list[str]) -> dict:
+    """Agrège les statistiques de type Anki affichées sur le profil :
+    maturité des cartes, force de mémoire, activité, records de série,
+    échéances, et un récapitulatif par parcours."""
+    user_id = sp.id
+    today = date.today()
+
+    # --- Réponses : précision, activité quotidienne, volumes ---
+    answers = (
+        UserAnswer.query.filter_by(user_id=user_id)
+        .with_entities(UserAnswer.is_correct, UserAnswer.answered_at)
+        .all()
+    )
+    total_reviews = len(answers)
+    correct = sum(1 for a in answers if a.is_correct)
+    accuracy = round((correct / total_reviews) * 100) if total_reviews else 0
+
+    day_counts: dict = defaultdict(int)
+    for a in answers:
+        if a.answered_at:
+            day_counts[a.answered_at.date()] += 1
+    reviews_today = day_counts.get(today, 0)
+    week_start = today - timedelta(days=6)
+    reviews_week = sum(c for d, c in day_counts.items() if d >= week_start)
+    active_days = len(day_counts)
+
+    # Plus longue série de jours consécutifs d'activité (record historique).
+    longest_streak = 0
+    if day_counts:
+        days_sorted = sorted(day_counts.keys())
+        run = longest_streak = 1
+        for prev, cur in zip(days_sorted, days_sorted[1:]):
+            run = run + 1 if (cur - prev).days == 1 else 1
+            longest_streak = max(longest_streak, run)
+
+    # --- Cartes FSRS : maturité, force de mémoire, échéances ---
+    cards = (
+        db.session.query(FsrsCard.state, FsrsCard.stability, FsrsCard.due_date, Question.parcours)
+        .join(Question, Question.id == FsrsCard.question_id)
+        .filter(FsrsCard.user_id == user_id, Question.parcours.in_(codes))
+        .all()
+        if codes else []
+    )
+    state_counts = {"new": 0, "learning": 0, "review": 0, "relearning": 0}
+    stabilities = []
+    mature = due_today = due_week = 0
+    per_parcours_cards: dict = defaultdict(int)
+    for state, stability, due, parcours in cards:
+        state_counts[state] = state_counts.get(state, 0) + 1
+        per_parcours_cards[parcours] += 1
+        if stability:
+            stabilities.append(stability)
+            if stability >= MATURE_STABILITY_DAYS:
+                mature += 1
+        if due:
+            if due <= today:
+                due_today += 1
+            elif due <= today + timedelta(days=7):
+                due_week += 1
+    total_cards = len(cards)
+    avg_stability = round(sum(stabilities) / len(stabilities)) if stabilities else 0
+
+    total_state = sum(state_counts.values()) or 1
+    maturity = [
+        {
+            "state": s,
+            "label": STATE_LABELS.get(s, s),
+            "count": state_counts.get(s, 0),
+            "pct": round(state_counts.get(s, 0) / total_state * 100, 1),
+        }
+        for s in STATE_ORDER
+    ]
+
+    completed_subjects = (
+        Progression.query.filter_by(user_id=user_id, status="completed").count()
+    )
+
+    # --- Précision par parcours (récap' par מסלול) ---
+    acc_rows = (
+        db.session.query(Question.parcours, UserAnswer.is_correct)
+        .join(UserAnswer, UserAnswer.question_id == Question.id)
+        .filter(UserAnswer.user_id == user_id, Question.parcours.in_(codes))
+        .all()
+        if codes else []
+    )
+    acc_by_code: dict = defaultdict(lambda: {"total": 0, "correct": 0})
+    for parcours, is_correct in acc_rows:
+        acc_by_code[parcours]["total"] += 1
+        if is_correct:
+            acc_by_code[parcours]["correct"] += 1
+
+    hidden_ids = _hidden_question_ids(user_id)
+    due_by_code = _due_counts_by_parcours(user_id, codes, hidden_ids)
+    per_parcours = []
+    for code in codes:
+        a = acc_by_code.get(code, {"total": 0, "correct": 0})
+        per_parcours.append({
+            "code": code,
+            "label": PARCOURS_LABELS.get(code, code),
+            "cards": per_parcours_cards.get(code, 0),
+            "answered": a["total"],
+            "accuracy": round((a["correct"] / a["total"]) * 100) if a["total"] else None,
+            "due": due_by_code.get(code, 0),
+        })
+
+    return {
+        "accuracy": accuracy,
+        "total_reviews": total_reviews,
+        "reviews_today": reviews_today,
+        "reviews_week": reviews_week,
+        "active_days": active_days,
+        "longest_streak": longest_streak,
+        "total_cards": total_cards,
+        "mature_cards": mature,
+        "avg_stability": avg_stability,
+        "due_today": due_today,
+        "due_week": due_week,
+        "completed_subjects": completed_subjects,
+        "maturity": maturity,
+        "per_parcours": per_parcours,
+        "heatmap": _activity_heatmap(day_counts, today),
+    }
+
+
 @bp.route("/profil")
 @login_required
 def profil():
     sp = get_profile()
-    answers = UserAnswer.query.filter_by(user_id=sp.id).with_entities(UserAnswer.is_correct).all()
-    total = len(answers)
-    correct = sum(1 for a in answers if a.is_correct)
-    accuracy = round((correct / total) * 100) if total > 0 else 0
+    actifs = get_active_parcours(sp.id)
+    codes = [r.parcours for r in actifs]
+    stats = _profile_stats(sp, codes)
     return render_template(
         "student/profil.html",
         profile=sp,
-        total=total,
-        accuracy=accuracy,
-        exam_cards=_exam_cards(get_active_parcours(sp.id)),
+        total=stats["total_reviews"],
+        accuracy=stats["accuracy"],
+        stats=stats,
+        exam_cards=_exam_cards(actifs),
     )
 
 

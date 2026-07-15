@@ -162,7 +162,9 @@ smiha-flask/
 │   ├── recompute_item_stats.py # Batch : recalcul autoritaire des agrégats/priors
 │   ├── migrate_phase2.py       # Migration schéma Phase 2 (bases existantes)
 │   ├── migrate_approve_pending.py  # Approuve les questions "pending" historiques (bases existantes)
-│   └── migrate_multi_parcours.py   # Crée student_parcours + backfill legacy (bases existantes)
+│   ├── migrate_multi_parcours.py   # Crée student_parcours + backfill legacy (bases existantes)
+│   ├── simulate_multi_parcours.py  # Base de démo isolée « plusieurs parcours entamés » (build/serve)
+│   └── screenshot_sim.py           # Captures d'écran de la simulation (Playwright) → screenshots/simulations/
 │
 └── tests/
     ├── test_fsrs.py            # Tests du scheduler FSRS-6 + quick wins (runner autonome)
@@ -543,7 +545,7 @@ Retourne uniquement un tableau JSON valide, sans texte avant ou après.
 |---|---|---|
 | GET | `/app/` | Redirige vers onboarding ou home |
 | GET/POST | `/app/onboarding` | Choix des **parcours** (multi-select, ≥ 1 requis), date de מבחן **par parcours** (optionnelle), niveau cible, sections |
-| GET | `/app/home` | Dashboard : salutation + message contextuel (examen imminent ≤ 7 j > cartes dues > série active > défaut), streak, puis **une section par parcours activé** (compte à rebours du מבחן du parcours, barre de préparation, stats rapides — précision/nb réponses/cartes dues — et boutons « המשך הלמידה » / « חזרה יומית » scopés à ce parcours) |
+| GET | `/app/home` | Dashboard : salutation + message contextuel (examen imminent ≤ 7 j > cartes dues > série active > défaut), streak, puis **une section par parcours activé** (compte à rebours du מבחן du parcours, barre de préparation, stats rapides — précision/nb réponses/cartes dues — et **deux tuiles d'action carrées côte à côte** « המשך הלמידה » / « חזרה יומית » scopées à ce parcours) |
 | GET | `/app/parcours` | Table des matières : parcours **activés** → simanim rétractables → cartes par sujet (plage de seifim indicative) |
 | GET | `/app/chapitre/<subject>/<siman>[/<seif>]` | Session d'étude sur un sujet du siman — restreinte aux parcours activés (la variante `/<seif>` reste supportée mais n'est plus liée depuis le sélecteur) |
 | GET | `/app/revision` | Hub de révision : 4 cartes (jour / siman / sujet / aléatoire) avec compteurs (parcours activés uniquement) |
@@ -556,7 +558,7 @@ Retourne uniquement un tableau JSON valide, sans texte avant ou après.
 | GET | `/app/revision/aleatoire` | Session de révision aléatoire (max 10 cartes déjà apprises, retirée à chaque visite) |
 | POST | `/app/advance-revisions` | Avance toutes les cartes dues de 1 jour (outil de test) |
 | POST | `/app/reset-progress` | Efface UserAnswer + FsrsCard + Progression (nucléaire) |
-| GET | `/app/profil` | Profil : total réponses, précision % |
+| GET | `/app/profil` | Profil — tableau de bord statistique type Anki : précision globale, KPIs (points, série courante, **série record**, cartes apprises), **maturité des cartes** (répartition par état FSRS `בשליטה`/`בלמידה`/`חזרה מחדש`/`חדש`), zone mémoire & activité (עוצמת זיכרון ממוצעת = stabilité moyenne, חזרות השבוע, ממתינים היום/השבוע, נושאים שהושלמו, ימי לימוד), **יומן פעילות** (heatmap 12 semaines), récap par parcours (cartes/précision/réponses/dus) et bloc יעדים ומבחנים (target_stability + date de מבחן par parcours). Stats calculées par `_profile_stats()` |
 | GET/POST | `/app/settings` | Activer/désactiver les parcours et leur date de מבחן (≥ 1 parcours requis ; désactiver = masquer le contenu + perdre la série quotidienne du parcours), target_stability, sections |
 | GET | `/app/today-stats` | JSON : points du jour, cartes révisées, précision |
 

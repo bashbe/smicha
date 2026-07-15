@@ -1437,6 +1437,184 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
 }
 
 /* ============================================================
+   PROFIL — statistiques type Anki
+   ============================================================ */
+
+/* --- KPI tiles (2×2) --- */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-1);
+}
+.kpi-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-2) var(--space-1);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  text-align: center;
+}
+.kpi-icon { color: var(--muted); line-height: 0; }
+.kpi-icon-hot { color: var(--accent); }
+.kpi-num {
+  font-family: 'Secular One', sans-serif;
+  font-size: var(--text-xl);
+  line-height: 1.1;
+}
+.kpi-label { font-size: var(--text-xs); color: var(--muted); }
+
+/* --- Sections de profil --- */
+.profile-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--space-3);
+}
+.profile-section-head { margin-bottom: var(--space-2); }
+.profile-section-title { margin: 0 0 var(--space-2); font-size: var(--text-lg); }
+.profile-section-head .profile-section-title { margin: 0; }
+.profile-section-note { font-size: var(--text-xs); color: var(--muted); }
+
+/* --- Barre de maturité (états FSRS) --- */
+.maturity-bar {
+  display: flex;
+  height: 12px;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: var(--border);
+  gap: 2px;
+}
+.maturity-seg { min-width: 4px; }
+.maturity-legend {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px var(--space-2);
+  margin-top: var(--space-2);
+}
+.maturity-legend-item { display: flex; align-items: center; gap: 6px; font-size: var(--text-sm); }
+.maturity-dot { width: 9px; height: 9px; border-radius: var(--radius-pill); flex-shrink: 0; }
+.maturity-legend-label { color: var(--muted); }
+.maturity-legend-count { margin-inline-start: auto; font-weight: 700; }
+/* Palette des états — dérivée du système (ambre/vert/brique + neutre) */
+.maturity-review     { background: var(--success); }
+.maturity-learning   { background: var(--accent); }
+.maturity-relearning { background: var(--danger); }
+.maturity-new        { background: var(--muted); }
+
+/* --- Mini-stats (grille 3) --- */
+.mini-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2) var(--space-1);
+}
+.mini-stat { display: flex; flex-direction: column; gap: 2px; text-align: center; }
+.mini-stat-num {
+  font-family: 'Secular One', sans-serif;
+  font-size: var(--text-lg);
+  line-height: 1.1;
+}
+.mini-stat-unit { font-size: var(--text-xs); color: var(--muted); margin-inline-start: 2px; }
+.mini-stat-label { font-size: var(--text-xs); color: var(--muted); line-height: 1.25; }
+
+/* --- Calendrier d'activité (heatmap) --- */
+.heatmap {
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+.heatmap-col { display: flex; flex-direction: column; gap: 3px; }
+.heatmap-cell {
+  width: 12px; height: 12px;
+  border-radius: 3px;
+  background: var(--border);
+  display: inline-block;
+}
+.heatmap-empty { background: transparent; }
+.heatmap-l0 { background: var(--border); }
+.heatmap-l1 { background: color-mix(in srgb, var(--accent) 28%, var(--border)); }
+.heatmap-l2 { background: color-mix(in srgb, var(--accent) 52%, var(--border)); }
+.heatmap-l3 { background: color-mix(in srgb, var(--accent) 76%, var(--border)); }
+.heatmap-l4 { background: var(--accent); }
+.heatmap-scale {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: var(--space-2);
+}
+.heatmap-scale .heatmap-cell { width: 10px; height: 10px; }
+
+/* --- Récap par מסלול --- */
+.parcours-recap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-btn);
+  padding: var(--space-2);
+}
+.parcours-recap-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-1); }
+.parcours-recap-label { font-weight: 700; }
+.parcours-recap-stats {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-top: 6px;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.parcours-recap-stats b { color: var(--fg); font-family: 'Secular One', sans-serif; font-weight: 400; }
+
+/* ============================================================
+   ACCUEIL — tuiles d'action carrées côte à côte
+   ============================================================ */
+.folio-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-1);
+}
+.folio-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  aspect-ratio: 1 / 1;
+  padding: var(--space-2);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--border);   /* signet en haut (carré) */
+  background: var(--surface);
+  color: var(--fg);
+  transition: background 0.15s, border-color 0.15s;
+}
+.folio-tile-primary { border-top-color: var(--accent); }
+.folio-tile:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+}
+.folio-tile-primary:hover { border-top-color: var(--accent); }
+.folio-tile .icon-box { position: relative; }
+.folio-tile-title { font-weight: 700; font-size: var(--text-base); margin-top: auto; }
+.folio-tile-sub { font-size: var(--text-sm); color: var(--muted); line-height: 1.3; }
+.folio-tile-badge {
+  position: absolute;
+  top: -6px;
+  inset-inline-start: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================================
    MOBILE — Admin responsive
    ============================================================ */
 
