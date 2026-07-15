@@ -933,6 +933,44 @@ def _activity_heatmap(day_counts: dict, today: date, weeks: int = 12) -> list:
     return cols
 
 
+def _revision_forecast(user_id: str, codes: list[str], hidden_ids: set, today: date) -> dict:
+    """Prévision des cartes à réviser par jour à venir (type « Future Due »
+    d'Anki). Même périmètre que la file de révision (approuvées, parcours
+    actifs, signalements "open" exclus). Les cartes en retard (due ≤ aujourd'hui)
+    sont regroupées sur le jour 0. Retourne le nombre de cartes dues par offset
+    de jour (`daily[i]` = cartes dues dans i jours) ; le client en tire le cumul
+    sur les fenêtres 7 / 30 / toute la période."""
+    if not codes:
+        return {"daily": [], "max_offset": 0, "overdue": 0}
+    q = (
+        db.session.query(FsrsCard.due_date, func.count(FsrsCard.id))
+        .join(Question, Question.id == FsrsCard.question_id)
+        .filter(
+            FsrsCard.user_id == user_id,
+            Question.status == "approved",
+            Question.parcours.in_(codes),
+        )
+    )
+    if hidden_ids:
+        q = q.filter(Question.id.notin_(hidden_ids))
+    rows = q.group_by(FsrsCard.due_date).all()
+
+    counts: dict[int, int] = defaultdict(int)
+    overdue = 0
+    max_offset = 0
+    for due, n in rows:
+        if not due:
+            continue
+        off = (due - today).days
+        if off <= 0:
+            overdue += n
+            off = 0
+        counts[off] += n
+        max_offset = max(max_offset, off)
+    daily = [counts.get(i, 0) for i in range(0, max_offset + 1)]
+    return {"daily": daily, "max_offset": max_offset, "overdue": overdue}
+
+
 def _profile_stats(sp, codes: list[str]) -> dict:
     """Agrège les statistiques de type Anki affichées sur le profil :
     maturité des cartes, force de mémoire, activité, records de série,
@@ -1054,6 +1092,7 @@ def _profile_stats(sp, codes: list[str]) -> dict:
         "maturity": maturity,
         "per_parcours": per_parcours,
         "heatmap": _activity_heatmap(day_counts, today),
+        "forecast": _revision_forecast(user_id, codes, hidden_ids, today),
     }
 
 
