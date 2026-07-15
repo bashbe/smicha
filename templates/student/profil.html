@@ -103,6 +103,25 @@
     </div>
   </section>
 
+  <!-- Prévision des révisions (cartes à réviser en cumulé) -->
+  <section class="profile-section">
+    <div class="row between profile-section-head">
+      <h3 class="profile-section-title">תחזית חזרות</h3>
+      <div class="range-toggle" role="tablist" aria-label="טווח התחזית">
+        <button type="button" class="range-btn is-active" data-range="7">7 ימים</button>
+        <button type="button" class="range-btn" data-range="30">30 יום</button>
+        <button type="button" class="range-btn" data-range="all">הכל</button>
+      </div>
+    </div>
+    <div id="forecast-chart" class="forecast-chart"
+         data-daily='{{ stats.forecast.daily | tojson }}'
+         data-overdue="{{ stats.forecast.overdue }}"></div>
+    <div class="forecast-legend">
+      <span class="forecast-legend-item"><span class="forecast-swatch forecast-swatch-bar"></span> לפי יום</span>
+      <span class="forecast-legend-item"><span class="forecast-swatch forecast-swatch-cum"></span> מצטבר</span>
+    </div>
+  </section>
+
   <!-- Calendrier d'activité -->
   <section class="profile-section">
     <div class="row between profile-section-head">
@@ -212,4 +231,86 @@
   </a>
 
 </div>
+
+<script>
+(function () {
+  var el = document.getElementById('forecast-chart');
+  if (!el) return;
+  var daily = [];
+  try { daily = JSON.parse(el.dataset.daily || '[]'); } catch (e) { daily = []; }
+  var btns = document.querySelectorAll('.range-btn');
+
+  var W = 340, H = 190, padL = 8, padR = 8, padT = 14, padB = 26;
+  var plotW = W - padL - padR, plotH = H - padT - padB, baseY = padT + plotH;
+
+  function build(range) {
+    var N = (range === 'all') ? Math.max(daily.length, 1) : parseInt(range, 10);
+    var win = [];
+    for (var i = 0; i < N; i++) win.push(daily[i] || 0);
+
+    // Regroupe en paquets si la fenêtre est trop large (lisibilité).
+    var maxBars = 40;
+    var bucket = win.length > maxBars ? Math.ceil(win.length / maxBars) : 1;
+    var bars = [], cum = 0;
+    for (var k = 0; k < win.length; k += bucket) {
+      var s = 0, end = Math.min(k + bucket, win.length);
+      for (var j = k; j < end; j++) s += win[j];
+      cum += s;
+      bars.push({ due: s, cum: cum });
+    }
+    var total = cum, n = bars.length;
+    var maxDue = Math.max.apply(null, [1].concat(bars.map(function (b) { return b.due; })));
+    var maxCum = Math.max(1, total);
+    var step = plotW / n, barW = Math.max(1, step - 2), barMaxH = plotH * 0.6;
+    // RTL : aujourd'hui à droite, futur vers la gauche.
+    function cx(i) { return padL + plotW - (i + 0.5) * step; }
+
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="forecast-svg" role="img" aria-label="תחזית חזרות">';
+    svg += '<line x1="' + padL + '" y1="' + baseY + '" x2="' + (padL + plotW) + '" y2="' + baseY + '" class="fc-axis"/>';
+    for (var b = 0; b < n; b++) {
+      var h = bars[b].due > 0 ? (bars[b].due / maxDue) * barMaxH : 0;
+      if (h > 0) svg += '<rect x="' + (cx(b) - barW / 2).toFixed(1) + '" y="' + (baseY - h).toFixed(1) +
+        '" width="' + barW.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="1" class="fc-bar"/>';
+    }
+    if (n > 0) {
+      var area = 'M ' + cx(0).toFixed(1) + ',' + baseY + ' ', line = [];
+      for (var p = 0; p < n; p++) {
+        var y = baseY - (bars[p].cum / maxCum) * plotH;
+        area += 'L ' + cx(p).toFixed(1) + ',' + y.toFixed(1) + ' ';
+        line.push(cx(p).toFixed(1) + ',' + y.toFixed(1));
+      }
+      area += 'L ' + cx(n - 1).toFixed(1) + ',' + baseY + ' Z';
+      svg += '<path d="' + area + '" class="fc-area"/>';
+      svg += '<polyline points="' + line.join(' ') + '" class="fc-line"/>';
+      var ey = baseY - (total / maxCum) * plotH;
+      svg += '<circle cx="' + cx(n - 1).toFixed(1) + '" cy="' + ey.toFixed(1) + '" r="2.6" class="fc-dot"/>';
+    }
+    svg += '<text x="' + (padL + plotW - 2) + '" y="' + (H - 8) + '" class="fc-lbl" text-anchor="end">היום</text>';
+    var endLbl = 'בעוד ' + (range === 'all' ? win.length : range) + ' ימ׳';
+    svg += '<text x="' + (padL + 2) + '" y="' + (H - 8) + '" class="fc-lbl" text-anchor="end">' + endLbl + '</text>';
+    svg += '</svg>';
+    return { svg: svg, total: total };
+  }
+
+  function render(range) {
+    var sum = daily.reduce(function (a, b) { return a + b; }, 0);
+    if (!daily.length || sum === 0) {
+      el.innerHTML = '<div class="forecast-empty">אין עדיין כרטיסים מתוזמנים לחזרה.</div>';
+      return;
+    }
+    var r = build(range);
+    var scope = range === 'all' ? 'בסך הכל' : ('ב-' + range + ' הימים הקרובים');
+    el.innerHTML = '<div class="forecast-total"><b>' + r.total + '</b> כרטיסים לחזרה ' + scope + '</div>' + r.svg;
+  }
+
+  btns.forEach(function (b) {
+    b.addEventListener('click', function () {
+      btns.forEach(function (x) { x.classList.remove('is-active'); });
+      b.classList.add('is-active');
+      render(b.dataset.range);
+    });
+  });
+  render('7');
+})();
+</script>
 {% endblock %}

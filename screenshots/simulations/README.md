@@ -10,6 +10,7 @@ Captures d'écran (viewport mobile) illustrant l'app quand un étudiant prépare
 | `03_mon_parcours.png` | Table des matières multi-parcours |
 | `04_hub_revision.png` | Hub de révision |
 | `05_choix_revision_jour.png` | Sélecteur de révision du jour (compteur de cartes dues par parcours + « הכל ») |
+| `06_forecast_7.png` / `06_forecast_30.png` / `06_forecast_all.png` | Graphe **תחזית חזרות** (Future Due) — cartes à réviser par jour à venir + courbe cumulée, sur les fenêtres 7 / 30 jours / toute la période |
 
 ## Régénérer
 
