@@ -345,6 +345,122 @@ def test_flagged_and_pending_cards_hidden_from_revision():
         assert client.get("/app/revision").status_code == 200
 
 
+def _post_answer(client, q: Question, correct=True, combo=0, mode="study"):
+    return client.post("/api/answer", json={
+        "question_id": q.id,
+        "given_answer": "true" if correct else "false",
+        "response_time_ms": 5000,
+        "combo": combo,
+        "mode": mode,
+    }).get_json()
+
+
+def test_combo_is_recomputed_server_side_not_trusted_from_client():
+    """Un client qui envoie un combo gonflé ne doit pas gonfler ses points :
+    le serveur recalcule le combo depuis l'historique réel de l'utilisateur."""
+    app = _fresh_app()
+    with app.app_context():
+        uid = _make_user()
+        _activate(uid, "p1")
+        q = _make_question("p1")
+        _make_due_card(uid, q)
+        client = app.test_client()
+        _login(client, uid)
+
+        # Première bonne réponse avec un combo client mensonger (99) : le
+        # serveur ignore la valeur et repart de 1.
+        d1 = _post_answer(client, q, correct=True, combo=99)
+        assert d1["combo"] == 1, d1
+
+        # Deuxième bonne réponse consécutive : le serveur incrémente à 2 (et
+        # non 100), toujours indépendamment du combo client.
+        d2 = _post_answer(client, q, correct=True, combo=99)
+        assert d2["combo"] == 2, d2
+
+        # Une mauvaise réponse remet le combo à 0 côté serveur.
+        d3 = _post_answer(client, q, correct=False, combo=99)
+        assert d3["combo"] == 0, d3
+
+
+def test_inflated_client_combo_does_not_inflate_points():
+    """À situation identique, un combo client gonflé donne exactement les
+    mêmes points qu'un combo client honnête — le multiplicateur ne dépend que
+    de l'état serveur."""
+    honest = _fresh_app()
+    with honest.app_context():
+        uid = _make_user()
+        _activate(uid, "p1")
+        q = _make_question("p1")
+        _make_due_card(uid, q)
+        client = honest.test_client()
+        _login(client, uid)
+        pts_honest = _post_answer(client, q, correct=True, combo=0)["points"]
+
+    cheat = _fresh_app()
+    with cheat.app_context():
+        uid = _make_user()
+        _activate(uid, "p1")
+        q = _make_question("p1")
+        _make_due_card(uid, q)
+        client = cheat.test_client()
+        _login(client, uid)
+        pts_cheat = _post_answer(client, q, correct=True, combo=99)["points"]
+
+    assert pts_honest == pts_cheat, (pts_honest, pts_cheat)
+
+
+def test_predicted_r_logged_for_engaged_card():
+    """Une carte déjà engagée par FSRS voit son R prédit logué sur UserAnswer,
+    dans (0, 1) ; une carte jamais vue (premier contact) reste NULL."""
+    app = _fresh_app()
+    with app.app_context():
+        uid = _make_user()
+        _activate(uid, "p1")
+        q_engaged = _make_question("p1", siman=1)
+        q_new = _make_question("p1", siman=2)
+        # carte engagée : stabilité réelle + dernière révision il y a 5 jours
+        _make_due_card(uid, q_engaged, stability=5.0)
+        client = app.test_client()
+        _login(client, uid)
+
+        _post_answer(client, q_engaged, correct=True)
+        ua = (
+            UserAnswer.query.filter_by(user_id=uid, question_id=q_engaged.id)
+            .order_by(UserAnswer.answered_at.desc())
+            .first()
+        )
+        assert ua.predicted_r is not None, "engaged card should log a prediction"
+        assert 0.0 < ua.predicted_r < 1.0, ua.predicted_r
+
+        # premier contact avec une carte neuve : aucune prédiction possible
+        _post_answer(client, q_new, correct=True)
+        ua_new = (
+            UserAnswer.query.filter_by(user_id=uid, question_id=q_new.id)
+            .order_by(UserAnswer.answered_at.desc())
+            .first()
+        )
+        assert ua_new.predicted_r is None, ua_new.predicted_r
+
+
+def test_retention_report_scores_predictions():
+    """retention_report : log loss fini, true/predicted retention cohérents,
+    et cas vide géré proprement."""
+    from calibration import retention_report
+
+    empty = retention_report([])
+    assert empty["n"] == 0 and empty["log_loss"] is None
+
+    # prédictions parfaites (toujours 0.9, 9/10 réussites) → true≈pred
+    pairs = [(0.9, True)] * 9 + [(0.9, False)]
+    rep = retention_report(pairs)
+    assert rep["n"] == 10
+    assert rep["log_loss"] > 0
+    assert abs(rep["true_retention"] - 0.9) < 1e-9
+    assert abs(rep["predicted_retention"] - 0.9) < 1e-9
+    # None dans predicted_r est ignoré
+    assert retention_report([(None, True), (0.8, True)])["n"] == 1
+
+
 def _run():
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

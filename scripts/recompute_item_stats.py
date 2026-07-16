@@ -89,6 +89,38 @@ def recompute() -> None:
         db.session.commit()
         print(f"recomputed {n_items} item_stats rows and {n_users} user_speed rows")
 
+        # ---- retention calibration rollup (read-only) ----------------------
+        # Score FSRS's predicted retention against observed outcomes, from the
+        # append-only UserAnswer log (predicted_r is stored per review). This
+        # is the primary "are our settings actually working?" signal — without
+        # it, CAP_FIRST / WARMUP / W7_FLOOR / Elo are unfalsifiable.
+        rows = (
+            db.session.query(UserAnswer.predicted_r, UserAnswer.is_correct, Question.parcours)
+            .join(Question, Question.id == UserAnswer.question_id)
+            .filter(UserAnswer.predicted_r.isnot(None))
+            .all()
+        )
+        overall = calibration.retention_report([(pr, c) for pr, c, _ in rows])
+        if not overall["n"]:
+            print("retention: no predicted_r data yet (needs reviews of engaged cards)")
+            return
+
+        print(
+            f"retention: n={overall['n']} log_loss={overall['log_loss']:.4f} "
+            f"rmse_bins={overall['rmse_bins']:.4f} "
+            f"true_ret={overall['true_retention']:.3f} pred_ret={overall['predicted_retention']:.3f}"
+        )
+        by_parcours: dict[str, list] = {}
+        for pr, correct, parcours in rows:
+            by_parcours.setdefault(parcours or "—", []).append((pr, correct))
+        for parcours, pairs in sorted(by_parcours.items()):
+            rep = calibration.retention_report(pairs)
+            if rep["n"] >= 20:  # skip too-small slices (noise)
+                print(
+                    f"  [{parcours}] n={rep['n']} log_loss={rep['log_loss']:.4f} "
+                    f"true_ret={rep['true_retention']:.3f} pred_ret={rep['predicted_retention']:.3f}"
+                )
+
 
 if __name__ == "__main__":
     recompute()

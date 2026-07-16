@@ -7,6 +7,7 @@ from datetime import datetime
 
 from flask import Blueprint, Response, flash, redirect, render_template, request, url_for
 
+import calibration
 from auth_helpers import current_user, login_user, logout_user, staff_required
 from blueprints.auth import create_account
 from chapter_topics import save_topics
@@ -110,8 +111,20 @@ def dashboard():
         by_subject[name] = by_subject.get(name, 0) + 1
     by_subject_sorted = sorted(by_subject.items(), key=lambda kv: -kv[1])
     reports_count = QuestionReport.query.filter_by(status="open").count()
+
+    # Retention calibration — computed live from the append-only UserAnswer log
+    # (predicted_r vs observed outcome). Cheap on a small cohort; the log is the
+    # source of truth, so no snapshot table is needed.
+    ret_rows = (
+        db.session.query(UserAnswer.predicted_r, UserAnswer.is_correct)
+        .filter(UserAnswer.predicted_r.isnot(None))
+        .all()
+    )
+    retention = calibration.retention_report([(p, c) for p, c in ret_rows])
+
     return render_template(
-        "admin/dashboard.html", counts=counts, by_subject=by_subject_sorted, reports_count=reports_count,
+        "admin/dashboard.html", counts=counts, by_subject=by_subject_sorted,
+        reports_count=reports_count, retention=retention,
     )
 
 

@@ -245,6 +245,11 @@ class UserAnswer(db.Model):
     z_item = db.Column(db.Float)     # (log rt - mu_item) / sigma_item
     z_user = db.Column(db.Float)     # normalised for the user's reading speed
     auto_grade = db.Column(db.Float)  # continuous 1.0..4.0 grade derived from latency
+    # Retention instrumentation — R predicted by FSRS at the moment of this
+    # review (from the card's pre-update stability + elapsed days). NULL when
+    # the card was not yet engaged by FSRS (no prediction to score). Compared
+    # against is_correct to measure true retention / log loss.
+    predicted_r = db.Column(db.Float)
 
 
 class FsrsCard(db.Model):

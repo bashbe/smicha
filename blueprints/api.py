@@ -34,6 +34,10 @@ from models import (
 from points import compute_daily_points, compute_points, compute_stability_points
 from question_types import PARCOURS_LABELS, is_correct_answer, normalize_db_question
 
+# Max gap between two consecutive answers still counted as the same combo
+# session. Beyond this the server-side combo resets (see /api/answer).
+COMBO_SESSION_GAP = timedelta(minutes=30)
+
 
 def _due_count_for_parcours(user_id: str, parcours: str, today) -> int:
     """Cartes dues du parcours donné — même périmètre que la file servie par
@@ -68,7 +72,8 @@ def answer():
         - question_id: UUID of the question
         - given_answer: student's answer
         - response_time_ms: milliseconds taken to answer
-        - combo: current combo multiplier (from client)
+        - combo: display hint only — the authoritative combo is recomputed
+          server-side from the user's recent history (never trusted here)
         - mode: study mode (default "study"; also "revision_daily", "revision_siman", etc)
 
     Returns:
@@ -91,7 +96,6 @@ def answer():
     question_id = data.get("question_id")
     given_answer = data.get("given_answer", "")
     response_time_ms = int(data.get("response_time_ms", 0))
-    combo = int(data.get("combo", 0))
     mode = data.get("mode", "study")
 
     q = Question.query.get(question_id)
@@ -143,13 +147,44 @@ def answer():
     z_eff = z_item if z_item is not None else z_user
     collective_bucket = calibration.bucket_from_z(z_item, z_user, q.difficulty, response_time_ms)
     auto_grade = calibration.auto_grade_from_latency(is_correct, z_eff, collective_bucket)
-    new_combo = combo + 1 if is_correct else 0
+
+    # Combo — recomputed server-side from the user's own recent history, NEVER
+    # trusted from the client. The `combo` field in the request body is only a
+    # display hint; using it as the points multiplier would let a tampered
+    # client inflate its score (and pollute the latency/Elo signals by
+    # rewarding raw speed/volume). The prior combo is the last answer's stored
+    # combo, but only if it was correct and recent enough to be the same
+    # session — a wrong answer or a long gap resets the streak, mirroring the
+    # client player's behaviour.
+    last_answer = (
+        UserAnswer.query.filter_by(user_id=user.id)
+        .order_by(UserAnswer.answered_at.desc())
+        .first()
+    )
+    prior_combo = 0
+    if (
+        last_answer is not None
+        and last_answer.is_correct
+        and (datetime.utcnow() - last_answer.answered_at) <= COMBO_SESSION_GAP
+    ):
+        prior_combo = last_answer.combo_at_time or 0
+    new_combo = prior_combo + 1 if is_correct else 0
 
     # Bucket de vitesse personnel : comparaison au propre temps de référence
     # de l'élève sur cette carte (temps du premier succès tant que FSRS n'est
     # pas engagé, puis moyenne glissante `avg_response_time_ms`).
     bucket = personal_bucket(card.avg_response_time_ms if card else None, response_time_ms)
     rating = rating_for(is_correct, bucket)
+
+    # R prédit par FSRS AU MOMENT de cette révision — calculé sur l'état de la
+    # carte AVANT la mise à jour (stabilité précédente + jours écoulés depuis
+    # la dernière révision). N'a de sens que pour une carte déjà engagée par
+    # FSRS (stabilité réelle) ; NULL sinon. Logué sur UserAnswer pour mesurer
+    # a posteriori la rétention réelle vs prédite (log loss, true retention).
+    predicted_r = None
+    if is_engaged and card.stability and card.last_review:
+        elapsed_pred = (date.today() - card.last_review.date()).days
+        predicted_r = retrievability(elapsed_pred, card.stability)
 
     # Nombre de cartes dues du parcours de cette question AVANT ce traitement
     # (utilisé pour le bonus de complétion quotidienne PAR parcours — capturé
@@ -190,6 +225,7 @@ def answer():
             z_item=z_item,
             z_user=z_user,
             auto_grade=auto_grade,
+            predicted_r=predicted_r,
         )
     )
 

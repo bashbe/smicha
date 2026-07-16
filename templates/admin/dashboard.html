@@ -62,6 +62,35 @@
     </div>
   </div>
 
+  <div class="card">
+    <h2 class="text-lg semibold" style="margin-bottom:0.25rem;">📊 כיול ושימור (FSRS)</h2>
+    <p class="text-xs muted" style="margin-bottom:0.75rem;">השוואת השימור שה־FSRS צופה מול השימור שנצפה בפועל, על חזרות של כרטיסים שכבר נכנסו למחזור. פער גדול (מעל ~5 נקודות אחוז) מרמז שכדאי לכוונן את המשקלים או ההגדרות (CAP_FIRST / WARMUP / W7_FLOOR).</p>
+    {% if not retention or not retention.n %}
+      <p class="text-sm muted">אין עדיין מספיק נתונים — נדרשות חזרות על כרטיסים שכבר נכנסו למחזור FSRS.</p>
+    {% else %}
+      {% set gap = (retention.true_retention - retention.predicted_retention) * 100 %}
+      <div class="grid grid-3">
+        <div>
+          <div class="text-3xl bold">{{ (retention.true_retention * 100) | round(1) }}%</div>
+          <div class="text-sm muted">שימור בפועל</div>
+        </div>
+        <div>
+          <div class="text-3xl bold">{{ (retention.predicted_retention * 100) | round(1) }}%</div>
+          <div class="text-sm muted">שימור חזוי</div>
+        </div>
+        <div>
+          <div class="text-3xl bold" style="color:{% if gap|abs > 5 %}var(--warning){% else %}var(--success){% endif %};">{{ '%+.1f' % gap }}</div>
+          <div class="text-sm muted">פער (נק' אחוז)</div>
+        </div>
+      </div>
+      <div class="row gap-2 text-sm muted" style="margin-top:0.75rem;flex-wrap:wrap;">
+        <span>log loss: <strong>{{ '%.4f' % retention.log_loss }}</strong></span>
+        <span>RMSE: <strong>{{ '%.4f' % retention.rmse_bins }}</strong></span>
+        <span>מדגם: <strong>{{ retention.n }}</strong> חזרות</span>
+      </div>
+    {% endif %}
+  </div>
+
   <script>
     function toggleSubjectRename(btn) {
       const row = btn.closest('[data-subject-row]');

@@ -159,8 +159,9 @@ smiha-flask/
 ├── scripts/
 │   ├── sim_schedule.py         # Simulation d'évaluation : scénarios + options utilisateur
 │   ├── sim_priors.py           # Démonstration du mélange des priors collectifs
-│   ├── recompute_item_stats.py # Batch : recalcul autoritaire des agrégats/priors
+│   ├── recompute_item_stats.py # Batch : recalcul autoritaire des agrégats/priors + rollup rétention
 │   ├── migrate_phase2.py       # Migration schéma Phase 2 (bases existantes)
+│   ├── migrate_predicted_r.py  # Migration : ajoute user_answers.predicted_r (bases existantes)
 │   ├── migrate_approve_pending.py  # Approuve les questions "pending" historiques (bases existantes)
 │   ├── migrate_multi_parcours.py   # Crée student_parcours + backfill legacy (bases existantes)
 │   ├── simulate_multi_parcours.py  # Base de démo isolée « plusieurs parcours entamés » (build/serve)
@@ -314,6 +315,13 @@ ci-dessous sont **ajoutés** (append-only), jamais réécrits.
 Champs de calibration collective (Phase 2) : `z_item` (`(log rt − μ_item)/σ_item`), `z_user`
 (normalisé pour la vitesse de lecture), `auto_grade` (note continue 1.0..4.0 dérivée de la latence).
 `StudentProfile` porte aussi `elo_ability` (capacité Elo de l'apprenant).
+
+Champ d'instrumentation de rétention : `predicted_r` — la rétrievabilité **prédite par FSRS au
+moment de cette révision** (stabilité pré-mise-à-jour + jours écoulés). `NULL` pour une carte pas
+encore engagée par FSRS (aucune prédiction à noter). Comparé à `is_correct`, il permet de mesurer
+a posteriori la **rétention réelle vs prédite** (log loss, true retention) — voir
+[Instrumentation de la rétention](#instrumentation-de-la-rétention). Base existante : lancer
+`python -m scripts.migrate_predicted_r` pour ajouter la colonne.
 
 ---
 
@@ -600,6 +608,11 @@ Corps JSON attendu :
 }
 ```
 
+> **`combo` n'est qu'un indice d'affichage** — le serveur **ne lui fait pas confiance**. Le combo
+> autoritaire (celui qui sert de multiplicateur de points) est **recalculé côté serveur** à partir
+> de l'historique réel de l'utilisateur (voir [Système de points](#système-de-points-pointspy)).
+> La réponse renvoie le `combo` recalculé, que le client resynchronise pour l'affichage.
+
 `mode` (optionnel, défaut `"study"`) sélectionne la formule de points appliquée (voir
 [Système de points](#système-de-points-pointspy)) :
 - `"study"` (ou champ omis) — étude normale (`/app/chapitre/…`) : `compute_points`
@@ -632,7 +645,7 @@ parcours dont la file se vide déclenche son propre bonus, cumulables le même j
 `null` sinon) accompagne le bonus pour l'affichage.
 
 **Effets de bord** (dans l'ordre) :
-1. Enregistre un `UserAnswer` (avec `z_item`, `z_user`, `auto_grade`)
+1. Enregistre un `UserAnswer` (avec `z_item`, `z_user`, `auto_grade`, `predicted_r`)
 2. Crée ou met à jour la `FsrsCard` (scheduling FSRS-6, prior collectif par item si carte neuve)
 3. Met à jour la calibration collective : Elo (`ItemStats.elo_difficulty`, `StudentProfile.elo_ability`),
    compteurs et distributions log-RT (`ItemStats`, `UserSpeed`)
@@ -763,6 +776,22 @@ D0_card = (1 − α) · D0_fsrs + α · d0_prior_item
 - **Elo dynamique** (Rasch) : met à jour ensemble `elo_difficulty` (item) et `elo_ability` (user),
   score intégrant exactitude + latence (règle HSHS).
 
+### Instrumentation de la rétention
+
+Sans mesure de rétention réelle, tout réglage FSRS (`CAP_FIRST`, `WARMUP_INTERVALS`, `W7_FLOOR`,
+priors Elo) reste une conjecture invérifiable. Le système journalise donc, pour chaque révision
+d'une carte déjà engagée, le **R prédit** (`UserAnswer.predicted_r`, calculé sur l'état de la carte
+*avant* mise à jour via `fsrs.retrievability`) à côté du résultat réel (`is_correct`).
+
+- **Métriques** (`calibration.retention_report`) sur les paires `(predicted_r, is_correct)` :
+  - **log loss** (primaire — la cross-entropie binaire réellement optimisée par FSRS) ;
+  - **RMSE(bins)** (lisible — « en moyenne on se trompe de X en prédisant R ») ;
+  - **true retention** (taux de rappel observé) vs **rétention prédite** (moyenne des `predicted_r`).
+- **Restitution** : `scripts/recompute_item_stats.py` imprime le rollup global + par parcours ;
+  `/admin/dashboard` affiche un bloc « כיול ושימור » (shomer/kiyul) calculé en direct depuis le
+  journal append-only. Repère de décision : un écart *true vs predicted* > ~5 points d'% signale
+  des réglages ou des poids à revoir.
+
 ### Système de points (`points.py`)
 
 Trois formules distinctes selon le `mode` transmis à `POST /api/answer` (voir
@@ -770,8 +799,16 @@ Trois formules distinctes selon le `mode` transmis à `POST /api/answer` (voir
 la régularité est le bonus de complétion quotidienne explicite (`daily_bonus`, calculé dans
 `blueprints/api.py`, pas dans `points.py`), pour éviter un double comptage.
 
-Dans les trois formules : mauvaise réponse → 0 point, combo réinitialisé à 0 côté client.
+Dans les trois formules : mauvaise réponse → 0 point, combo réinitialisé à 0.
 `combo` (multiplicateur commun) : `{2: ×1.1, 3: ×1.2, 4: ×1.3, 5+: ×1.5}`.
+
+> **Combo autoritaire côté serveur (anti-triche).** Le combo qui sert de multiplicateur n'est
+> **jamais** pris depuis le corps de la requête — le `combo` du client est purement décoratif.
+> `blueprints/api.py` le recalcule à partir de la dernière réponse de l'utilisateur : le combo
+> monte d'un cran sur chaque bonne réponse **consécutive**, et repart à 0 sur une mauvaise réponse
+> ou après un trou de plus de `COMBO_SESSION_GAP` (30 min, garde de session). Sans ça, un client
+> modifié pourrait gonfler ses points **et** polluer les signaux de latence (`z_item`) / d'Elo en
+> récompensant la vitesse/volume bruts.
 
 > **Cas particulier — cycle d'activation d'une carte** : tant qu'une carte n'a jamais été
 > engagée par FSRS (voir *Cycle de vie d'une carte* dans la section FSRS-6 ci-dessus), ces
