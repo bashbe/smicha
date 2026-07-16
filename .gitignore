@@ -8,6 +8,9 @@ venv/
 # Sauvegardes locales de la base (scripts/sync_prod_db.py)
 db_backups/
 
+# Lots de questions générés par /generate-cards (fichiers de travail)
+generated_questions_*.json
+
 # Local git worktrees (superpowers:using-git-worktrees)
 .worktrees/
 

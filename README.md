@@ -131,7 +131,7 @@ smiha-flask/
 ├── fsrs.py                 # Algorithme FSRS-6 (21 poids) + réglages produit (cap/warm-up/w7/priors)
 ├── calibration.py          # Calibration collective : latence z-score, HSHS, Elo, priors par item
 ├── points.py               # Calcul points / combos (3 formules : étude / jour / stabilité)
-├── question_types.py       # Normalisation + validation des 4 types de questions
+├── question_types.py       # Normalisation + validation des 3 types de questions
 ├── seed.py                 # Initialisation BDD + données de démo + item_stats
 ├── requirements.txt        # Flask, Flask-SQLAlchemy, Werkzeug
 ├── sample_questions.json   # 3 questions d'exemple (MC, TF, dropdown) — maintenir en sync avec question_types.py
@@ -242,7 +242,7 @@ Un profil `onboarded` sans aucune ligne (base pré-migration) est automatiquemen
 | `explanation` | Text | Explication après réponse |
 | `difficulty` | Integer | 1 (facile), 2 (moyen), 3 (difficile) |
 | `section` | JSON | Liste de sections de révision |
-| `question_type` | Enum | `multiple_choice`, `true_false`, `multiple_opinions_dropdown`, `practical_scenario` |
+| `question_type` | Enum | `multiple_choice`, `true_false`, `multiple_opinions_dropdown` |
 | `payload` | JSON | Structure spécifique au type |
 | `status` | String | `"pending"` / `"approved"` / `"rejected"` — défaut `"approved"` (voir [règle de statut](#règle-métier--acceptation-par-défaut-et-signalement)) |
 | `parcours` | String | Parcours d'apprentissage — valeurs dans `VALID_PARCOURS` (ex : `"bassar_bechalav"`) |
@@ -353,7 +353,7 @@ la question reste `approved` globalement mais est retirée **uniquement** pour `
 
 | Champ JSON | Type | Valeurs autorisées | Colonne DB |
 |---|---|---|---|
-| `type` | string | `multiple_choice`, `true_false`, `multiple_opinions_dropdown`, `practical_scenario` | `question_type` |
+| `type` | string | `multiple_choice`, `true_false`, `multiple_opinions_dropdown` | `question_type` |
 | `parcours` | string | `"bassar_bechalav"` (liste dans `VALID_PARCOURS`) | `parcours` |
 | `sujet` | string | texte hébreu non vide — thème traité **dans le siman** (peut couvrir plusieurs seifim ; sert au regroupement des cartes dans le sélecteur) | `subject` |
 | `siman` | integer | > 0 | `siman` |
@@ -428,10 +428,7 @@ Règles : au moins 2 options, numérotées en séquence à partir de 1 (1, 2, 3,
   "tags": ["מחלוקת פוסקים"]
 }
 ```
-Règles : ≥ 2 decisors, chaque `correct_choice` doit être dans `dropdown_choices`.
-
-#### `practical_scenario`
-Structure similaire à `multiple_choice` avec un champ `scenario_text` additionnel décrivant le contexte pratique.
+Règles : ≥ 2 decisors, chaque `correct_choice` doit être dans `dropdown_choices`, et au moins deux `correct_choice` distincts (désaccord réel obligatoire).
 
 ---
 
@@ -440,32 +437,22 @@ Structure similaire à `multiple_choice` avec un champ `scenario_text` additionn
 > Cette section s'adresse à quiconque veut utiliser un LLM pour produire des questions en masse.  
 > **Règle** : l'IA doit lire la section [Format JSON des questions](#format-json-des-questions) ci-dessus avant de générer quoi que ce soit — les contraintes y sont définitives.
 
-### Prompt template
+### Prompt de référence
 
-```
-Tu es un expert en Halakha (loi juive). Génère [N] questions en hébreu
-au format JSON valide pour l'application קניין הלכה.
+Le prompt complet et à jour vit dans **[`prompt_generation_questions.md`](prompt_generation_questions.md)**
+(racine du repo). Il encode, en plus du format JSON ci-dessus :
 
-Contraintes impératives :
-- Respecte scrupuleusement le format de la section "Format JSON des questions" du README
-- Valeurs autorisées pour "parcours"  : "bassar_bechalav"
-- Valeurs autorisées pour "exam_section" : "shulchan_aruch", "tur", "psikei_admur", "ptei_teshuva"
-- Les valeurs de "exam_section" doivent être celles maîtrisées par le sujet traité
-  (ex : une question qui couvre aussi le Tur → ["shulchan_aruch", "tur"])
-- "siman" et "seif" sont des entiers > 0
-- "difficulty_level" : 1 (facile), 2 (moyen), 3 (difficile)
-- "sujet" est le thème traité DANS le siman (en hébreu, il peut couvrir plusieurs
-  seifim) — pas le nom du parcours. Les questions d'un même thème doivent porter
-  exactement le même "sujet" (il sert au regroupement des cartes dans l'app).
-- Tous les textes de questions, options et explications en hébreu
+- le workflow obligatoire en 5 passes (lecture du texte source → génération → re-vérification
+  contre le texte → audit des réponses/distracteurs → relecture linguistique hébreu) avant
+  toute sortie JSON ;
+- la politique de choix des types : machloket réelle entre poskim → `multiple_opinions_dropdown`,
+  type par défaut → `multiple_choice`, `true_false` réservé aux cas vraiment binaires ;
+- les règles pédagogiques (atomicité, anti-interférence, qualité des distracteurs, sources
+  citées dans `explanation`).
 
-Parcours : [ex. bassar_bechalav]
-Siman : [N]
-Sujets à couvrir : [LISTE DE THÈMES EN HÉBREU, ex. משך ההמתנה בין בשר לחלב]
-Types à générer : [multiple_choice | true_false | multiple_opinions_dropdown]
-
-Retourne uniquement un tableau JSON valide, sans texte avant ou après.
-```
+Dans Claude Code, la commande **`/generate-cards`** (`.claude/commands/generate-cards.md`)
+applique ce prompt et valide le lot généré avec `question_types.normalize_imported_question()`
+avant livraison.
 
 ### Exemple de lot JSON valide
 
@@ -815,14 +802,13 @@ Inversement proportionnel à la `retrievability` FSRS (`fsrs.retrievability`) �
 
 ### Validation des questions (`question_types.py`)
 
-`normalize_imported_question()` valide et normalise les 4 types à l'import :
+`normalize_imported_question()` valide et normalise les 3 types à l'import :
 
 | Type | Règles spécifiques |
 |---|---|
-| `multiple_choice` | 4 options numérotées, une seule bonne réponse |
+| `multiple_choice` | ≥ 2 options numérotées en séquence (1, 2, 3, …), une ou plusieurs bonnes réponses (plusieurs = sélection multiple) |
 | `true_false` | Booléen simple |
-| `multiple_opinions_dropdown` | ≥ 2 "decisors" (opinions), choix parmi liste |
-| `practical_scenario` | QCM avec contexte de scénario |
+| `multiple_opinions_dropdown` | ≥ 2 "decisors" (opinions), choix parmi liste, désaccord réel obligatoire |
 
 Valide aussi les **champs communs obligatoires** : `parcours` (valeur dans `VALID_PARCOURS`), `sujet` (texte hébreu non vide), `siman` (entier > 0), `seif` (entier > 0), `difficulty_level` (1, 2 ou 3).
 
