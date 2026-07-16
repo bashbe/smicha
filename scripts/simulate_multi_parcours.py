@@ -133,46 +133,60 @@ CONTENT = {
 }
 
 
+# Nombre minimal de questions par parcours dans la démo : garantit assez de
+# cartes apprises pour dépasser le palier d'affichage des stats (STATS_MIN_CARDS).
+MIN_Q_PER_PARCOURS = 16
+_FILLER_OPTS = ["תשובה ראשונה", "תשובה שנייה", "תשובה שלישית", "תשובה רביעית"]
+
+
+def _insert_mc(parcours, subject, siman, seif, difficulty, sections, text, opts, correct_idx, tags):
+    """Valide (format d'import) puis insère une question à choix multiple."""
+    raw = {
+        "type": "multiple_choice", "parcours": parcours, "sujet": subject,
+        "siman": siman, "seif": seif, "difficulty_level": difficulty,
+        "exam_section": sections, "question_text": text,
+        "options": [{"number": i + 1, "text": o, "is_correct": i == correct_idx}
+                    for i, o in enumerate(opts)],
+        "explanation": "הסבר לדוגמה עבור " + subject + ".", "tags": tags,
+    }
+    norm = qt.normalize_imported_question(raw)
+    if not norm["valid"]:
+        raise SystemExit(f"question invalide ({parcours} {siman}): {norm['issue']}")
+    ins = norm["insert"]
+    q = Question(
+        question_type=ins["question_type"], text=ins["text"], payload=ins["payload"],
+        choices=ins["choices"], correct_answer=ins["correct_answer"],
+        explanation=ins["explanation"], difficulty=ins["difficulty"],
+        section=ins["section"], tags=ins["tags"], source_ref=ins["source_ref"],
+        subject=ins.get("subject"), siman=ins.get("siman"), seif=ins.get("seif"),
+        parcours=ins.get("parcours"), status="approved",
+    )
+    db.session.add(q)
+    db.session.flush()
+    db.session.add(ItemStats(question_id=q.id, question_type=q.question_type,
+                             hidden_difficulty=q.difficulty))
+    return q
+
+
 def _build_questions() -> dict[str, list[dict]]:
-    """Insère les questions de CONTENT, retourne les Question par parcours."""
+    """Insère les questions de CONTENT (+ complément de tirage pour atteindre
+    MIN_Q_PER_PARCOURS), retourne les Question par parcours."""
     by_parcours: dict[str, list[dict]] = {c: [] for c in CONTENT}
     for parcours, cfg in CONTENT.items():
         for siman, subjects in cfg["simanim"].items():
-            for seif, (subject, items) in enumerate(subjects.items(), start=1):
+            for _, (subject, items) in enumerate(subjects.items(), start=1):
                 for q_seif, (text, opts, correct_idx, tags) in enumerate(items, start=1):
-                    raw = {
-                        "type": "multiple_choice",
-                        "parcours": parcours,
-                        "sujet": subject,
-                        "siman": siman,
-                        "seif": q_seif,
-                        "difficulty_level": (q_seif % 3) + 1,
-                        "exam_section": cfg["sections"],
-                        "question_text": text,
-                        "options": [
-                            {"number": i + 1, "text": o, "is_correct": i == correct_idx}
-                            for i, o in enumerate(opts)
-                        ],
-                        "explanation": "הסבר לדוגמה עבור " + subject + ".",
-                        "tags": tags,
-                    }
-                    norm = qt.normalize_imported_question(raw)
-                    if not norm["valid"]:
-                        raise SystemExit(f"question invalide ({parcours} {siman}): {norm['issue']}")
-                    ins = norm["insert"]
-                    q = Question(
-                        question_type=ins["question_type"], text=ins["text"], payload=ins["payload"],
-                        choices=ins["choices"], correct_answer=ins["correct_answer"],
-                        explanation=ins["explanation"], difficulty=ins["difficulty"],
-                        section=ins["section"], tags=ins["tags"], source_ref=ins["source_ref"],
-                        subject=ins.get("subject"), siman=ins.get("siman"), seif=ins.get("seif"),
-                        parcours=ins.get("parcours"), status="approved",
-                    )
-                    db.session.add(q)
-                    db.session.flush()
-                    db.session.add(ItemStats(question_id=q.id, question_type=q.question_type,
-                                             hidden_difficulty=q.difficulty))
-                    by_parcours[parcours].append(q)
+                    by_parcours[parcours].append(_insert_mc(
+                        parcours, subject, siman, q_seif, (q_seif % 3) + 1,
+                        cfg["sections"], text, opts, correct_idx, tags))
+        # Complément générique (« חזרה ותרגול ») pour avoir un socle de cartes.
+        extra = 1
+        while len(by_parcours[parcours]) < MIN_Q_PER_PARCOURS:
+            by_parcours[parcours].append(_insert_mc(
+                parcours, "חזרה ותרגול", 100, extra, (extra % 3) + 1,
+                cfg["sections"], f"שאלת תרגול מספר {extra} לחזרה על החומר",
+                _FILLER_OPTS, extra % 4, ["תרגול"]))
+            extra += 1
     db.session.commit()
     return by_parcours
 
@@ -322,6 +336,52 @@ def _seed_student(by_parcours: dict[str, list[dict]]) -> None:
           f"{len(PARCOURS_PROGRESS)} parcours actifs")
 
 
+NEW_EMAIL = "demo-new@example.com"
+NEW_NAME = "אברהם לוי"
+NEW_CARDS = 8  # < STATS_MIN_CARDS (30) → profil en état « stats verrouillées »
+
+
+def _seed_new_student(by_parcours: dict[str, list[dict]]) -> None:
+    """Débutant : un seul parcours, quelques cartes seulement (< palier de
+    stats) — sert à illustrer le profil quand le tableau de bord est verrouillé."""
+    today = date.today()
+    now = datetime.utcnow()
+    user = User(email=NEW_EMAIL, full_name=NEW_NAME)
+    user.set_password(SIM_PASSWORD)
+    db.session.add(user)
+    db.session.flush()
+    db.session.add(UserRole(user_id=user.id, role="student"))
+    db.session.add(StudentProfile(
+        id=user.id, full_name=NEW_NAME, onboarded=True, target_stability=0.95,
+        section=["shulchan_aruch"], streak_days=2, last_activity_date=today, total_points=0,
+    ))
+    db.session.add(StudentParcours(
+        user_id=user.id, parcours="bassar_bechalav",
+        exam_date=today + timedelta(days=60), created_at=now - timedelta(days=4),
+    ))
+    total_points = 0
+    for i, q in enumerate(by_parcours["bassar_bechalav"][:NEW_CARDS]):
+        state = "review" if i < 3 else "learning"
+        rt = random.randint(5000, 15000)
+        db.session.add(FsrsCard(
+            user_id=user.id, question_id=q.id, state=state,
+            stability=round(random.uniform(1, 8), 2), fsrs_difficulty=round(random.uniform(4, 7), 2),
+            reps=random.randint(1, 3), lapses=0, due_date=today + timedelta(days=random.randint(0, 3)),
+            last_review=now - timedelta(days=random.randint(0, 3)),
+            avg_response_time_ms=rt, target_stability=0.95,
+        ))
+        for d in range(min(3, i + 1)):  # activité sur les derniers jours
+            correct = random.random() < 0.7
+            pts = random.randint(12, 24) if correct else 0
+            total_points += pts
+            db.session.add(_mk_answer(user.id, q.id, correct, rt, pts,
+                                      datetime.combine(today - timedelta(days=d), datetime.min.time())
+                                      + timedelta(hours=random.randint(8, 21))))
+    db.session.query(StudentProfile).filter_by(id=user.id).update({"total_points": total_points})
+    db.session.commit()
+    print(f"seeded débutant {NEW_EMAIL} / {SIM_PASSWORD} — {NEW_CARDS} cartes (stats verrouillées)")
+
+
 def build() -> None:
     random.seed(42)
     app = create_app()
@@ -330,6 +390,7 @@ def build() -> None:
         db.create_all()
         by_parcours = _build_questions()
         _seed_student(by_parcours)
+        _seed_new_student(by_parcours)
         print(f"base de simulation prête : {SIM_DB_PATH}")
 
 
