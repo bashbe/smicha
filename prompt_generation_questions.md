@@ -30,11 +30,14 @@ definitions. Your cards must train exactly that.
 =================================================================
 MANDATORY WORKFLOW — five passes, in this order, never skipped
 =================================================================
-PASS 1 — READ AND UNDERSTAND. Read the entire Hebrew source text before
-writing anything. Build an inventory: every distinct din, every machloket
-(which poskim, on which exact case, who rules what), every legal number,
-every borderline case. Do not generate a single question before this
-inventory is complete.
+PASS 1 — READ, UNDERSTAND AND CATEGORIZE. Read the entire Hebrew source text
+before writing anything. Build an inventory: every distinct din, every
+machloket (which poskim, on which exact case, who rules what), every legal
+number, every borderline case. Label every passage with its exam_section
+according to the EXAM_SECTION ATTRIBUTION rules below. Footnotes are out of
+scope: do not analyze them, do not write cards on them. Any passage you
+cannot classify with confidence → ask the user; never guess. Do not generate
+a single question before this inventory is complete.
 
 PASS 2 — GENERATE THE QUESTIONS. Coverage is exhaustive by default: every
 distinct din in the inventory gets at least one card (unless the user fixes a
@@ -81,6 +84,36 @@ TYPE-SELECTION POLICY
    no double negation.
 
 =================================================================
+EXAM_SECTION ATTRIBUTION
+=================================================================
+Assign each card the section of the passage of the source text it is based on:
+- "tur"            → the Tur, the Beit Yosef, the rishonim, and the teachings
+                     of the gemara underlying each part.
+- "shulchan_aruch" → the Shulchan Aruch text itself and its main printed
+                     commentaries: the Shach and the Taz.
+- "ptei_teshuva"   → all acharonim later than the Shulchan Aruch (Pitchei
+                     Teshuva and the poskim it cites, etc.).
+- "psikei_admur"   → every Chabad position: Shulchan Aruch haRav (Admur
+                     haZaken), the Tzemach Tzedek, the Rebbe, etc.
+
+Single-section policy — app behavior: a card tagged with several sections is
+shown ONLY to students who study ALL of them, so multi-tagging HIDES cards:
+- Default: exactly ONE section per card — the section of the passage the
+  card is based on.
+- When the same din appears in two parts of the text (e.g. Tur and Shulchan
+  Aruch): write ONE card tagged "shulchan_aruch" and ONE complementary card
+  tagged "tur" with a different angle (source, reasoning, position of the
+  rishonim) — never a word-for-word duplicate — so every student meets the
+  din.
+- A multi-section tag is reserved for a card that explicitly COMPARES the
+  sources and would be meaningless without both.
+
+COVERAGE CHECK (mandatory before delivering a batch): for each section taken
+alone, a student who selected ONLY that section must still be tested on
+everything the text of that section teaches. Re-scan the source text section
+by section and fill any gap.
+
+=================================================================
 PEDAGOGY — non-negotiable card-writing rules
 =================================================================
 - ATOMICITY (minimum information principle): one card = one din. A question
@@ -104,6 +137,14 @@ PEDAGOGY — non-negotiable card-writing rules
   or two sentences. State who rules for whom when relevant (ספרדים/אשכנזים).
 - EXAM ORIENTATION: prefer the final din, who rules it, the exact numbers,
   and concrete practical cases over abstract definitions.
+- NO PADDING: never generate more cards than the text justifies. Variants
+  (several cards on the same din from different angles) only when genuinely
+  necessary — a complementary card for another section, or a discrimination
+  card. Keep every question, option and explanation as short as possible.
+- NO GIVEAWAYS: the phrasing must not hint at the answer (no option standing
+  out, no telling qualifier in the stem, no true/false statement whose
+  wording betrays its truth value). A card answerable without knowing the
+  din is a failed card.
 
 =================================================================
 HARD FORMAT CONSTRAINTS (import validator — any violation rejects the batch)
@@ -132,9 +173,9 @@ HARD FORMAT CONSTRAINTS (import validator — any violation rejects the batch)
   of a din to a case), 3 (hard — machloket, borderline case, discrimination
   between close dinim).
 - exam_section: one string or a list, values ONLY among:
-  "shulchan_aruch", "tur", "psikei_admur", "ptei_teshuva".
-  List every source the question actually covers and no other
-  (e.g. ["shulchan_aruch", "tur"] only if the card really tests the Tur too).
+  "shulchan_aruch", "tur", "psikei_admur", "ptei_teshuva" — assigned
+  according to the EXAM_SECTION ATTRIBUTION rules above. One single section
+  per card by default.
 - explanation: mandatory, Hebrew, non-empty — the din, the source
   (siman:seif + decisor) and the reasoning.
 - tags (optional): list of short Hebrew keywords, e.g. ["המתנה", "מחלוקת"].
@@ -231,8 +272,14 @@ SELF-CHECK before outputting (redo PASS 5 on every card)
 4. The machloket cards are multiple_opinions_dropdown; true_false cards are
    few and each one is genuinely binary; everything else is multiple_choice.
 5. Each card is atomic, faithful to the source text, not answerable by
-   elimination, and its explanation cites siman:seif + decisor.
-6. The whole output parses with json.loads() and contains nothing but the
+   elimination or by wording hints, and its explanation cites siman:seif +
+   decisor.
+6. Each card's exam_section matches the section of the passage it is based
+   on (ATTRIBUTION rules); one section per card unless the card explicitly
+   compares sources; no card is based on a footnote.
+7. COVERAGE CHECK done: every section of the text, taken alone, is fully
+   covered for a student who selected only that section.
+8. The whole output parses with json.loads() and contains nothing but the
    array.
 ```
 
@@ -247,10 +294,11 @@ siman: 89
 sujets existants (à réutiliser tels quels si le thème correspond) :
 - משך ההמתנה בין בשר לחלב
 - איסור חלב מיד לאחר בשר
+sections présentes dans le texte: <optionnel, ex. tur + shulchan_aruch + ptei_teshuva — sinon l'IA catégorise elle-même et demande en cas de doute>
 nombre de questions: <optionnel — par défaut, couverture exhaustive du texte>
 
 ## Texte source
-<colle ici l'extrait hébreu du Choulhan Aroukh, Tur, ou autre source, avec les numéros de seifim>
+<colle ici le texte hébreu avec les numéros de seifim ; les notes de bas de page seront ignorées>
 ```
 
 ---
