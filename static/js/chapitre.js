@@ -2,6 +2,25 @@
 (function () {
   const root = document.getElementById("player");
   const origQuestions = JSON.parse(root.dataset.questions);
+
+  // Mélange l'ordre des options à chaque affichage (nouveau tirage à chaque
+  // session) pour empêcher l'étudiant de mémoriser la position visuelle de
+  // la bonne réponse plutôt que la réponse elle-même. Ne touche pas aux
+  // "key" des options : la correction se fait toujours par clé, jamais par
+  // position.
+  function shuffleInPlace(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+  origQuestions.forEach((q) => {
+    if (q.normalized && q.normalized.type === "multiple_choice" && Array.isArray(q.normalized.choices)) {
+      shuffleInPlace(q.normalized.choices);
+    }
+  });
+
   const cfg = {
     parcours: root.dataset.parcoursUrl,
     home: root.dataset.homeUrl,
@@ -630,6 +649,7 @@
       }
       answers.appendChild(wrap);
     } else if (nq.multiSelect) {
+      answers.appendChild(el("div", "text-xs muted mb-2", "לשאלה זו יש כמה תשובות נכונות — סמן את כולן"));
       nq.choices.forEach((c, i) => {
         const isCorrect = (nq.correctKeys || []).includes(c.key);
         const isChosen = state.multiSelected.has(c.key);
@@ -653,7 +673,7 @@
           btn.disabled = true;
         }
         btn.appendChild(el("span", "flex-1 line-height-loose", c.text));
-        btn.appendChild(mark || el("span", "key", c.label || String(i + 1)));
+        btn.appendChild(mark || el("span", "key", String(i + 1)));
         answers.appendChild(btn);
       });
       if (!state.revealed) {
@@ -663,6 +683,9 @@
         answers.appendChild(submitBtn);
       }
     } else {
+      if (!isTrueFalse) {
+        answers.appendChild(el("div", "text-xs muted mb-2", "לשאלה זו יש תשובה נכונה אחת בלבד"));
+      }
       nq.choices.forEach((c, i) => {
         const isCorrect = nq.correctKey === c.key;
         const isChosen = state.chosen === c.key;
@@ -681,7 +704,7 @@
           btn.appendChild(el("span", "text-lg bold", c.text));
         } else {
           btn.appendChild(el("span", "flex-1 line-height-loose", c.text));
-          btn.appendChild(mark || el("span", "key", c.label || String(i + 1)));
+          btn.appendChild(mark || el("span", "key", String(i + 1)));
         }
         answers.appendChild(btn);
       });
