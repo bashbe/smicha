@@ -1730,7 +1730,9 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
 .folio-tile {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  justify-content: center;   /* groupe icône+texte centré : plus de vide au milieu */
+  gap: var(--space-1);
   aspect-ratio: 1 / 1;
   padding: var(--space-2);
   border-radius: var(--radius-card);
@@ -1738,6 +1740,7 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
   border-top: 3px solid var(--border);   /* signet en haut (carré) */
   background: var(--surface);
   color: var(--fg);
+  text-align: center;
   transition: background 0.15s, border-color 0.15s;
 }
 .folio-tile-primary { border-top-color: var(--accent); }
@@ -1747,7 +1750,7 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
 }
 .folio-tile-primary:hover { border-top-color: var(--accent); }
 .folio-tile .icon-box { position: relative; }
-.folio-tile-title { font-weight: 700; font-size: var(--text-base); margin-top: auto; }
+.folio-tile-title { font-weight: 700; font-size: var(--text-base); }
 .folio-tile-sub { font-size: var(--text-sm); color: var(--muted); line-height: 1.3; }
 .folio-tile-badge {
   position: absolute;
