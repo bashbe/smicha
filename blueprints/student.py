@@ -898,6 +898,12 @@ def reset_progress():
 # une carte dont la stabilité FSRS dépasse ce seuil est considérée bien ancrée.
 MATURE_STABILITY_DAYS = 21
 
+# Nombre minimal de cartes apprises avant d'afficher le tableau de bord
+# statistique du profil : en dessous, l'échantillon est trop faible pour être
+# parlant (précision instable, maturité/prévision peu significatives), on
+# affiche à la place une jauge de progression vers ce palier.
+STATS_MIN_CARDS = 30
+
 # Libellés hébreux des états FSRS pour la barre de maturité du profil.
 STATE_LABELS = {
     "new": "חדש",
@@ -1087,6 +1093,10 @@ def _profile_stats(sp, codes: list[str]) -> dict:
         })
 
     return {
+        "unlocked": total_cards >= STATS_MIN_CARDS,
+        "min_cards": STATS_MIN_CARDS,
+        "cards_to_unlock": max(0, STATS_MIN_CARDS - total_cards),
+        "unlock_pct": min(100, round(total_cards / STATS_MIN_CARDS * 100)) if STATS_MIN_CARDS else 100,
         "accuracy": accuracy,
         "total_reviews": total_reviews,
         "reviews_today": reviews_today,

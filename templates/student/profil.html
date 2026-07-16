@@ -1,5 +1,5 @@
 {% extends "student/_layout.html" %}
-{% from "_icons.html" import icon_settings, icon_logout, icon_shield, icon_coin, icon_flame, icon_book, icon_target %}
+{% from "_icons.html" import icon_settings, icon_logout, icon_shield, icon_coin, icon_flame, icon_book, icon_target, icon_lock %}
 {% block title %}פרופיל — קניין הלכה{% endblock %}
 {% block content %}
 {% set first_name = (profile.full_name or "תלמיד").split(" ")[0] %}
@@ -13,11 +13,13 @@
     </div>
   </div>
 
-  <!-- Stat principale en grand : l'exactitude -->
+  <!-- Stat principale en grand : l'exactitude (dès le palier de stats atteint) -->
+  {% if stats.unlocked %}
   <div class="profile-display-stat">
     <div class="profile-display-number">{{ accuracy }}%</div>
     <div class="profile-display-label">דיוק כללי · {{ stats.total_reviews }} תשובות</div>
   </div>
+  {% endif %}
 
   <!-- KPI tiles -->
   <div class="kpi-grid">
@@ -43,6 +45,7 @@
     </div>
   </div>
 
+  {% if stats.unlocked %}
   <!-- Maturité des cartes (à la Anki) -->
   <section class="profile-section">
     <div class="row between profile-section-head">
@@ -171,6 +174,25 @@
         </div>
       </div>
       {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% else %}
+  <!-- Palier de statistiques non atteint : jauge de progression -->
+  <section class="profile-section stats-locked">
+    <div class="stats-locked-icon">{{ icon_lock(22) }}</div>
+    <h3 class="profile-section-title center-text">הסטטיסטיקות בדרך</h3>
+    <p class="stats-locked-text">
+      לאחר למידת {{ stats.min_cards }} כרטיסים ייפתח לוח הסטטיסטיקה המלא —
+      דיוק, בשלות הכרטיסים, זיכרון, תחזית חזרות ויומן פעילות.
+    </p>
+    <div class="folio-progress" style="margin-inline:0;max-width:none;">
+      <div class="folio-progress-fill" style="width:{{ stats.unlock_pct }}%;"></div>
+    </div>
+    <div class="stats-locked-count">
+      <b>{{ stats.total_cards }}</b> / {{ stats.min_cards }} כרטיסים נלמדו
+      {% if stats.cards_to_unlock %}· נותרו {{ stats.cards_to_unlock }}{% endif %}
     </div>
   </section>
   {% endif %}
