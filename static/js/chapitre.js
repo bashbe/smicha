@@ -499,7 +499,7 @@
     const q = queue[state.idx];
     const nq = q.normalized;
     const origIdx = origIdxMap[q.id];
-    const totalDots = Math.min(10, origQuestions.length);
+    const totalDots = origQuestions.length;
     const isTrueFalse = nq.type === "true_false";
     const isOpinions = nq.type === "multiple_opinions_dropdown";
     root.innerHTML = "";
