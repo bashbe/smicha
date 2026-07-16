@@ -69,7 +69,7 @@
       <!-- Sujets du siman : une carte par sujet (les seifim couverts restent indicatifs) -->
       <div class="seif-chips">
         {% if s.sujets %}
-          {% for sj in s.sujets %}<a href="{{ url_for('student.chapitre', subject=sj.subject, siman=s.siman) }}" class="seif-chip {{ 'seif-chip-done' if sj.completed }}">{% if sj.seif_min is not none %}<span class="seif-chip-num">{% if sj.seif_min == sj.seif_max %}{{ sj.seif_min | to_hebrew }}{% else %}{{ sj.seif_min | to_hebrew }}–{{ sj.seif_max | to_hebrew }}{% endif %}</span>&nbsp;{% endif %}<span class="seif-chip-topic">{{ sj.subject }}</span>&nbsp;<span class="seif-chip-count">{% if sj.completed %}✓{% else %}{{ sj.count }}{% endif %}</span></a> {% endfor %}
+          {% for sj in s.sujets %}<a href="{{ url_for('student.chapitre', subject_id=sj.subject_id) }}" class="seif-chip {{ 'seif-chip-done' if sj.completed }}">{% if sj.seif_min is not none %}<span class="seif-chip-num">{% if sj.seif_min == sj.seif_max %}{{ sj.seif_min | to_hebrew }}{% else %}{{ sj.seif_min | to_hebrew }}–{{ sj.seif_max | to_hebrew }}{% endif %}</span>&nbsp;{% endif %}<span class="seif-chip-topic">{{ sj.subject }}</span>&nbsp;<span class="seif-chip-count">{% if sj.completed %}✓{% else %}{{ sj.count }}{% endif %}</span></a> {% endfor %}
         {% else %}
           <p style="font-size:var(--text-sm);color:var(--muted);">אין נושאים</p>
         {% endif %}

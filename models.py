@@ -114,6 +114,27 @@ class StudentParcours(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
 
+class Subject(db.Model):
+    """Sujet : regroupe les questions d'un même thème à l'intérieur d'un siman.
+
+    L'ID est la clé stable référencée par `Question.subject_id` et
+    `Progression.subject_id` ; `title` est le seul champ affiché à l'étudiant
+    et peut être renommé indépendamment (voir /admin/subjects/rename) sans
+    avoir à toucher chaque question qui le partage.
+    """
+
+    __tablename__ = "subjects"
+    __table_args__ = (
+        db.UniqueConstraint("parcours", "siman", "title", name="uq_subject_parcours_siman_title"),
+    )
+
+    id = db.Column(db.String(36), primary_key=True, default=_uuid)
+    parcours = db.Column(db.String(64), nullable=False, index=True)
+    siman = db.Column(db.Integer, nullable=False, index=True)
+    title = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+
 class Question(db.Model):
     __tablename__ = "questions"
 
@@ -133,7 +154,7 @@ class Question(db.Model):
     validated_by = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"))
     validator_note = db.Column(db.Text)
     # second-migration fields
-    subject = db.Column(db.String(255), index=True)
+    subject_id = db.Column(db.String(36), db.ForeignKey("subjects.id", ondelete="SET NULL"), index=True)
     siman = db.Column(db.Integer, index=True)
     seif = db.Column(db.Integer)
     hint = db.Column(db.Text)
@@ -144,6 +165,8 @@ class Question(db.Model):
     source_ref = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    subject = db.relationship("Subject")
 
     def section_list(self) -> list[str]:
         """Return the question's exam sections as a normalized list.
@@ -168,7 +191,8 @@ class Question(db.Model):
             "section": self.section,
             "tags": self.tags or [],
             "status": self.status,
-            "subject": self.subject,
+            "subject_id": self.subject_id,
+            "subject": self.subject.title if self.subject else None,
             "siman": self.siman,
             "seif": self.seif,
             "hint": self.hint,
@@ -216,13 +240,14 @@ class QuestionEdit(db.Model):
 class Progression(db.Model):
     __tablename__ = "progression"
     __table_args__ = (
-        db.UniqueConstraint("user_id", "subject", "siman", name="uq_progression_user_subject_siman"),
+        db.UniqueConstraint("user_id", "subject_id", name="uq_progression_user_subject"),
     )
 
     id = db.Column(db.String(36), primary_key=True, default=_uuid)
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    subject = db.Column(db.String(255), default="", nullable=False)
-    siman = db.Column(db.Integer, default=0, nullable=False)
+    # Le siman est porté par Subject (subject_id l'implique déjà) — plus de
+    # colonne siman séparée ici.
+    subject_id = db.Column(db.String(36), db.ForeignKey("subjects.id", ondelete="CASCADE"), nullable=False)
     status = db.Column(db.String(16), default="in_progress", nullable=False)
     average_score = db.Column(db.Float, default=0)
     questions_answered = db.Column(db.Integer, default=0, nullable=False)

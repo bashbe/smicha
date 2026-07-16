@@ -126,12 +126,13 @@ export SUPER_ADMIN_EMAIL="admin@votre-org.com"
 smiha-flask/
 ├── app.py                  # Factory Flask : init DB, enregistrement blueprints, filtre to_hebrew
 ├── config.py               # Classe Config (variables d'env)
-├── models.py               # 8 modèles SQLAlchemy
+├── models.py               # 13 modèles SQLAlchemy
 ├── auth_helpers.py         # Session, g.user, @login_required, @staff_required
 ├── fsrs.py                 # Algorithme FSRS-6 (21 poids) + réglages produit (cap/warm-up/w7/priors)
 ├── calibration.py          # Calibration collective : latence z-score, HSHS, Elo, priors par item
 ├── points.py               # Calcul points / combos (3 formules : étude / jour / stabilité)
 ├── question_types.py       # Normalisation + validation des 3 types de questions
+├── subjects.py             # Lookup-or-create / renommage (avec fusion) des Subject par ID
 ├── seed.py                 # Initialisation BDD + données de démo + item_stats
 ├── requirements.txt        # Flask, Flask-SQLAlchemy, Werkzeug
 ├── sample_questions.json   # 3 questions d'exemple (MC, TF, dropdown) — maintenir en sync avec question_types.py
@@ -163,6 +164,7 @@ smiha-flask/
 │   ├── migrate_phase2.py       # Migration schéma Phase 2 (bases existantes)
 │   ├── migrate_approve_pending.py  # Approuve les questions "pending" historiques (bases existantes)
 │   ├── migrate_multi_parcours.py   # Crée student_parcours + backfill legacy (bases existantes)
+│   ├── migrate_subjects.py         # Crée la table subjects + backfill subject_id (bases existantes)
 │   ├── simulate_multi_parcours.py  # Base de démo isolée « plusieurs parcours entamés » (build/serve)
 │   └── screenshot_sim.py           # Captures d'écran de la simulation (Playwright) → screenshots/simulations/
 │
@@ -246,7 +248,7 @@ Un profil `onboarded` sans aucune ligne (base pré-migration) est automatiquemen
 | `payload` | JSON | Structure spécifique au type |
 | `status` | String | `"pending"` / `"approved"` / `"rejected"` — défaut `"approved"` (voir [règle de statut](#règle-métier--acceptation-par-défaut-et-signalement)) |
 | `parcours` | String | Parcours d'apprentissage — valeurs dans `VALID_PARCOURS` (ex : `"bassar_bechalav"`) |
-| `subject` | String | Sujet traité **dans le siman** (thème en hébreu pouvant couvrir plusieurs seifim, ex : `"משך ההמתנה בין בשר לחלב"`) — champ JSON `sujet` à l'import |
+| `subject_id` | FK subjects.id (nullable) | Sujet traité **dans le siman** — voir [`subjects`](#subjects) ci-dessous. Le champ JSON `sujet` (texte hébreu) reste le format d'import ; il est résolu vers cet ID par `get_or_create_subject()` (`subjects.py`), jamais stocké tel quel |
 | `siman` | Integer | Numéro de chapitre (entier positif, obligatoire) |
 | `seif` | Integer | Numéro de sous-section (entier positif, obligatoire) |
 | `hint` | Text | Indice (optionnel) |
@@ -254,7 +256,25 @@ Un profil `onboarded` sans aucune ligne (base pré-migration) est automatiquemen
 | `tags` | JSON | Liste de tags libres (optionnel) |
 | `created_by` / `validated_by` | FK users | |
 
-Méthodes : `as_dict()`, `section_list()`.
+Méthodes : `as_dict()` (inclut `subject_id` et `subject` — le titre résolu via la relation `Subject`, ou `None`), `section_list()`.
+
+---
+
+### `subjects`
+
+Un sujet (« נושא ») regroupe les questions d'un même thème **à l'intérieur d'un siman**. Introduit pour découpler la clé de regroupement (stable) de son intitulé affiché (renommable) — avant, `questions.subject` était le texte lui-même, et le renommer exigeait un chercher/remplacer sur toutes les cartes qui le partageaient.
+
+| Colonne | Type | Notes |
+|---|---|---|
+| `id` | UUID (PK) | Référencé par `questions.subject_id` et `progression.subject_id` |
+| `parcours` | String(64) | |
+| `siman` | Integer | |
+| `title` | String(255) | Titre hébreu affiché à l'étudiant (`/app/parcours`, en-tête de session) |
+| `created_at` | DateTime | |
+
+Contrainte unique `(parcours, siman, title)`. Gestion dans `subjects.py` :
+- `get_or_create_subject(parcours, siman, title)` — lookup-or-create par correspondance exacte, appelé à chaque import/édition de question (le format JSON continue de porter `sujet` en texte libre, voir [Format JSON des questions](#format-json-des-questions)) ;
+- `rename_subject(subject_id, new_title)` — renomme le titre affiché (`POST /admin/subjects/rename`, une seule ligne modifiée). Si le nouveau titre entre en collision avec un autre sujet du même siman, **fusionne** les deux : questions et `Progression` du sujet source sont réassignées au sujet cible, puis le sujet source est supprimé — reproduit l'ancien comportement de fusion implicite (deux textes renommés vers la même valeur finissaient dans le même groupe).
 
 ---
 
@@ -318,7 +338,7 @@ Champs de calibration collective (Phase 2) : `z_item` (`(log rt − μ_item)/σ_
 ---
 
 ### `progression`
-Avancement par `(user_id, subject, siman)` — c'est-à-dire par **sujet dans le siman**. Marqué `"completed"` quand toutes les questions du sujet sont répondues correctement.
+Avancement par `(user_id, subject_id)` — `subject_id` implique déjà le siman (voir [`subjects`](#subjects), plus de colonne `siman` séparée ici). Marqué `"completed"` quand toutes les questions du sujet sont répondues correctement.
 
 ---
 
@@ -355,7 +375,7 @@ la question reste `approved` globalement mais est retirée **uniquement** pour `
 |---|---|---|---|
 | `type` | string | `multiple_choice`, `true_false`, `multiple_opinions_dropdown` | `question_type` |
 | `parcours` | string | `"bassar_bechalav"` (liste dans `VALID_PARCOURS`) | `parcours` |
-| `sujet` | string | texte hébreu non vide — thème traité **dans le siman** (peut couvrir plusieurs seifim ; sert au regroupement des cartes dans le sélecteur) | `subject` |
+| `sujet` | string | texte hébreu non vide — thème traité **dans le siman** (peut couvrir plusieurs seifim ; sert au regroupement des cartes dans le sélecteur). Résolu vers un [`Subject`](#subjects) stable par correspondance exacte `(parcours, siman, texte)` — texte déjà vu ⇒ réutilisé, sinon nouveau sujet créé | `subject_id` (via `subjects.get_or_create_subject()`) |
 | `siman` | integer | > 0 | `siman` |
 | `seif` | integer | > 0 | `seif` |
 | `difficulty_level` | integer | 1, 2, 3 | `difficulty` |
@@ -534,12 +554,12 @@ avant livraison.
 | GET/POST | `/app/onboarding` | Choix des **parcours** (multi-select, ≥ 1 requis), date de מבחן **par parcours** (optionnelle), niveau cible, sections |
 | GET | `/app/home` | Dashboard : salutation + message contextuel (examen imminent ≤ 7 j > cartes dues > série active > défaut), streak, puis **une section par parcours activé** (compte à rebours du מבחן du parcours, barre de préparation, stats rapides — précision/nb réponses/cartes dues — et **deux tuiles d'action carrées côte à côte** « המשך הלמידה » / « חזרה יומית » scopées à ce parcours) |
 | GET | `/app/parcours` | Table des matières : **un seul parcours affiché à la fois** (sélectionné par `?p=<code>`, défaut = premier parcours activé) → simanim rétractables → cartes par sujet (plage de seifim indicative). Avec ≥ 2 parcours activés, un sélecteur en tête de page (icône de bascule + menu) permet de changer de parcours ; un code inconnu retombe sur le premier |
-| GET | `/app/chapitre/<subject>/<siman>[/<seif>]` | Session d'étude sur un sujet du siman — restreinte aux parcours activés (la variante `/<seif>` reste supportée mais n'est plus liée depuis le sélecteur) |
+| GET | `/app/chapitre/<subject_id>[/<seif>]` | Session d'étude sur un sujet (le siman est implicite via `subject_id`) — restreinte aux parcours activés (la variante `/<seif>` reste supportée mais n'est plus liée depuis le sélecteur) |
 | GET | `/app/revision` | Hub de révision : 4 cartes (jour / siman / sujet / aléatoire) avec compteurs (parcours activés uniquement) |
 | GET | `/app/revision/jour` | Révision du jour : session directe si ≤ 1 parcours actif, sinon **écran de choix du parcours** (compteur de cartes dues par parcours + option « הכל ») |
 | GET | `/app/revision/jour/<parcours>` | Session de révision du jour restreinte à un parcours actif ; valeur spéciale `all` = tous les parcours actifs. Parcours inconnu/non activé → redirection vers le sélecteur |
 | GET | `/app/revision/siman` | Liste des simanim déjà appris (parcours → siman → cartes par sujet) |
-| GET | `/app/revision/siman/<subject>/<siman>` | Session de révision sur un sujet déjà appris d'un siman |
+| GET | `/app/revision/siman/<subject_id>` | Session de révision sur un sujet déjà appris d'un siman |
 | GET | `/app/revision/sujet` | Liste des tags (`Question.tags`) ayant ≥ 3 cartes déjà apprises |
 | GET | `/app/revision/sujet/<tag>` | Session de révision sur toutes les cartes déjà apprises portant ce tag |
 | GET | `/app/revision/aleatoire` | Session de révision aléatoire (max 10 cartes déjà apprises, retirée à chaque visite) |
@@ -567,7 +587,7 @@ avant livraison.
 | GET | `/admin/reports` | File des signalements personnels `QuestionReport.status="open"` — carte non retirée pour tout le monde, juste pour le(s) signaleur(s) |
 | POST | `/admin/reports/<report_id>/confirm` | Signalement jugé justifié — retire la question pour tout le monde (`Question.status="pending"`, rejoint `/admin/questions`) et classe tous les signalements "open" de la question en `"confirmed"` |
 | POST | `/admin/reports/<report_id>/dismiss` | Signalement jugé injustifié — classe ce signalement en `"dismissed"`, la question redevient visible pour ce seul étudiant |
-| POST | `/admin/subjects/rename` | Renomme un `sujet` (recherche/remplace exact) sur toutes les cartes qui le partagent, depuis `/admin/dashboard` (bloc « שאלות לפי נושא ») — met aussi à jour `Progression.subject` en parallèle pour ne pas casser la progression déjà enregistrée |
+| POST | `/admin/subjects/rename` | Renomme le titre d'un [`Subject`](#subjects) par ID (une seule ligne modifiée), depuis `/admin/dashboard` (bloc « שאלות לפי נושא ») — si le nouveau titre entre en collision avec un autre sujet du même siman, fusionne les deux (questions + `Progression` réassignées, ancien sujet supprimé) |
 | POST | `/admin/reset-db` | **super_admin uniquement** — efface et recrée toutes les tables (confirmation texte `"RESET"` requise) |
 
 ---
@@ -831,8 +851,8 @@ Convertit un entier en notation hébraïque (gematria) avec geresh/gershayim :
   Avec un seul parcours activé, le sélecteur est remplacé par le simple en-tête `.toc-group-subject`.
 - En-tête par **parcours** (ex : `בשר בחלב`, libellé dans `PARCOURS_LABELS` de `question_types.py`)
 - Chaque **siman** est un `<details>` rétractable avec son numéro en hébreu (פ״ט, צ׳, …) et son titre (édité dans `/admin/topics`, indexé par parcours dans `siman_seif_topics.json`)
-- À l'intérieur : **cartes par sujet** (`Question.subject`) cliquables avec indicateur ✓ si complété, compteur de questions et plage indicative des seifim couverts (ex : `א–ג`)
-- Cliquer une carte ouvre une session sur toutes les questions du sujet dans le siman (`/app/chapitre/<sujet>/<siman>`)
+- À l'intérieur : **cartes par sujet** — les questions sont groupées par `Question.subject_id` (voir [`subjects`](#subjects)), le titre affiché est `Subject.title` — cliquables avec indicateur ✓ si complété, compteur de questions et plage indicative des seifim couverts (ex : `א–ג`)
+- Cliquer une carte ouvre une session sur toutes les questions du sujet (`/app/chapitre/<subject_id>`)
 - Aucun siman n'est verrouillé — l'étudiant accède librement à n'importe quel sujet
 
 ### Multi-parcours

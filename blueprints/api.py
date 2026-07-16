@@ -287,26 +287,26 @@ def answer():
     )
     user_speed.log_rt_mean, user_speed.log_rt_sd, user_speed.n_responses = us_mean, us_sd, us_n
 
-    # 3. progression upsert — keyed by (sujet, siman) : a question only counts as
-    # "validated" once it has been answered correctly at least once. A wrong
-    # answer never advances progress, and re-answering is not double-counted.
-    prog = Progression.query.filter_by(user_id=user.id, subject=q.subject, siman=q.siman).first()
-    total_in_siman = Question.query.filter_by(subject=q.subject, siman=q.siman, status="approved").count()
+    # 3. progression upsert — keyed by subject_id (implies siman) : a question
+    # only counts as "validated" once it has been answered correctly at least
+    # once. A wrong answer never advances progress, and re-answering is not
+    # double-counted.
+    prog = Progression.query.filter_by(user_id=user.id, subject_id=q.subject_id).first()
+    total_in_siman = Question.query.filter_by(subject_id=q.subject_id, status="approved").count()
     validated = (
         db.session.query(UserAnswer.question_id)
         .join(Question, Question.id == UserAnswer.question_id)
         .filter(
             UserAnswer.user_id == user.id,
             UserAnswer.is_correct.is_(True),
-            Question.subject == q.subject,
-            Question.siman == q.siman,
+            Question.subject_id == q.subject_id,
             Question.status == "approved",
         )
         .distinct()
         .count()
     )
     if prog is None:
-        prog = Progression(user_id=user.id, subject=q.subject, siman=q.siman)
+        prog = Progression(user_id=user.id, subject_id=q.subject_id)
         db.session.add(prog)
     prog.questions_answered = validated
     prog.average_score = (validated / total_in_siman) if total_in_siman else 0

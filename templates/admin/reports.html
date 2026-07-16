@@ -29,7 +29,7 @@
             <span class="badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;font-size:0.65rem;">ממתינה</span>
             {% endif %}
             <span class="badge text-xs">{{ type_label.get(q.question_type, '—') }}</span>
-            {% if q.subject %}<span class="badge">{{ q.subject }}</span>{% endif %}
+            {% if q.subject %}<span class="badge">{{ q.subject.title }}</span>{% endif %}
             {% if q.siman is not none %}<span class="badge">סי' {{ q.siman }}</span>{% endif %}
           </div>
           <div class="semibold text-sm">{{ q.text or '— ללא טקסט —' }}</div>
