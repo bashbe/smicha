@@ -499,7 +499,6 @@
     const q = queue[state.idx];
     const nq = q.normalized;
     const origIdx = origIdxMap[q.id];
-    const totalDots = origQuestions.length;
     const isTrueFalse = nq.type === "true_false";
     const isOpinions = nq.type === "multiple_opinions_dropdown";
     root.innerHTML = "";
@@ -540,9 +539,18 @@
     header.appendChild(headerRight);
     root.appendChild(header);
 
-    // dots
+    // dots — fenêtre glissante centrée sur la question courante (5 de chaque
+    // côté) ; une fois qu'il ne reste plus que 5 questions après la question
+    // courante, la fenêtre cesse d'avancer et se fige sur la fin du paquet.
+    const DOT_RADIUS = 5;
+    const totalQuestions = origQuestions.length;
+    const windowSize = Math.min(totalQuestions, DOT_RADIUS * 2 + 1);
+    const dotsStart = Math.min(
+      Math.max(0, origIdx - DOT_RADIUS),
+      Math.max(0, totalQuestions - windowSize)
+    );
     const dots = el("div", "row center gap-1 player-dots");
-    for (let i = 0; i < totalDots; i++) {
+    for (let i = dotsStart; i < dotsStart + windowSize; i++) {
       const r = state.results[i];
       let cls = "dot";
       if (r === "correct") cls += " correct";
