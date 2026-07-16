@@ -256,3 +256,71 @@ def build_prior(hidden_difficulty: int | None, item_stats) -> ItemPrior:
         return ItemPrior(d0=d0, s0_good=_s0_from_d0(d0), alpha=ALPHA_CONTENT)
     d0, s0_good = derive_priors(item_stats)
     return ItemPrior(d0=d0, s0_good=s0_good, alpha=_alpha(item_stats.n_responses or 0))
+
+
+# ---------------------------------------------------------------------------
+# Retention instrumentation
+# ---------------------------------------------------------------------------
+LOG_LOSS_EPS = 1e-6  # clip predictions away from 0/1 so log loss stays finite
+
+
+def retention_report(pairs, n_bins: int = 10) -> dict:
+    """Score FSRS's predicted retention against observed outcomes.
+
+    ``pairs`` is an iterable of ``(predicted_r, is_correct)``; entries whose
+    ``predicted_r`` is None are ignored (card not yet engaged, no prediction).
+
+    Returns a dict with:
+      * ``n``                  — number of scored reviews
+      * ``log_loss``           — mean binary cross-entropy (PRIMARY metric,
+                                 exactly what FSRS optimises); lower is better
+      * ``rmse_bins``          — RMSE of predicted vs observed retention across
+                                 probability bins (the human-readable "off by
+                                 X" number)
+      * ``true_retention``     — observed recall rate
+      * ``predicted_retention``— mean predicted recall rate
+      * ``bins``               — per-bin calibration points (for a reliability
+                                 curve)
+
+    All-None / empty input yields a well-formed dict with ``n == 0`` and None
+    metrics, so callers can render an "insufficient data" state safely.
+    """
+    eps = LOG_LOSS_EPS
+    clean = [
+        (max(eps, min(1.0 - eps, float(p))), 1.0 if c else 0.0)
+        for p, c in pairs
+        if p is not None
+    ]
+    n = len(clean)
+    if n == 0:
+        return {
+            "n": 0, "log_loss": None, "rmse_bins": None,
+            "true_retention": None, "predicted_retention": None, "bins": [],
+        }
+
+    log_loss = -sum(y * math.log(p) + (1 - y) * math.log(1 - p) for p, y in clean) / n
+    true_ret = sum(y for _, y in clean) / n
+    pred_ret = sum(p for p, _ in clean) / n
+
+    bins = []
+    weighted_sq_err = 0.0
+    for b in range(n_bins):
+        lo, hi = b / n_bins, (b + 1) / n_bins
+        # last bin is closed on the right so p == 1.0 lands somewhere
+        members = [
+            (p, y) for p, y in clean
+            if (lo <= p < hi) or (b == n_bins - 1 and p >= hi)
+        ]
+        if not members:
+            continue
+        bn = len(members)
+        mean_pred = sum(p for p, _ in members) / bn
+        mean_obs = sum(y for _, y in members) / bn
+        bins.append({"lo": lo, "hi": hi, "n": bn, "pred": mean_pred, "obs": mean_obs})
+        weighted_sq_err += bn * (mean_pred - mean_obs) ** 2
+    rmse_bins = math.sqrt(weighted_sq_err / n)
+
+    return {
+        "n": n, "log_loss": log_loss, "rmse_bins": rmse_bins,
+        "true_retention": true_ret, "predicted_retention": pred_ret, "bins": bins,
+    }
