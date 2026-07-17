@@ -155,6 +155,16 @@
   const PARCOURS_LABELS = { bassar_bechalav: "בשר בחלב" };
   function parcoursLabel(p) { return PARCOURS_LABELS[p] || p || ""; }
 
+  // Mirrors the section labels used in templates/admin/questions.html and
+  // templates/student/settings.html.
+  const SECTION_LABELS = {
+    shulchan_aruch: 'שו"ע', tur: "טור", psikei_admur: 'פסקי אדה"ז', ptei_teshuva: "פתחי תשובה",
+  };
+  function sectionLabel(sections) {
+    if (!sections || !sections.length) return "";
+    return sections.map((s) => SECTION_LABELS[s] || s).join(" + ");
+  }
+
   function toHebNum(n) {
     if (!n || n <= 0) return String(n);
     const h = ["","ק","ר","ש","ת","תק","תר","תש","תת","תתק"];
@@ -170,6 +180,46 @@
 
   // ── answer flow ────────────────────────────────────────────────────────────
 
+  function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+  // Envoie la réponse au serveur, seule source de vérité pour la sauvegarde
+  // (FSRS, points, "apprise"). Une réponse HTTP non-2xx (ex: session expirée)
+  // était auparavant traitée comme un succès silencieux — la carte
+  // s'affichait comme corrigée côté client sans jamais être enregistrée, et
+  // ni les points ni le statut "apprise" ne survivaient à la fermeture de
+  // l'app. On retente les échecs transitoires (réseau / 5xx) et on distingue
+  // explicitement l'expiration de session (401), qui n'a aucune chance de
+  // réussir sans reconnexion.
+  async function submitAnswer(payload, guessCorrect, nq, q) {
+    const attempts = 3;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        const res = await fetch(cfg.answer, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.status === 401) return { data: null, sessionExpired: true };
+        if (!res.ok) throw new Error("http " + res.status);
+        return { data: await res.json(), sessionExpired: false };
+      } catch (e) {
+        if (i < attempts - 1) await sleep(400 * (i + 1));
+      }
+    }
+    // Échec persistant (réseau hors-ligne...) : on garde l'app jouable en
+    // mode dégradé, mais rien de tout cela n'est enregistré côté serveur —
+    // 0 point, pas de mise à jour FSRS, la question réapparaîtra donc comme
+    // non apprise à la prochaine visite.
+    return {
+      data: {
+        is_correct: guessCorrect, correct_key: nq.correctKey, points: 0,
+        combo: guessCorrect ? state.combo + 1 : 0, explanation: nq.explanation, seif: q.seif,
+        rating_badge: "", rating_tone: "", daily_bonus: 0, unsaved: true,
+      },
+      sessionExpired: false,
+    };
+  }
+
   async function pick(key) {
     if (state.revealed) return;
     const q = queue[state.idx];
@@ -184,21 +234,15 @@
     state.results[origIdx] = guessCorrect ? "correct" : "wrong";
     render();
 
-    let data;
-    try {
-      const res = await fetch(cfg.answer, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question_id: q.id, given_answer: key, response_time_ms: elapsed, combo: state.combo,
-          mode: cfg.mode,
-        }),
-      });
-      data = await res.json();
-    } catch (e) {
-      data = { is_correct: guessCorrect, correct_key: nq.correctKey, points: 0,
-               combo: guessCorrect ? state.combo + 1 : 0,
-               explanation: nq.explanation, seif: q.seif, rating_badge: "", rating_tone: "", daily_bonus: 0 };
+    const { data, sessionExpired } = await submitAnswer({
+      question_id: q.id, given_answer: key, response_time_ms: elapsed, combo: state.combo,
+      mode: cfg.mode,
+    }, guessCorrect, nq, q);
+
+    if (sessionExpired) {
+      window.alert("החיבור שלך פג — מתחבר מחדש. התשובה האחרונה לא נשמרה, יש לענות עליה שוב.");
+      window.location.reload();
+      return;
     }
 
     state.combo = data.combo;
@@ -224,6 +268,7 @@
       ratingBadge: data.rating_badge, ratingTone: data.rating_tone,
       explanation: data.explanation, seif: data.seif,
       isRetry: prevResult === "wrong",
+      unsaved: !!data.unsaved,
     };
     render();
 
@@ -573,13 +618,17 @@
     const metaParts = [];
     const pLabel = parcoursLabel(q.parcours);
     if (pLabel) metaParts.push(pLabel);
-    const srcSubject = q.subject || cfg.subject;
-    if (srcSubject) metaParts.push(srcSubject);
     const srcSiman = q.siman != null ? q.siman : Number(cfg.siman);
     if (srcSiman) metaParts.push("סימן " + toHebNum(srcSiman));
     if (q.seif !== null && q.seif !== undefined) metaParts.push("סעיף " + toHebNum(q.seif));
+    const secLabel = sectionLabel(q.section);
+    if (secLabel) metaParts.push(secLabel);
     if (metaParts.length) {
       card.appendChild(el("div", "card-meta", metaParts.join(" · ")));
+    }
+    const srcSubject = q.subject || cfg.subject;
+    if (srcSubject) {
+      card.appendChild(el("div", "card-meta card-meta-subject", srcSubject));
     }
     if (nq.scenario) {
       card.appendChild(el("div", "text-sm muted scenario-box", nq.scenario));
@@ -731,6 +780,9 @@
       const inner = el("div", "player-exp-inner");
       if (!state.feedback.isCorrect && state.combo === 0) {
         inner.appendChild(el("div", "exp-combo-break", "הקומבו נשבר"));
+      }
+      if (state.feedback.unsaved) {
+        inner.appendChild(el("div", "exp-combo-break", "אין חיבור לשרת — התשובה לא נשמרה, נא לבדוק את החיבור"));
       }
       if (state.feedback.explanation) {
         inner.appendChild(el("p", "text-sm line-height-loose", state.feedback.explanation));

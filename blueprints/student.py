@@ -474,6 +474,7 @@ def _load_chapitre(sp, base_filters: list, allowed: set[str] | None = None) -> l
         {
             "id": q.id, "difficulty": q.difficulty, "seif": q.seif,
             "subject": q.subject, "siman": q.siman, "parcours": q.parcours, "tags": q.tags or [],
+            "section": q.section or [],
             "normalized": normalize_db_question(q.as_dict()),
         }
         for q in rows
@@ -632,6 +633,7 @@ def _render_revision_jour(sp, actifs: list[StudentParcours]):
             "siman": q.siman,
             "parcours": q.parcours,
             "tags": q.tags or [],
+            "section": q.section or [],
             "normalized": nq,
         })
 
@@ -751,6 +753,7 @@ def revision_siman_detail(subject: str, siman: int):
         {
             "id": q.id, "difficulty": q.difficulty, "seif": q.seif,
             "subject": q.subject, "siman": q.siman, "parcours": q.parcours, "tags": q.tags or [],
+            "section": q.section or [],
             "normalized": normalize_db_question(q.as_dict()),
         }
         for q in rows
@@ -811,6 +814,7 @@ def revision_sujet_detail(tag: str):
         {
             "id": q.id, "difficulty": q.difficulty, "seif": q.seif,
             "subject": q.subject, "siman": q.siman, "parcours": q.parcours, "tags": q.tags or [],
+            "section": q.section or [],
             "normalized": normalize_db_question(q.as_dict()),
         }
         for q in rows
@@ -845,6 +849,7 @@ def revision_aleatoire():
         {
             "id": q.id, "difficulty": q.difficulty, "seif": q.seif,
             "subject": q.subject, "siman": q.siman, "parcours": q.parcours, "tags": q.tags or [],
+            "section": q.section or [],
             "normalized": normalize_db_question(q.as_dict()),
         }
         for q in sample
