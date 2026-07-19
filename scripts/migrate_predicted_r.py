@@ -1,8 +1,8 @@
 """Idempotent migration: add UserAnswer.predicted_r (retention instrumentation).
 
-`db.create_all()` never ADDs columns to existing tables, so run this once
-against a database that predates the retention-instrumentation change (dev
-SQLite you don't want to wipe, or prod Postgres):
+`db.create_all()` never ADDs columns to existing tables. `app.py` now applies
+this same column automatically on every startup (`_ensure_additive_columns`),
+so this script is only needed to apply the fix without restarting the process:
 
     python -m scripts.migrate_predicted_r
 

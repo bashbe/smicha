@@ -320,8 +320,10 @@ Champ d'instrumentation de rétention : `predicted_r` — la rétrievabilité **
 moment de cette révision** (stabilité pré-mise-à-jour + jours écoulés). `NULL` pour une carte pas
 encore engagée par FSRS (aucune prédiction à noter). Comparé à `is_correct`, il permet de mesurer
 a posteriori la **rétention réelle vs prédite** (log loss, true retention) — voir
-[Instrumentation de la rétention](#instrumentation-de-la-rétention). Base existante : lancer
-`python -m scripts.migrate_predicted_r` pour ajouter la colonne.
+[Instrumentation de la rétention](#instrumentation-de-la-rétention). La colonne est ajoutée
+automatiquement au démarrage sur une base existante (`app.py::_ensure_additive_columns`,
+voir [note sur les migrations additives](#note--colonnes-additives-appliquées-au-démarrage)) ;
+`python -m scripts.migrate_predicted_r` reste disponible pour l'appliquer sans redémarrer l'app.
 
 ---
 
@@ -1058,6 +1060,22 @@ python -m scripts.sync_prod_db && python app.py
 git config --global credential.helper store
 ```
 
+#### Note — colonnes additives appliquées au démarrage
+
+`db.create_all()` crée les tables manquantes mais n'ajoute jamais de colonne à une
+table déjà existante : historiquement, chaque colonne ajoutée à un modèle (`z_item`,
+`z_user`, `auto_grade`, `elo_ability`, `predicted_r`) nécessitait de lancer à la main
+le script `migrate_*.py` correspondant sur la base de prod après déploiement — une
+étape facile à oublier (cause vécue d'un `/admin/dashboard` et d'un `POST /api/answer`
+qui plantaient silencieusement après un déploiement, faute de migration). `app.py`
+(`_ensure_additive_columns`, appelé dans `create_app()` juste après `db.create_all()`)
+applique désormais ces `ALTER TABLE ADD COLUMN` automatiquement à chaque démarrage,
+de façon idempotente (sans effet si la colonne existe déjà). Les scripts
+`migrate_phase2` / `migrate_predicted_r` restent utilisables pour appliquer le
+correctif sans redémarrer le process. Ne couvre que les colonnes purement additives
+(`ADDITIVE_COLUMNS` dans `app.py`) — les migrations de données (`migrate_approve_pending`,
+`migrate_multi_parcours`) restent des scripts à lancer manuellement, une seule fois.
+
 ---
 
 ## Service worker & mise à jour automatique
@@ -1182,8 +1200,10 @@ sans avoir besoin d'une console PythonAnywhere.
 - **Calibration collective** : les priors par item ne remplacent jamais FSRS à 100 % (mélange
   plafonné à `ALPHA_MAX`). L'Elo est mis à jour en ligne ; `scripts/recompute_item_stats.py` est la
   source autoritaire des μ/σ de latence — le lancer en batch (cron nocturne) pour la stabilité.
-- **Migration** : sur une base existante, lancer `python -m scripts.migrate_phase2` (ajoute les
-  colonnes + tables Phase 2). Une base neuve (`python seed.py`) est déjà au bon schéma.
+- **Migration** : les colonnes Phase 2 sont désormais ajoutées automatiquement au démarrage sur
+  une base existante (voir [note sur les migrations additives](#note--colonnes-additives-appliquées-au-démarrage)) ;
+  `python -m scripts.migrate_phase2` reste disponible pour les appliquer sans redémarrer le process.
+  Une base neuve (`python seed.py`) est déjà au bon schéma.
 - **Acceptation par défaut** : `Question.status` vaut `"approved"` par défaut (voir
   [règle métier](#règle-métier--acceptation-par-défaut-et-signalement)). Sur une base existante,
   lancer `python -m scripts.migrate_approve_pending` pour approuver les questions `pending`

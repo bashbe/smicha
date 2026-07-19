@@ -16,7 +16,7 @@
       <h2 class="text-lg semibold" style="margin-bottom:0.75rem;">{{ g.label }}</h2>
       <div class="stack-sm">
         {% for s in g.simanim %}
-        <div class="card" style="background:rgba(30,41,59,0.4);">
+        <div class="card" style="background:color-mix(in srgb, var(--surface), var(--border) 25%);">
           <div class="row gap-2" style="align-items:center;flex-wrap:wrap;">
             <span class="badge">סי' {{ s.siman }}</span>
             <input type="hidden" name="siman_parcours" value="{{ g.parcours }}" />
