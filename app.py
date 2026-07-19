@@ -58,6 +58,42 @@ def _maybe_sync_prod_db() -> None:
 _maybe_sync_prod_db()
 
 
+# Colonnes ajoutées à des modèles existants depuis la mise en place du schéma
+# initial. `db.create_all()` crée les tables manquantes mais n'altère jamais
+# une table déjà existante — sans ce filet, une base de prod plus ancienne que
+# le dernier commit de schéma continue de tourner sans ces colonnes tant que
+# personne ne pense à lancer manuellement le script `scripts/migrate_*.py`
+# correspondant (cause vécue d'un plantage silencieux de /admin/dashboard et
+# de POST /api/answer après un déploiement). Idempotent : sans effet une fois
+# la colonne présente.
+ADDITIVE_COLUMNS = {
+    "user_answers": {
+        "z_item": "FLOAT",
+        "z_user": "FLOAT",
+        "auto_grade": "FLOAT",
+        "predicted_r": "FLOAT",
+    },
+    "student_profiles": {
+        "elo_ability": "FLOAT NOT NULL DEFAULT 0",
+    },
+}
+
+
+def _ensure_additive_columns() -> None:
+    from sqlalchemy import inspect, text
+
+    insp = inspect(db.engine)
+    for table, columns in ADDITIVE_COLUMNS.items():
+        if not insp.has_table(table):
+            continue
+        existing = {c["name"] for c in insp.get_columns(table)}
+        for col, coltype in columns.items():
+            if col in existing:
+                continue
+            db.session.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {coltype}"))
+    db.session.commit()
+
+
 def create_app(config_object: type = Config) -> Flask:
     app = Flask(__name__)
     app.config.from_object(config_object)
@@ -117,6 +153,7 @@ def create_app(config_object: type = Config) -> Flask:
 
     with app.app_context():
         db.create_all()
+        _ensure_additive_columns()
 
     return app
 

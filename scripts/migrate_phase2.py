@@ -1,8 +1,9 @@
 """Idempotent migration for the Phase 2 collective-calibration schema.
 
 `db.create_all()` creates the NEW tables (item_stats, user_speed) but does not
-ADD columns to existing tables. Run this once against an existing database
-(dev SQLite that you don't want to wipe, or prod Postgres):
+ADD columns to existing tables. `app.py` now applies these same columns
+automatically on every startup (`_ensure_additive_columns`), so this script is
+only needed to apply the fix without restarting the process:
 
     python -m scripts.migrate_phase2
 
