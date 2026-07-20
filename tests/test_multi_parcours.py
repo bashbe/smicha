@@ -26,6 +26,7 @@ from models import (  # noqa: E402
     UserAnswer,
     db,
 )
+from subjects import get_or_create_subject  # noqa: E402
 
 TODAY = date.today()
 
@@ -59,11 +60,12 @@ def _activate(user_id: str, parcours: str, exam_date=None, **kw) -> StudentParco
 
 
 def _make_question(parcours: str, siman=1, seif=1) -> Question:
+    subj = get_or_create_subject(parcours, siman, "נושא " + parcours)
     q = Question(
         text="שאלה", question_type="true_false",
         payload={"statement_text": "אמת?", "correct_answer": True},
         explanation="", difficulty=1, section=["shulchan_aruch"],
-        status="approved", parcours=parcours, subject="נושא " + parcours,
+        status="approved", parcours=parcours, subject_id=subj.id,
         siman=siman, seif=seif,
     )
     db.session.add(q)
@@ -282,7 +284,7 @@ def test_content_hidden_for_inactive_parcours():
         uid = _make_user()
         _activate(uid, "p1")
         _make_question("p1")
-        _make_question("p2", siman=2)  # non activé → masqué partout
+        q_p2 = _make_question("p2", siman=2)  # non activé → masqué partout
         client = app.test_client()
         _login(client, uid)
 
@@ -291,7 +293,7 @@ def test_content_hidden_for_inactive_parcours():
         assert "נושא p2" not in html
 
         # Accès URL directe à un sujet d'un parcours non activé → redirection.
-        resp = client.get("/app/chapitre/נושא p2/2")
+        resp = client.get(f"/app/chapitre/{q_p2.subject_id}")
         assert resp.status_code == 302
 
 
@@ -326,7 +328,7 @@ def test_flagged_and_pending_cards_hidden_from_revision():
         client = app.test_client()
         _login(client, uid)
 
-        subject = q_visible.subject
+        subject_id = q_visible.subject_id
 
         def _assert_only_visible(html: str):
             assert q_visible.id in html
@@ -335,7 +337,7 @@ def test_flagged_and_pending_cards_hidden_from_revision():
 
         _assert_only_visible(client.get("/app/revision/jour").get_data(as_text=True))
         _assert_only_visible(
-            client.get(f"/app/revision/siman/{subject}/1").get_data(as_text=True)
+            client.get(f"/app/revision/siman/{subject_id}").get_data(as_text=True)
         )
         _assert_only_visible(
             client.get("/app/revision/sujet/t1").get_data(as_text=True)

@@ -1,8 +1,9 @@
 """Lookup for siman/seif topic labels shown on the /app/parcours page.
 
-La hiérarchie de contenu est parcours → simanim → sujets (Question.subject est le
-thème traité DANS le siman, il peut couvrir plusieurs seifim ; le seif reste
-indicatif). Les libellés gérés ici sont distincts des sujets des questions :
+La hiérarchie de contenu est parcours → simanim → sujets (le Subject référencé
+par Question.subject_id est le thème traité DANS le siman, il peut couvrir
+plusieurs seifim ; le seif reste indicatif). Les libellés gérés ici sont
+distincts des sujets des questions :
 - le titre du siman (affiché dans le sélecteur de simanim)
 - le titre du seif (indicatif, édité dans /admin/topics mais plus affiché
   dans le sélecteur)

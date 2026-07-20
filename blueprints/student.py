@@ -8,10 +8,21 @@ from datetime import date, datetime, timedelta
 
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from sqlalchemy import distinct, func
+from sqlalchemy.orm import joinedload
 
 from auth_helpers import current_user, login_required
 from chapter_topics import siman_topic
-from models import FsrsCard, Progression, Question, QuestionReport, StudentParcours, StudentProfile, UserAnswer, db
+from models import (
+    FsrsCard,
+    Progression,
+    Question,
+    QuestionReport,
+    StudentParcours,
+    StudentProfile,
+    Subject,
+    UserAnswer,
+    db,
+)
 from question_types import PARCOURS_DESCRIPTIONS, PARCOURS_LABELS, VALID_PARCOURS, normalize_db_question
 
 bp = Blueprint("student", __name__, url_prefix="/app")
@@ -265,26 +276,34 @@ def home():
 
     all_qs = (
         Question.query.filter(Question.status == "approved", Question.parcours.in_(codes))
-        .with_entities(Question.id, Question.parcours, Question.subject, Question.siman, Question.section)
+        .with_entities(Question.id, Question.parcours, Question.subject_id, Question.siman, Question.section)
         .all()
     )
-    prog = {f"{p.subject}|{p.siman}": p for p in Progression.query.filter_by(user_id=sp.id).all()}
+    prog = {p.subject_id: p for p in Progression.query.filter_by(user_id=sp.id).all()}
 
     # Sujets/simanim uniques par parcours (mêmes règles que /app/parcours : sections
     # autorisées + signalements personnels exclus), pour déterminer le prochain
     # chapitre à étudier PAR parcours.
     unique_by_code: dict[str, list[dict]] = {c: [] for c in codes}
     seen_by_code: dict[str, set] = {c: set() for c in codes}
-    for qid, code, subject, siman, section in all_qs:
-        if not subject or siman is None:
+    for qid, code, subject_id, siman, section in all_qs:
+        if not subject_id or siman is None:
             continue
         if not (set(_to_section_list(section)) & allowed) or qid in hidden_ids:
             continue
-        key = f"{subject}|{siman}"
-        if key in seen_by_code[code]:
+        if subject_id in seen_by_code[code]:
             continue
-        seen_by_code[code].add(key)
-        unique_by_code[code].append({"subject": subject, "siman": siman})
+        seen_by_code[code].add(subject_id)
+        unique_by_code[code].append({"subject_id": subject_id, "siman": siman})
+
+    titles = {
+        s.id: s.title for s in Subject.query.filter(
+            Subject.id.in_({u["subject_id"] for lst in unique_by_code.values() for u in lst})
+        ).all()
+    }
+    for lst in unique_by_code.values():
+        for u in lst:
+            u["subject"] = titles.get(u["subject_id"], "")
 
     # Précision / volume de réponses par parcours — quelques stats rapides par section.
     answer_rows = (
@@ -309,7 +328,7 @@ def home():
         code = r.parcours
         unique = sorted(unique_by_code.get(code, []), key=lambda u: (u["subject"], u["siman"]))
         next_chapter = next(
-            (u for u in unique if not prog.get(f"{u['subject']}|{u['siman']}") or prog[f"{u['subject']}|{u['siman']}"].status != "completed"),
+            (u for u in unique if not prog.get(u["subject_id"]) or prog[u["subject_id"]].status != "completed"),
             unique[0] if unique else None,
         )
         stat = stats_by_code.get(code, {"total": 0, "correct": 0})
@@ -364,15 +383,15 @@ def parcours():
 
     # Hiérarchie de contenu : parcours → siman → sujet (le sujet regroupe les
     # questions à l'intérieur du siman ; le seif reste indicatif).
-    # by_parcours[parcours][siman][subject] = {"count", "seifim"}
+    # by_parcours[parcours][siman][subject_id] = {"count", "seifim"}
     by_parcours: dict[str, dict[int, dict[str, dict]]] = {}
     for q in qs:
-        if not q.parcours or not q.subject or q.siman is None:
+        if not q.parcours or not q.subject_id or q.siman is None:
             continue
         bucket = (
             by_parcours.setdefault(q.parcours, {})
             .setdefault(q.siman, {})
-            .setdefault(q.subject, {"count": 0, "seifim": set()})
+            .setdefault(q.subject_id, {"count": 0, "seifim": set()})
         )
         bucket["count"] += 1
         if q.seif is not None:
@@ -381,31 +400,35 @@ def parcours():
     # IDs of questions in allowed sections (Python-side filter for JSON column)
     allowed_q_ids = [q.id for q in qs]
     correct_rows = (
-        db.session.query(Question.parcours, Question.siman, Question.subject,
+        db.session.query(Question.parcours, Question.siman, Question.subject_id,
                          func.count(distinct(UserAnswer.question_id)))
         .join(UserAnswer, UserAnswer.question_id == Question.id)
         .filter(UserAnswer.user_id == sp.id, Question.id.in_(allowed_q_ids),
                 UserAnswer.is_correct == True)
-        .group_by(Question.parcours, Question.siman, Question.subject)
+        .group_by(Question.parcours, Question.siman, Question.subject_id)
         .all()
     )
     correct_map = {f"{r[0]}|{r[1]}|{r[2]}": r[3] for r in correct_rows}
+
+    subject_ids = {sid for simans in by_parcours.values() for subs in simans.values() for sid in subs}
+    titles = {s.id: s.title for s in Subject.query.filter(Subject.id.in_(subject_ids)).all()}
 
     groups = []
     for parcours_code in sorted(by_parcours.keys()):
         simanim = []
         for siman, subjects_map in sorted(by_parcours[parcours_code].items()):
-            # sujets ordonnés selon le texte : par premier seif croissant
+            # sujets ordonnés selon le titre : par premier seif croissant
             ordered_subjects = sorted(
                 subjects_map.items(),
-                key=lambda kv: (min(kv[1]["seifim"]) if kv[1]["seifim"] else 10**6, kv[0]),
+                key=lambda kv: (min(kv[1]["seifim"]) if kv[1]["seifim"] else 10**6, titles.get(kv[0], "")),
             )
             sujets = []
-            for subject, data in ordered_subjects:
-                answered = correct_map.get(f"{parcours_code}|{siman}|{subject}", 0)
+            for subject_id, data in ordered_subjects:
+                answered = correct_map.get(f"{parcours_code}|{siman}|{subject_id}", 0)
                 seifim_sorted = sorted(data["seifim"])
                 sujets.append({
-                    "subject": subject,
+                    "subject_id": subject_id,
+                    "subject": titles.get(subject_id, ""),
                     "count": data["count"],
                     "answered": answered,
                     "completed": answered >= data["count"] and data["count"] > 0,
@@ -440,13 +463,16 @@ def parcours():
     )
 
 
-def _load_chapitre(sp, base_filters: list, allowed: set[str] | None = None) -> list | None:
-    """Shared helper: fetch unanswered questions matching base_filters.
+def _load_chapitre(sp, subject_id: str, extra_filters: list, allowed: set[str] | None = None) -> list | None:
+    """Shared helper: fetch unanswered questions of a subject matching extra_filters.
     Restreint aux parcours activés — bloque aussi l'accès par URL directe à
     un sujet d'un parcours non activé."""
     codes = active_parcours_codes(sp.id)
     rows = (
-        Question.query.filter(Question.parcours.in_(codes), *base_filters)
+        Question.query.filter(
+            Question.parcours.in_(codes), Question.subject_id == subject_id,
+            Question.status == "approved", *extra_filters,
+        )
         .order_by(Question.seif.asc())
         .all()
     )
@@ -470,57 +496,52 @@ def _load_chapitre(sp, base_filters: list, allowed: set[str] | None = None) -> l
         rows = [q for q in rows if q.id not in correct_ids]
     if not rows:
         return None
+    subj = Subject.query.get(subject_id)
+    title = subj.title if subj else None
     return [
         {
             "id": q.id, "difficulty": q.difficulty, "seif": q.seif,
-            "subject": q.subject, "siman": q.siman, "parcours": q.parcours, "tags": q.tags or [],
-            "section": q.section or [],
+            "subject": title, "subject_id": subject_id, "siman": q.siman,
+            "parcours": q.parcours, "tags": q.tags or [], "section": q.section or [],
             "normalized": normalize_db_question(q.as_dict()),
         }
         for q in rows
     ]
 
 
-@bp.route("/chapitre/<path:subject>/<int:siman>/<int:seif>")
+@bp.route("/chapitre/<subject_id>/<int:seif>")
 @login_required
-def chapitre_seif(subject: str, siman: int, seif: int):
+def chapitre_seif(subject_id: str, seif: int):
     sp = get_profile()
     allowed = allowed_sections(sp.section)
-    questions = _load_chapitre(sp, [
-        Question.subject == subject,
-        Question.siman == siman,
-        Question.seif == seif,
-        Question.status == "approved",
-    ], allowed)
+    subj = Subject.query.get_or_404(subject_id)
+    questions = _load_chapitre(sp, subject_id, [Question.seif == seif], allowed)
     if questions is None:
         flash("כל השאלות בסעיף זה הושלמו! עברו לחזרות 🎓", "success")
         return redirect(url_for("student.revision"))
     return render_template(
         "student/chapitre.html",
-        subject=subject,
-        siman=siman,
+        subject=subj.title,
+        siman=subj.siman,
         questions=questions,
         profile=sp,
     )
 
 
-@bp.route("/chapitre/<path:subject>/<int:siman>")
+@bp.route("/chapitre/<subject_id>")
 @login_required
-def chapitre(subject: str, siman: int):
+def chapitre(subject_id: str):
     sp = get_profile()
     allowed = allowed_sections(sp.section)
-    questions = _load_chapitre(sp, [
-        Question.subject == subject,
-        Question.siman == siman,
-        Question.status == "approved",
-    ], allowed)
+    subj = Subject.query.get_or_404(subject_id)
+    questions = _load_chapitre(sp, subject_id, [], allowed)
     if questions is None:
         flash("כל השאלות בסימן זה הושלמו! עברו לחזרות 🎓", "success")
         return redirect(url_for("student.revision"))
     return render_template(
         "student/chapitre.html",
-        subject=subject,
-        siman=siman,
+        subject=subj.title,
+        siman=subj.siman,
         questions=questions,
         profile=sp,
     )
@@ -611,6 +632,7 @@ def _render_revision_jour(sp, actifs: list[StudentParcours]):
     due_query = (
         db.session.query(FsrsCard, Question)
         .join(Question, Question.id == FsrsCard.question_id)
+        .options(joinedload(Question.subject))
         .filter(
             FsrsCard.user_id == sp.id,
             FsrsCard.due_date <= today,
@@ -629,7 +651,8 @@ def _render_revision_jour(sp, actifs: list[StudentParcours]):
             "id": q.id,
             "difficulty": q.difficulty,
             "seif": q.seif,
-            "subject": q.subject,
+            "subject": q.subject.title if q.subject else None,
+            "subject_id": q.subject_id,
             "siman": q.siman,
             "parcours": q.parcours,
             "tags": q.tags or [],
@@ -688,29 +711,33 @@ def revision_siman():
         # Même regroupement que le sélecteur : parcours → siman → sujet
         by_parcours: dict[str, dict[int, dict[str, dict]]] = {}
         for q in qs:
-            if not q.parcours or not q.subject or q.siman is None:
+            if not q.parcours or not q.subject_id or q.siman is None:
                 continue
             bucket = (
                 by_parcours.setdefault(q.parcours, {})
                 .setdefault(q.siman, {})
-                .setdefault(q.subject, {"count": 0, "seifim": set()})
+                .setdefault(q.subject_id, {"count": 0, "seifim": set()})
             )
             bucket["count"] += 1
             if q.seif is not None:
                 bucket["seifim"].add(q.seif)
+
+        subject_ids = {sid for simans in by_parcours.values() for subs in simans.values() for sid in subs}
+        titles = {s.id: s.title for s in Subject.query.filter(Subject.id.in_(subject_ids)).all()}
 
         for parcours_code in sorted(by_parcours.keys()):
             simanim = []
             for siman, subjects_map in sorted(by_parcours[parcours_code].items()):
                 ordered_subjects = sorted(
                     subjects_map.items(),
-                    key=lambda kv: (min(kv[1]["seifim"]) if kv[1]["seifim"] else 10**6, kv[0]),
+                    key=lambda kv: (min(kv[1]["seifim"]) if kv[1]["seifim"] else 10**6, titles.get(kv[0], "")),
                 )
                 sujets = []
-                for subject, data in ordered_subjects:
+                for subject_id, data in ordered_subjects:
                     seifim_sorted = sorted(data["seifim"])
                     sujets.append({
-                        "subject": subject,
+                        "subject_id": subject_id,
+                        "subject": titles.get(subject_id, ""),
                         "count": data["count"],
                         "seif_min": seifim_sorted[0] if seifim_sorted else None,
                         "seif_max": seifim_sorted[-1] if seifim_sorted else None,
@@ -730,17 +757,18 @@ def revision_siman():
     return render_template("student/revision_siman_list.html", groups=groups, profile=sp)
 
 
-@bp.route("/revision/siman/<path:subject>/<int:siman>")
+@bp.route("/revision/siman/<subject_id>")
 @login_required
-def revision_siman_detail(subject: str, siman: int):
+def revision_siman_detail(subject_id: str):
     sp = get_profile()
     allowed = allowed_sections(sp.section)
     learned_ids = _learned_question_ids(sp.id)
     hidden_ids = _hidden_question_ids(sp.id)
 
     codes = active_parcours_codes(sp.id)
+    subj = Subject.query.get_or_404(subject_id)
     rows = [q for q in Question.query.filter(
-        Question.subject == subject, Question.siman == siman,
+        Question.subject_id == subject_id,
         Question.status == "approved", Question.id.in_(learned_ids),
         Question.parcours.in_(codes),
     ).order_by(Question.seif.asc()).all() if question_in_sections(q, allowed) and q.id not in hidden_ids]
@@ -752,14 +780,14 @@ def revision_siman_detail(subject: str, siman: int):
     questions = [
         {
             "id": q.id, "difficulty": q.difficulty, "seif": q.seif,
-            "subject": q.subject, "siman": q.siman, "parcours": q.parcours, "tags": q.tags or [],
-            "section": q.section or [],
+            "subject": subj.title, "subject_id": subject_id, "siman": q.siman,
+            "parcours": q.parcours, "tags": q.tags or [], "section": q.section or [],
             "normalized": normalize_db_question(q.as_dict()),
         }
         for q in rows
     ]
     return render_template(
-        "student/chapitre.html", subject=subject, siman=siman, questions=questions, profile=sp,
+        "student/chapitre.html", subject=subj.title, siman=subj.siman, questions=questions, profile=sp,
         mode="revision_siman", mode_label="חזרה לפי סימן", is_revision=True,
         back_url=url_for("student.revision_siman"),
     )
@@ -799,10 +827,13 @@ def revision_sujet_detail(tag: str):
 
     codes = active_parcours_codes(sp.id)
     rows = [
-        q for q in Question.query.filter(
+        q for q in Question.query
+        .join(Subject, Subject.id == Question.subject_id, isouter=True)
+        .options(joinedload(Question.subject))
+        .filter(
             Question.status == "approved", Question.id.in_(learned_ids),
             Question.parcours.in_(codes),
-        ).order_by(Question.subject.asc(), Question.siman.asc(), Question.seif.asc()).all()
+        ).order_by(Subject.title.asc(), Question.siman.asc(), Question.seif.asc()).all()
         if question_in_sections(q, allowed) and tag in (q.tags or []) and q.id not in hidden_ids
     ]
 
@@ -813,8 +844,8 @@ def revision_sujet_detail(tag: str):
     questions = [
         {
             "id": q.id, "difficulty": q.difficulty, "seif": q.seif,
-            "subject": q.subject, "siman": q.siman, "parcours": q.parcours, "tags": q.tags or [],
-            "section": q.section or [],
+            "subject": q.subject.title if q.subject else None, "subject_id": q.subject_id,
+            "siman": q.siman, "parcours": q.parcours, "tags": q.tags or [], "section": q.section or [],
             "normalized": normalize_db_question(q.as_dict()),
         }
         for q in rows
@@ -835,7 +866,7 @@ def revision_aleatoire():
     hidden_ids = _hidden_question_ids(sp.id)
 
     codes = active_parcours_codes(sp.id)
-    rows = [q for q in Question.query.filter(
+    rows = [q for q in Question.query.options(joinedload(Question.subject)).filter(
         Question.status == "approved", Question.id.in_(learned_ids),
         Question.parcours.in_(codes),
     ).all() if question_in_sections(q, allowed) and q.id not in hidden_ids]
@@ -848,8 +879,8 @@ def revision_aleatoire():
     questions = [
         {
             "id": q.id, "difficulty": q.difficulty, "seif": q.seif,
-            "subject": q.subject, "siman": q.siman, "parcours": q.parcours, "tags": q.tags or [],
-            "section": q.section or [],
+            "subject": q.subject.title if q.subject else None, "subject_id": q.subject_id,
+            "siman": q.siman, "parcours": q.parcours, "tags": q.tags or [], "section": q.section or [],
             "normalized": normalize_db_question(q.as_dict()),
         }
         for q in sample

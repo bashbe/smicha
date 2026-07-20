@@ -26,22 +26,22 @@
         <p class="text-sm muted">עוד אין שאלות במערכת.</p>
       {% else %}
         <ul style="list-style:none;padding:0;margin:0;" class="stack-sm">
-          {% for name, count in by_subject %}
+          {% for row in by_subject %}
           <li class="text-sm" data-subject-row>
             <div class="row between" style="gap:0.5rem;align-items:center;">
-              <span>{{ name }}</span>
+              <span>{{ row.title }}</span>
               <span class="row gap-1" style="align-items:center;">
-                <span class="muted">{{ count }}</span>
-                {% if name != '— ללא נושא —' %}
+                <span class="muted">{{ row.count }}</span>
+                {% if row.id %}
                 <button type="button" class="btn btn-outline" style="padding:0.2rem 0.5rem;min-height:auto;font-size:0.75rem;" onclick="toggleSubjectRename(this)">✏️</button>
                 {% endif %}
               </span>
             </div>
-            {% if name != '— ללא נושא —' %}
+            {% if row.id %}
             <form method="post" action="{{ url_for('admin.rename_subject') }}" class="row gap-1" style="display:none;margin-top:0.4rem;" data-rename-form
-                  onsubmit="return confirm('לשנות את שם הנושא בכל {{ count }} הכרטיסים? הפעולה תעדכן גם התקדמות תלמידים קיימת.');">
-              <input type="hidden" name="old_subject" value="{{ name }}" />
-              <input type="text" name="new_subject" value="{{ name }}" placeholder="שם נושא חדש…" style="flex:1;" required />
+                  onsubmit="return confirm('לשנות את שם הנושא בכל {{ row.count }} הכרטיסים? הפעולה תעדכן גם התקדמות תלמידים קיימת.');">
+              <input type="hidden" name="subject_id" value="{{ row.id }}" />
+              <input type="text" name="new_title" value="{{ row.title }}" placeholder="שם נושא חדש…" style="flex:1;" required />
               <button type="submit" class="btn btn-primary" style="padding:0.3rem 0.75rem;min-height:auto;font-size:0.8rem;">שנה</button>
             </form>
             {% endif %}
