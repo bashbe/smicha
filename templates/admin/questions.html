@@ -72,7 +72,7 @@
         </div>
         <div class="semibold text-sm" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;">{{ q.text or '— ללא טקסט —' }}</div>
         <div class="row gap-1" style="margin-top:0.3rem;flex-wrap:wrap;">
-          {% if q.subject %}<span class="badge">{{ q.subject }}</span>{% endif %}
+          {% if q.subject %}<span class="badge">{{ q.subject.title }}</span>{% endif %}
           {% if q.siman is not none %}<span class="badge">סי' {{ q.siman }}</span>{% endif %}
           {% if q.seif is not none %}<span class="badge">סע' {{ q.seif }}</span>{% endif %}
           <span class="badge">קו' {{ q.difficulty }}</span>
@@ -142,7 +142,7 @@
           <div class="grid grid-3" style="margin-top:0.75rem;">
             <div>
               <label>נושא (בתוך הסימן) <span class="destructive">*</span></label>
-              <input name="subject" value="{{ selected.subject or '' }}" placeholder="לדוגמה: משך ההמתנה בין בשר לחלב" />
+              <input name="subject" value="{{ selected.subject.title if selected.subject else '' }}" placeholder="לדוגמה: משך ההמתנה בין בשר לחלב" />
             </div>
             <div>
               <label>חלק הבחינה</label>

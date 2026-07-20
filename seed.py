@@ -12,6 +12,7 @@ from app import create_app
 from blueprints.auth import create_account
 from models import ItemStats, Question, User, db
 from question_types import normalize_imported_question
+from subjects import get_or_create_subject
 
 app = create_app()
 
@@ -40,6 +41,7 @@ def run():
                     print("skip invalid:", norm["issue"])
                     continue
                 ins = norm["insert"]
+                subj = get_or_create_subject(ins.get("parcours"), ins.get("siman"), ins.get("subject"))
                 db.session.add(
                     Question(
                         question_type=ins["question_type"],
@@ -52,7 +54,7 @@ def run():
                         section=ins["section"],
                         tags=ins["tags"],
                         source_ref=ins["source_ref"],
-                        subject=ins.get("subject"),
+                        subject_id=subj.id,
                         siman=ins.get("siman"),
                         seif=ins.get("seif"),
                         parcours=ins.get("parcours"),

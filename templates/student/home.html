@@ -70,7 +70,7 @@
     </div>
 
     {% if s.next_chapter %}
-      {% set continue_url = url_for('student.chapitre', subject=s.next_chapter.subject, siman=s.next_chapter.siman) %}
+      {% set continue_url = url_for('student.chapitre', subject_id=s.next_chapter.subject_id) %}
     {% else %}
       {% set continue_url = url_for('student.parcours') %}
     {% endif %}

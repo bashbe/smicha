@@ -107,7 +107,7 @@
             {{ question.text[:80] + '…' if question.text and question.text|length > 80 else (question.text or '—') }}
           </td>
           <td style="padding:0.6rem 1rem;" class="muted">
-            {{ question.subject or '—' }}{% if question.siman %} / {{ question.siman }}{% endif %}
+            {{ (question.subject.title if question.subject else None) or '—' }}{% if question.siman %} / {{ question.siman }}{% endif %}
           </td>
           <td style="padding:0.6rem 1rem;">
             {% set s = card.stability %}

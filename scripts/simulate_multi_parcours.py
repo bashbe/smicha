@@ -57,6 +57,7 @@ from models import (  # noqa: E402
     UserRole,
     db,
 )
+from subjects import get_or_create_subject  # noqa: E402
 
 SIM_EMAIL = "demo-multi@example.com"
 SIM_PASSWORD = "password123"
@@ -153,12 +154,13 @@ def _insert_mc(parcours, subject, siman, seif, difficulty, sections, text, opts,
     if not norm["valid"]:
         raise SystemExit(f"question invalide ({parcours} {siman}): {norm['issue']}")
     ins = norm["insert"]
+    subj = get_or_create_subject(ins.get("parcours"), ins.get("siman"), ins.get("subject"))
     q = Question(
         question_type=ins["question_type"], text=ins["text"], payload=ins["payload"],
         choices=ins["choices"], correct_answer=ins["correct_answer"],
         explanation=ins["explanation"], difficulty=ins["difficulty"],
         section=ins["section"], tags=ins["tags"], source_ref=ins["source_ref"],
-        subject=ins.get("subject"), siman=ins.get("siman"), seif=ins.get("seif"),
+        subject_id=subj.id, siman=ins.get("siman"), seif=ins.get("seif"),
         parcours=ins.get("parcours"), status="approved",
     )
     db.session.add(q)
@@ -306,7 +308,7 @@ def _seed_student(by_parcours: dict[str, list[dict]]) -> None:
             engaged_pool.append({"q": q, "state": state})
             # Sujets complétés (les cartes matures du parcours le plus avancé).
             if state == "review" and stability > 25:
-                completed_by_parcours.setdefault(code, set()).add((q.subject, q.siman))
+                completed_by_parcours.setdefault(code, set()).add(q.subject_id)
 
     # --- Réponses réparties selon le journal d'activité (couvre chaque jour de
     # série pour que rצף שיא ≥ rצף נוכחי et que le heatmap soit crédible) ---
@@ -323,10 +325,10 @@ def _seed_student(by_parcours: dict[str, list[dict]]) -> None:
                                       + timedelta(hours=random.randint(7, 22))))
 
     # Progression "completed" pour quelques sujets bien ancrés.
-    for code, subjects in completed_by_parcours.items():
-        for subject, siman in subjects:
+    for code, subject_ids in completed_by_parcours.items():
+        for subject_id in subject_ids:
             db.session.add(Progression(
-                user_id=user.id, subject=subject, siman=siman, status="completed",
+                user_id=user.id, subject_id=subject_id, status="completed",
                 questions_answered=3, average_score=0.9,
             ))
 

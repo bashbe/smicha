@@ -6,6 +6,7 @@ import json
 from datetime import datetime
 
 from flask import Blueprint, Response, flash, redirect, render_template, request, url_for
+from sqlalchemy.orm import joinedload
 
 import calibration
 from auth_helpers import current_user, login_user, logout_user, staff_required
@@ -21,6 +22,7 @@ from models import (
     QuestionReport,
     StudentParcours,
     StudentProfile,
+    Subject,
     User,
     UserAnswer,
     db,
@@ -31,6 +33,8 @@ from question_types import (
     normalize_imported_question,
     sync_question_row_from_payload,
 )
+from subjects import get_or_create_subject
+from subjects import rename_subject as rename_subject_by_id
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -101,15 +105,24 @@ def denied():
 @staff_required
 def dashboard():
     """Admin dashboard: overview of question status and subject distribution."""
-    qs = Question.query.with_entities(Question.status, Question.subject).all()
+    qs = Question.query.with_entities(Question.status, Question.subject_id).all()
     counts = {"pending": 0, "approved": 0, "rejected": 0}
-    by_subject: dict[str, int] = {}
-    for status, subject in qs:
+    by_subject_id: dict[str, int] = {}
+    for status, subject_id in qs:
         if status in counts:
             counts[status] += 1
-        name = subject or "— ללא נושא —"
-        by_subject[name] = by_subject.get(name, 0) + 1
-    by_subject_sorted = sorted(by_subject.items(), key=lambda kv: -kv[1])
+        by_subject_id[subject_id] = by_subject_id.get(subject_id, 0) + 1
+
+    none_count = by_subject_id.pop(None, 0)
+    titles = {s.id: s.title for s in Subject.query.filter(Subject.id.in_(by_subject_id.keys())).all()}
+    by_subject = [
+        {"id": sid, "title": titles.get(sid, "—"), "count": count}
+        for sid, count in by_subject_id.items()
+    ]
+    by_subject.sort(key=lambda r: -r["count"])
+    if none_count:
+        by_subject.append({"id": None, "title": "— ללא נושא —", "count": none_count})
+
     reports_count = QuestionReport.query.filter_by(status="open").count()
 
     # Retention calibration — computed live from the append-only UserAnswer log
@@ -123,7 +136,7 @@ def dashboard():
     retention = calibration.retention_report([(p, c) for p, c in ret_rows])
 
     return render_template(
-        "admin/dashboard.html", counts=counts, by_subject=by_subject_sorted,
+        "admin/dashboard.html", counts=counts, by_subject=by_subject,
         reports_count=reports_count, retention=retention,
     )
 
@@ -131,43 +144,50 @@ def dashboard():
 @bp.route("/subjects/rename", methods=["POST"])
 @staff_required
 def rename_subject():
-    """Renames a subject (`sujet`) across every card sharing that exact title.
+    """Renomme le titre affiché d'un sujet, par ID.
 
-    Acts as a search-and-replace on Question.subject; matching Progression
-    rows are updated in tandem so existing student progress stays linked to
-    the renamed subject instead of silently orphaning.
+    Si le nouveau titre entre en collision avec un autre sujet du même siman,
+    les deux sont fusionnés (questions + progression réassignées, l'ancien
+    sujet supprimé) — même résultat qu'avant, quand deux textes différents
+    étaient renommés vers la même valeur.
     """
     user = current_user()
-    old_subject = (request.form.get("old_subject") or "").strip()
-    new_subject = (request.form.get("new_subject") or "").strip()
+    subject_id = request.form.get("subject_id") or ""
+    new_title = (request.form.get("new_title") or "").strip()
 
-    if not old_subject or not new_subject:
+    subj = Subject.query.get(subject_id)
+    if subj is None:
+        flash("נושא לא נמצא", "error")
+        return redirect(url_for("admin.dashboard"))
+    if not new_title:
         flash("יש להזין שם נושא חדש", "error")
         return redirect(url_for("admin.dashboard"))
-    if old_subject == new_subject:
+    if new_title == subj.title:
         flash("השם החדש זהה לשם הקיים", "error")
         return redirect(url_for("admin.dashboard"))
 
-    matching = Question.query.filter_by(subject=old_subject).all()
-    if not matching:
-        flash(f'לא נמצאו שאלות עם הנושא "{old_subject}"', "error")
-        return redirect(url_for("admin.dashboard"))
-
-    note = f'שינוי שם נושא: "{old_subject}" ← "{new_subject}"'
-    for q in matching:
-        previous = q.as_dict()
-        q.subject = new_subject
+    result = rename_subject_by_id(subject_id, new_title)
+    old_title = result["old_title"]
+    target = result["subject"]
+    note = (
+        f'מיזוג נושאים: "{old_title}" ← מוזג לתוך "{new_title}"'
+        if result["merged_into"] else f'שינוי שם נושא: "{old_title}" ← "{new_title}"'
+    )
+    for q in result["questions"]:
+        previous = result["previous"][q.id]
+        new_content = dict(previous, subject_id=target.id, subject=target.title)
         db.session.add(
             QuestionEdit(
                 question_id=q.id, editor_id=user.id, action="edited",
-                previous_content=previous, new_content=q.as_dict(), note=note,
+                previous_content=previous, new_content=new_content, note=note,
             )
         )
 
-    Progression.query.filter_by(subject=old_subject).update({"subject": new_subject})
-
     db.session.commit()
-    flash(f'{len(matching)} שאלות עודכנו: "{old_subject}" ← "{new_subject}"', "success")
+    if result["merged_into"]:
+        flash(f'{len(result["questions"])} שאלות מוזגו: "{old_title}" ← "{new_title}"', "success")
+    else:
+        flash(f'{len(result["questions"])} שאלות עודכנו: "{old_title}" ← "{new_title}"', "success")
     return redirect(url_for("admin.dashboard"))
 
 
@@ -212,6 +232,7 @@ def user_detail(user_id):
         .filter_by(user_id=user_id)
         .join(Question, Question.id == FsrsCard.question_id)
         .add_entity(Question)
+        .options(joinedload(Question.subject))
         .order_by(FsrsCard.stability.desc())
         .all()
     )
@@ -296,6 +317,7 @@ def import_questions():
                     continue
                 ins = norm["insert"]
                 try:
+                    subj = get_or_create_subject(ins.get("parcours"), ins.get("siman"), ins.get("subject"))
                     db.session.add(
                         Question(
                             question_type=ins["question_type"],
@@ -308,7 +330,7 @@ def import_questions():
                             section=ins["section"],
                             tags=ins["tags"],
                             source_ref=ins["source_ref"],
-                            subject=ins.get("subject"),
+                            subject_id=subj.id,
                             siman=ins.get("siman"),
                             seif=ins.get("seif"),
                             parcours=ins.get("parcours"),
@@ -413,6 +435,7 @@ def reports():
         db.session.query(QuestionReport, Question, User)
         .join(Question, Question.id == QuestionReport.question_id)
         .join(User, User.id == QuestionReport.reporter_id)
+        .options(joinedload(Question.subject))
         .filter(QuestionReport.status == "open")
         .order_by(QuestionReport.created_at.desc())
         .all()
@@ -491,7 +514,7 @@ def questions():
     tag_filter = request.args.get("tag", "").strip()
     selected_id = request.args.get("id", "")
 
-    query = Question.query
+    query = Question.query.options(joinedload(Question.subject))
     if status:
         query = query.filter_by(status=status)
     if qtype:
@@ -511,9 +534,9 @@ def questions():
             flash("סעיף חייב להיות מספר", "error")
             seif_filter = ""
     if search:
-        query = query.filter(
+        query = query.outerjoin(Subject, Subject.id == Question.subject_id).filter(
             or_(
-                Question.subject.ilike(f"%{search}%"),
+                Subject.title.ilike(f"%{search}%"),
                 Question.text.ilike(f"%{search}%"),
             )
         )
@@ -608,7 +631,11 @@ def edit_question(qid):
     q.correct_answer = row["correct_answer"]
     q.explanation = row.get("explanation")
     q.hint = draft["hint"] or None
-    q.subject = row.get("subject")
+    # Assigner l'objet (pas juste subject_id) : q.subject a déjà été chargé par
+    # le q.as_dict() de `previous` ci-dessus, une simple mise à jour de
+    # subject_id laisserait cette relation en cache avec l'ancien sujet pour
+    # le q.as_dict() de new_content plus bas.
+    q.subject = get_or_create_subject(row.get("parcours"), row.get("siman"), row.get("subject"))
     q.siman = row.get("siman")
     q.seif = row.get("seif")
     q.parcours = row.get("parcours")
