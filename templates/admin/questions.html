@@ -24,7 +24,9 @@
       </select>
       <select name="parcours" onchange="this.form.submit()" class="admin-filter-parcours">
         <option value="" {{ 'selected' if not filters.parcours }}>כל הפרוסים</option>
-        <option value="bassar_bechalav" {{ 'selected' if filters.parcours == 'bassar_bechalav' }}>בשר בחלב</option>
+        {% for code, label in parcours_labels.items() %}
+        <option value="{{ code }}" {{ 'selected' if filters.parcours == code }}>{{ label }}</option>
+        {% endfor %}
       </select>
       <input name="siman" type="number" min="1" value="{{ filters.siman }}" placeholder="סימן…" class="admin-filter-num" />
       <input name="seif" type="number" min="1" value="{{ filters.seif }}" placeholder="סעיף…" class="admin-filter-num" />
@@ -132,7 +134,9 @@
             <div>
               <label>פרוס <span class="destructive">*</span></label>
               <select name="parcours">
-                <option value="bassar_bechalav" {{ 'selected' if (selected.parcours or '') == 'bassar_bechalav' }}>בשר בחלב</option>
+                {% for code, label in parcours_labels.items() %}
+                <option value="{{ code }}" {{ 'selected' if (selected.parcours or '') == code }}>{{ label }}</option>
+                {% endfor %}
               </select>
             </div>
             <div>

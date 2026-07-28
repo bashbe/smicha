@@ -12,7 +12,6 @@ import calibration
 from auth_helpers import current_user, login_user, logout_user, staff_required
 from blueprints.auth import create_account
 from chapter_topics import save_topics
-from chapter_topics import seif_topic as get_seif_topic
 from chapter_topics import siman_topic as get_siman_topic
 from models import (
     FsrsCard,
@@ -561,6 +560,7 @@ def questions():
         filters=filters,
         question_types=QUESTION_TYPES,
         type_label=TYPE_LABEL,
+        parcours_labels=PARCOURS_LABELS,
     )
 
 
@@ -691,13 +691,7 @@ def topics():
             request.form.getlist("siman_num"),
             request.form.getlist("siman_topic"),
         ))
-        seif_rows = list(zip(
-            request.form.getlist("seif_parcours"),
-            request.form.getlist("seif_siman"),
-            request.form.getlist("seif_num"),
-            request.form.getlist("seif_topic"),
-        ))
-        save_topics(siman_rows, seif_rows)
+        save_topics(siman_rows)
         flash("הנושאים נשמרו", "success")
         return redirect(url_for("admin.topics"))
 
@@ -717,14 +711,10 @@ def topics():
     for parcours in sorted(by_parcours.keys()):
         simanim = []
         for siman in sorted(by_parcours[parcours].keys()):
-            seifim = [
-                {"seif": seif, "topic": get_seif_topic(parcours, siman, seif) or ""}
-                for seif in sorted(by_parcours[parcours][siman])
-            ]
             simanim.append({
                 "siman": siman,
                 "topic": get_siman_topic(parcours, siman) or "",
-                "seifim": seifim,
+                "seifim": sorted(by_parcours[parcours][siman]),
             })
         groups.append({
             "parcours": parcours,

@@ -1,10 +1,10 @@
 {% extends "admin/_layout.html" %}
-{% block title %}נושאי סימנים וסעיפים — ניהול{% endblock %}
+{% block title %}נושאי סימנים — ניהול{% endblock %}
 {% block content %}
 <div class="stack">
   <div>
-    <h1 class="text-2xl bold">נושאי סימנים וסעיפים</h1>
-    <p class="text-sm muted">השלם או ערוך את שם הנושא המוצג בעמוד "מסלול" מתחת למספר כל סימן, ובבועה של כל סעיף. הרשימה כוללת רק סימנים/סעיפים שכבר יש להם שאלות.</p>
+    <h1 class="text-2xl bold">נושאי סימנים</h1>
+    <p class="text-sm muted">השלם או ערוך את שם הנושא המוצג בעמוד "מסלול" מתחת למספר כל סימן. הרשימה כוללת רק סימנים שכבר יש להם שאלות.</p>
   </div>
 
   {% if not groups %}
@@ -25,16 +25,8 @@
           </div>
 
           {% if s.seifim %}
-          <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:0.5rem;margin-top:0.75rem;">
-            {% for sf in s.seifim %}
-            <div class="row gap-2" style="align-items:center;">
-              <span class="badge">סע' {{ sf.seif }}</span>
-              <input type="hidden" name="seif_parcours" value="{{ g.parcours }}" />
-              <input type="hidden" name="seif_siman" value="{{ s.siman }}" />
-              <input type="hidden" name="seif_num" value="{{ sf.seif }}" />
-              <input name="seif_topic" class="flex-1" placeholder="נושא הסעיף" value="{{ sf.topic }}" />
-            </div>
-            {% endfor %}
+          <div class="row gap-1 text-xs muted" style="flex-wrap:wrap;margin-top:0.5rem;">
+            {% for sf in s.seifim %}<span class="badge">סע' {{ sf }}</span>{% endfor %}
           </div>
           {% endif %}
         </div>
