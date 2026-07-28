@@ -22,11 +22,13 @@
           <th style="padding:0.75rem 1rem;text-align:right;font-weight:600;">רצף</th>
           <th style="padding:0.75rem 1rem;text-align:right;font-weight:600;">פתקים</th>
           <th style="padding:0.75rem 1rem;text-align:right;font-weight:600;">הצטרף</th>
+          <th style="padding:0.75rem 1rem;text-align:right;font-weight:600;">תפקידים</th>
           <th style="padding:0.75rem 1rem;"></th>
         </tr>
       </thead>
       <tbody>
         {% for profile, user in profiles %}
+        {% set user_roles = roles_by_user.get(user.id, []) %}
         <tr style="border-bottom:1px solid var(--border);">
           <td style="padding:0.75rem 1rem;">
             {{ profile.full_name or user.full_name or '—' }}
@@ -39,6 +41,36 @@
           <td style="padding:0.75rem 1rem;">{{ profile.streak_days }} 🔥</td>
           <td style="padding:0.75rem 1rem;">{{ card_counts.get(user.id, 0) }}</td>
           <td style="padding:0.75rem 1rem;" class="muted text-xs">{{ profile.created_at.strftime('%d/%m/%Y') }}</td>
+          <td style="padding:0.75rem 1rem;">
+            <div class="row gap-1" style="flex-wrap:wrap;align-items:center;">
+              {% for role in user_roles %}
+              <span class="badge" style="display:inline-flex;align-items:center;gap:0.3rem;">
+                {{ role }}
+                {% if is_super_admin %}
+                <form method="post" action="{{ url_for('admin.update_user_role', user_id=user.id) }}" style="display:inline;">
+                  <input type="hidden" name="role" value="{{ role }}" />
+                  <input type="hidden" name="action" value="remove" />
+                  <button type="submit" title="הסר תפקיד" style="line-height:1;padding:0;border:none;background:none;cursor:pointer;color:inherit;font-size:0.75rem;">✕</button>
+                </form>
+                {% endif %}
+              </span>
+              {% else %}
+              <span class="text-xs muted">—</span>
+              {% endfor %}
+            </div>
+            {% if is_super_admin %}
+            {% set available_roles = app_roles | reject('in', user_roles) | list %}
+            {% if available_roles %}
+            <form method="post" action="{{ url_for('admin.update_user_role', user_id=user.id) }}" class="row gap-1" style="margin-top:0.4rem;align-items:center;">
+              <input type="hidden" name="action" value="add" />
+              <select name="role" style="font-size:0.75rem;padding:0.15rem 0.4rem;">
+                {% for role in available_roles %}<option value="{{ role }}">{{ role }}</option>{% endfor %}
+              </select>
+              <button type="submit" class="btn btn-outline" style="font-size:0.7rem;padding:0.15rem 0.5rem;">+ הענק</button>
+            </form>
+            {% endif %}
+            {% endif %}
+          </td>
           <td style="padding:0.75rem 1rem;">
             <a href="{{ url_for('admin.user_detail', user_id=user.id) }}" class="btn btn-outline" style="font-size:0.75rem;padding:0.25rem 0.75rem;white-space:nowrap;">פרופיל ▸</a>
           </td>

@@ -14,6 +14,7 @@ from blueprints.auth import create_account
 from chapter_topics import save_topics
 from chapter_topics import siman_topic as get_siman_topic
 from models import (
+    APP_ROLES,
     FsrsCard,
     Progression,
     Question,
@@ -24,6 +25,7 @@ from models import (
     Subject,
     User,
     UserAnswer,
+    UserRole,
     db,
 )
 from question_types import (
@@ -213,9 +215,57 @@ def users():
         .group_by(StudentParcours.user_id)
         .all()
     )
+    roles_by_user: dict[str, list[str]] = {}
+    for user_id, role in db.session.query(UserRole.user_id, UserRole.role).all():
+        roles_by_user.setdefault(user_id, []).append(role)
+
     return render_template(
-        "admin/users.html", profiles=profiles, card_counts=card_counts, exam_dates=exam_dates
+        "admin/users.html",
+        profiles=profiles,
+        card_counts=card_counts,
+        exam_dates=exam_dates,
+        roles_by_user=roles_by_user,
+        app_roles=APP_ROLES,
+        is_super_admin=current_user().has_role("super_admin"),
     )
+
+
+@bp.route("/users/<user_id>/roles", methods=["POST"])
+@staff_required
+def update_user_role(user_id):
+    """Grant or revoke an app role for a user — reserved to super_admin.
+
+    Self-demotion out of super_admin is blocked so a lone admin can never
+    accidentally lock themselves out of role management.
+    """
+    actor = current_user()
+    if not actor.has_role("super_admin"):
+        return redirect(url_for("admin.denied"))
+
+    target = User.query.get_or_404(user_id)
+    role = request.form.get("role", "")
+    action = request.form.get("action", "")
+
+    if role not in APP_ROLES:
+        flash("תפקיד לא תקין", "error")
+        return redirect(url_for("admin.users"))
+
+    if action == "add":
+        if not UserRole.query.filter_by(user_id=target.id, role=role).first():
+            db.session.add(UserRole(user_id=target.id, role=role))
+            db.session.commit()
+        flash(f'התפקיד "{role}" הוענק ל-{target.email}', "success")
+    elif action == "remove":
+        if target.id == actor.id and role == "super_admin":
+            flash("אי אפשר להסיר את תפקיד super_admin מעצמך", "error")
+            return redirect(url_for("admin.users"))
+        UserRole.query.filter_by(user_id=target.id, role=role).delete()
+        db.session.commit()
+        flash(f'התפקיד "{role}" הוסר מ-{target.email}', "success")
+    else:
+        flash("פעולה לא תקינה", "error")
+
+    return redirect(url_for("admin.users"))
 
 
 @bp.route("/users/<user_id>")
