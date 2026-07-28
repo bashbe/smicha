@@ -163,7 +163,8 @@ smiha-flask/
 │   ├── recompute_item_stats.py # Batch : recalcul autoritaire des agrégats/priors + rollup rétention
 │   ├── migrate_phase2.py       # Migration schéma Phase 2 (bases existantes)
 │   ├── migrate_predicted_r.py  # Migration : ajoute user_answers.predicted_r (bases existantes)
-│   ├── migrate_approve_pending.py  # Approuve les questions "pending" historiques (bases existantes)
+│   ├── migrate_approve_pending.py  # (historique) Approuve les questions "pending" — ancien défaut
+│   ├── migrate_requeue_approved.py # Rebascule les questions "approved" en "pending" — nouveau défaut (bases existantes)
 │   ├── migrate_multi_parcours.py   # Crée student_parcours + backfill legacy (bases existantes)
 │   ├── migrate_subjects.py         # Crée la table subjects + backfill subject_id (bases existantes)
 │   ├── simulate_multi_parcours.py  # Base de démo isolée « plusieurs parcours entamés » (build/serve)
@@ -247,7 +248,7 @@ Un profil `onboarded` sans aucune ligne (base pré-migration) est automatiquemen
 | `section` | JSON | Liste de sections de révision |
 | `question_type` | Enum | `multiple_choice`, `true_false`, `multiple_opinions_dropdown` |
 | `payload` | JSON | Structure spécifique au type |
-| `status` | String | `"pending"` / `"approved"` / `"rejected"` — défaut `"approved"` (voir [règle de statut](#règle-métier--acceptation-par-défaut-et-signalement)) |
+| `status` | String | `"pending"` / `"approved"` / `"a_revoir"` / `"rejected"` — défaut `"pending"` (voir [règle de statut](#règle-métier--file-dattente-par-défaut-et-signalement)) |
 | `parcours` | String | Parcours d'apprentissage — valeurs dans `VALID_PARCOURS` (ex : `"bassar_bechalav"`) |
 | `subject_id` | FK subjects.id (nullable) | Sujet traité **dans le siman** — voir [`subjects`](#subjects) ci-dessous. Le champ JSON `sujet` (texte hébreu) reste le format d'import ; il est résolu vers cet ID par `get_or_create_subject()` (`subjects.py`), jamais stocké tel quel |
 | `siman` | Integer | Numéro de chapitre (entier positif, obligatoire) |
@@ -360,7 +361,7 @@ Journal d'audit : chaque action d'un validateur (approve / correct / reject) est
 ### `question_reports`
 Signalement **personnel** d'une question par un étudiant simple (aucun rôle staff). Tant que `status="open"`,
 la question reste `approved` globalement mais est retirée **uniquement** pour `reporter_id` (voir
-[règle de signalement](#règle-métier--acceptation-par-défaut-et-signalement)).
+[règle de signalement](#règle-métier--file-dattente-par-défaut-et-signalement)).
 
 | Colonne | Type | Notes |
 |---|---|---|
@@ -540,7 +541,7 @@ avant livraison.
 
 - **`exam_section` multi-valeur** : une question couvrant plusieurs sources doit lister toutes les sections pertinentes (`["shulchan_aruch", "tur"]`). Elle ne sera proposée qu'aux étudiants ayant **toutes** ces sections.
 - **Validation à l'import** : tout lot est passé par `normalize_imported_question()` — les erreurs sont remontées ligne par ligne avant sauvegarde. Aucune question n'est importée si le lot contient une erreur.
-- **Statut initial** : toute question importée arrive avec `status="approved"` et est immédiatement proposée aux étudiants ; elle ne repasse en `"pending"` que si un étudiant la signale (voir [règle de statut](#règle-métier--acceptation-par-défaut-et-signalement)).
+- **Statut initial** : toute question importée arrive avec `status="pending"` — elle n'est visible que par un `validator`/`super_admin` dans `/admin/questions` jusqu'à approbation explicite (voir [règle de statut](#règle-métier--file-dattente-par-défaut-et-signalement)).
 
 ---
 
@@ -593,7 +594,7 @@ avant livraison.
 | GET | `/admin/validate` | Redirection héritée vers `/admin/questions?status=pending` (l'onglet unifié) |
 | POST | `/admin/validate/approve-all` | Approuve en un clic toutes les questions `pending` (bouton « אשר הכל » de `/admin/questions` filtré sur `pending`) |
 | GET | `/admin/questions` | Recherche/édition de toutes les questions — filtres `status`, `type`, `parcours`, `siman`, `q` (texte libre) |
-| POST | `/admin/questions/<qid>/edit` | Sauvegarde / approuve / rejette une question depuis `/admin/questions` — résout aussi les `QuestionReport` "open" de la question (`"dismissed"` sur sauvegarde/approbation, `"confirmed"` sur rejet) |
+| POST | `/admin/questions/<qid>/edit` | Sauvegarde / approuve / signale à revoir / rejette une question depuis `/admin/questions` (actions `save` / `approve` / `flag` / `reject` — `flag` et `reject` exigent une note) — résout aussi les `QuestionReport` "open" de la question (`"dismissed"` sur sauvegarde/approbation, `"confirmed"` sur rejet) |
 | GET | `/admin/reports` | File des signalements personnels `QuestionReport.status="open"` — carte non retirée pour tout le monde, juste pour le(s) signaleur(s) |
 | POST | `/admin/reports/<report_id>/confirm` | Signalement jugé justifié — retire la question pour tout le monde (`Question.status="pending"`, rejoint `/admin/questions`) et classe tous les signalements "open" de la question en `"confirmed"` |
 | POST | `/admin/reports/<report_id>/dismiss` | Signalement jugé injustifié — classe ce signalement en `"dismissed"`, la question redevient visible pour ce seul étudiant |
@@ -668,12 +669,12 @@ parcours dont la file se vide déclenche son propre bonus, cumulables le même j
 #### `POST /api/report`
 
 Signalement d'une question, depuis le bouton 🚩 du lecteur (`chapitre.js`). Le comportement dépend
-du rôle de l'utilisateur qui signale (voir [règle de signalement](#règle-métier--acceptation-par-défaut-et-signalement)) :
+du rôle de l'utilisateur qui signale (voir [règle de signalement](#règle-métier--file-dattente-par-défaut-et-signalement)) :
 
 - **Étudiant simple** (aucun rôle staff) : crée un `QuestionReport` (`status="open"`) — la question
   n'est retirée **que pour lui**, `Question.status` global n'est pas touché.
-- **`validator` / `super_admin`** : retrait immédiat pour tout le monde — `Question.status` repasse
-  à `"pending"` et une `QuestionEdit` (`action="reported"`, `note=reason`) est journalisée, comme avant.
+- **`validator` / `super_admin`** : retrait immédiat pour tout le monde — `Question.status` passe
+  à `"a_revoir"` et une `QuestionEdit` (`action="reported"`, `note=reason`) est journalisée.
 
 Corps JSON attendu :
 ```json
@@ -952,47 +953,59 @@ Implémenté dans `allowed_sections()` + `question_in_sections()` (`blueprints/s
 
 `shulchan_aruch` est automatiquement injecté dans l'ensemble autorisé de tout étudiant par `allowed_sections()`, même s'il n'est pas explicitement dans `StudentProfile.section`. À l'onboarding et dans les paramètres, la case correspondante est verrouillée et toujours cochée.
 
-### Règle métier : acceptation par défaut et signalement
+### Règle métier : file d'attente par défaut et signalement
 
-Toute question est **acceptée par défaut** (`status="approved"` dès sa création — import ou seed), et donc immédiatement proposée aux étudiants. Il n'y a plus de file d'attente systématique avant mise en ligne.
+Toute question importée arrive par défaut en **`"pending"`** (en attente) — elle n'est visible que dans `/admin/questions` (accès `validator`/`super_admin`), jamais aux étudiants. 4 états possibles pour `Question.status` :
+
+| Statut | Visible par les étudiants ? | Comment y arriver |
+|---|---|---|
+| `pending` | Non | Défaut à l'import (`POST /admin/import` action `import`) |
+| `approved` | Oui | Le validateur/admin approuve depuis `/admin/questions` (action `approve`) ou en masse (`POST /admin/validate/approve-all` sur le filtre `pending`) |
+| `a_revoir` | Non | Le validateur/admin signale une question déjà approuvée comme à corriger (bouton 🚩 « סמן לבדיקה » sur `/admin/questions`, action `flag` — note obligatoire), ou un signalement étudiant est confirmé justifié, ou un `validator`/`super_admin` signale directement une question depuis le lecteur (`POST /api/report`) |
+| `rejected` | Non | Le validateur/admin rejette depuis `/admin/questions` (action `reject`, note obligatoire) — décision finale, atteignable depuis `pending` ou `a_revoir` |
 
 Le signalement d'une question (bouton 🚩 dans `chapitre.js`, `POST /api/report`) a un effet différent selon le rôle de qui signale :
 
 - **Étudiant simple** (aucun rôle staff) — la question est retirée **uniquement pour lui** : un `QuestionReport` (`status="open"`) est créé, `Question.status` global n'est pas modifié et les autres étudiants continuent de voir la question normalement. Toutes les requêtes du parcours étudiant (`blueprints/student.py`, helper `_hidden_question_ids()`) excluent les questions ayant un `QuestionReport` "open" pour l'utilisateur courant. La question réapparaît pour lui dès qu'un validateur tranche :
-  - **Confirme** (`POST /admin/reports/<id>/confirm`) → retrait pour **tout le monde** : `Question.status="pending"`, la carte rejoint la file standard de `/admin/questions` pour correction/rejet, et le signalement passe à `"confirmed"`.
+  - **Confirme** (`POST /admin/reports/<id>/confirm`) → retrait pour **tout le monde** : `Question.status="a_revoir"`, la carte rejoint la file "לתיקון" de `/admin/questions` pour correction/rejet, et le signalement passe à `"confirmed"`.
   - **Rejette** (`POST /admin/reports/<id>/dismiss`) → le signalement était injustifié : passe à `"dismissed"`, la question redevient visible pour ce seul étudiant.
   - **Modifie/ré-approuve la question** depuis `/admin/questions` (`POST /admin/questions/<qid>/edit`, action `save`/`approve`) → résout aussi automatiquement tout `QuestionReport` "open" de cette question en `"dismissed"` (elle a été corrigée, redevient visible pour ceux qui l'avaient signalée). Un rejet (`action="reject"`) les classe en `"confirmed"`.
-- **`validator` / `super_admin`** — retrait immédiat **pour tout le monde** : `Question.status` repasse à `"pending"` et une `QuestionEdit` (`action="reported"`, `note`=motif) est journalisée, comme dans l'ancien comportement historique. La question disparaît du parcours de tous les étudiants jusqu'à décision dans `/admin/questions`.
+- **`validator` / `super_admin`** — retrait immédiat **pour tout le monde** : `Question.status` passe à `"a_revoir"` et une `QuestionEdit` (`action="reported"`, `note`=motif) est journalisée. La question disparaît du parcours de tous les étudiants jusqu'à décision dans `/admin/questions`.
+- **Signalement interne depuis `/admin/questions`** (action `flag`, note obligatoire) — même effet que ci-dessus mais déclenché directement par le validateur/admin en train d'éditer la carte (`QuestionEdit` `action="flagged"`), sans passer par le lecteur étudiant.
 - **File d'attente des signalements personnels** — `/admin/reports` (accès staff) liste tous les `QuestionReport` "open", avec boutons "אשר" (confirmer, retrait global) / "דחה" (rejeter le signalement).
-- **Base existante** — `scripts/migrate_approve_pending.py` bascule en `approved` les questions `pending` d'une base existante (celles jamais explicitement rejetées) pour aligner les anciennes données sur ce nouveau défaut. La table `question_reports` est créée automatiquement par `db.create_all()` (nouvelle table, pas de script de migration nécessaire).
+- **Base existante** — `scripts/migrate_requeue_approved.py` rebascule en `pending` les questions `approved` d'une base existante, pour aligner les anciennes données sur ce nouveau défaut (⚠️ rend tout le contenu déjà approuvé invisible aux étudiants jusqu'à revalidation — à lancer délibérément, pas automatiquement). La table `question_reports` est créée automatiquement par `db.create_all()` (nouvelle table, pas de script de migration nécessaire).
 
 ---
 
 ## Pipeline d'import des questions
 
 ```
-Importer (JSON) → Prévisualisation (normalize_imported_question) → Sauvegarde status="approved"
+Importer (JSON) → Prévisualisation (normalize_imported_question) → Sauvegarde status="pending"
                                                                           ↓
-                                                        (visible immédiatement aux étudiants)
+                                                    (invisible aux étudiants — visible en /admin/questions)
+                                                                          ↓
+                                          /admin/questions → édite / approuve / rejette
+                                                                          ↓
+                                      Approuve → status="approved" (visible de tous)
                                                                           ↓
                               ┌─────────────────────────┴─────────────────────────┐
                               ↓                                                     ↓
-            Étudiant simple signale (🚩)                          validator/super_admin signale (🚩)
-            → QuestionReport "open"                                → status="pending" (retrait global)
+            Étudiant simple signale (🚩)                          validator/super_admin signale (🚩 lecteur ou "סמן לבדיקה")
+            → QuestionReport "open"                                → status="a_revoir" (retrait global)
             (retrait pour lui SEUL)                                            ↓
-                              ↓                                    /admin/questions → édite/approuve/rejette
+                              ↓                                    /admin/questions (filtre "לתיקון") → édite/approuve/rejette
               /admin/reports (file des signalements)
                     ↓                        ↓
       confirme (justifié)          rejette (injustifié)
-      → status="pending"           → QuestionReport "dismissed"
+      → status="a_revoir"          → QuestionReport "dismissed"
         (retrait global,             (redevient visible pour
          rejoint /admin/questions)    ce seul étudiant)
                               ↓
-            /admin/questions → édite (→ reports "dismissed") / rejette (→ reports "confirmed")
+            /admin/questions → édite (→ reports "dismissed") / approuve / rejette (→ reports "confirmed")
                                     ↓                        ↓
                               Approuve → status="approved"   Rejette → status="rejected" + note
                                     ↓
-                         Audit enregistré dans question_edits (action="approved"/"rejected"/"reported")
+              Audit enregistré dans question_edits (action="approved"/"flagged"/"rejected"/"reported")
 ```
 
 Le format JSON d'import accepte un tableau d'objets. Chaque objet est normalisé par `question_types.py`. Les erreurs de validation sont remontées ligne par ligne dans la prévisualisation — aucune question n'est importée si le lot contient des erreurs.
@@ -1045,7 +1058,8 @@ python -m scripts.sim_schedule          # évaluer le scheduler : scénarios + o
 python -m scripts.sim_priors            # visualiser le mélange des priors (jamais 100 %)
 python -m scripts.recompute_item_stats  # batch : recalcul autoritaire des agrégats/priors
 python -m scripts.migrate_phase2        # migration schéma sur une base EXISTANTE (prod)
-python -m scripts.migrate_approve_pending  # approuve les questions "pending" historiques (base EXISTANTE)
+python -m scripts.migrate_approve_pending  # (historique) approuve les questions "pending" — ancien défaut
+python -m scripts.migrate_requeue_approved  # rebascule les questions "approved" en "pending" — nouveau défaut (base EXISTANTE)
 python -m scripts.migrate_multi_parcours   # crée student_parcours + backfill (base EXISTANTE)
 
 # Tests (sans pytest requis)
@@ -1224,10 +1238,12 @@ sans avoir besoin d'une console PythonAnywhere.
   une base existante (voir [note sur les migrations additives](#note--colonnes-additives-appliquées-au-démarrage)) ;
   `python -m scripts.migrate_phase2` reste disponible pour les appliquer sans redémarrer le process.
   Une base neuve (`python seed.py`) est déjà au bon schéma.
-- **Acceptation par défaut** : `Question.status` vaut `"approved"` par défaut (voir
-  [règle métier](#règle-métier--acceptation-par-défaut-et-signalement)). Sur une base existante,
-  lancer `python -m scripts.migrate_approve_pending` pour approuver les questions `pending`
-  historiques.
+- **File d'attente par défaut** : `Question.status` vaut `"pending"` par défaut, avec 4 états
+  possibles — `pending` / `approved` / `a_revoir` / `rejected` (voir
+  [règle métier](#règle-métier--file-dattente-par-défaut-et-signalement)). Sur une base existante
+  déjà passée par l'ancien défaut `"approved"`, lancer `python -m scripts.migrate_requeue_approved`
+  pour rebasculer les questions `approved` en `pending` (⚠️ les retire temporairement de la vue
+  étudiant jusqu'à revalidation).
 - **`FsrsCard.target_stability`** est copié depuis `StudentProfile` à la création de la carte. Modifier le profil étudiant ne met pas à jour les cartes existantes — prévu par design.
 - **`/app/reset-progress`** efface `UserAnswer`, `FsrsCard`, `Progression` sans confirmation supplémentaire. Protéger en prod si nécessaire.
 - **`/admin/reset-db`** efface **toutes** les tables et déconnecte l'utilisateur. Réservé au `super_admin`, requiert la saisie du mot `"RESET"` en confirmation.

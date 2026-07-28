@@ -415,9 +415,9 @@ def report():
     - Étudiant simple (aucun rôle staff) : la question est retirée
       UNIQUEMENT pour lui (QuestionReport "open"), tant qu'un validateur ne
       l'a pas confirmée (retrait global) ou modifiée (signalement classé).
-    - Validateur / super_admin : retrait immédiat pour tout le monde
-      (comportement historique) — Question.status repasse à "pending" pour
-      retraitement dans /admin/questions.
+    - Validateur / super_admin : retrait immédiat pour tout le monde —
+      Question.status repasse à "a_revoir" pour retraitement dans
+      /admin/questions.
     """
     user = current_user()
     if user is None:
@@ -433,7 +433,7 @@ def report():
 
     if user.has_role("validator") or user.has_role("super_admin"):
         previous = q.as_dict()
-        q.status = "pending"
+        q.status = "a_revoir"
         db.session.add(
             QuestionEdit(
                 question_id=q.id,

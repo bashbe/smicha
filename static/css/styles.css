@@ -142,8 +142,10 @@ button { font-family: inherit; cursor: pointer; }
 .grid   { display: grid; gap: var(--space-2); }
 .grid-2 { grid-template-columns: 1fr 1fr; }
 .grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
 @media (max-width: 640px) {
   .grid-3 { grid-template-columns: 1fr; }
+  .grid-4 { grid-template-columns: 1fr 1fr; }
   .grid-2-mobile-1 { grid-template-columns: 1fr; }
 }
 .block    { display: block; }

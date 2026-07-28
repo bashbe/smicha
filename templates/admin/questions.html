@@ -12,7 +12,7 @@
     <form method="get" class="admin-filter-form">
       <select name="status" onchange="this.form.submit()" class="admin-filter-status">
         <option value="" {{ 'selected' if not filters.status }}>כל הסטטוסים</option>
-        {% for v,l in [('pending','ממתינות'),('approved','מאושרות'),('rejected','נדחו')] %}
+        {% for v,l in [('pending','ממתינות'),('a_revoir','לתיקון'),('approved','מאושרות'),('rejected','נדחו')] %}
         <option value="{{ v }}" {{ 'selected' if filters.status == v }}>{{ l }}</option>
         {% endfor %}
       </select>
@@ -65,6 +65,8 @@
           <span class="badge" style="background:rgba(34,197,94,0.15);color:#22c55e;font-size:0.65rem;">מאושרת</span>
           {% elif q.status == 'rejected' %}
           <span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;font-size:0.65rem;">נדחתה</span>
+          {% elif q.status == 'a_revoir' %}
+          <span class="badge" style="background:rgba(249,115,22,0.15);color:#f97316;font-size:0.65rem;">לתיקון</span>
           {% else %}
           <span class="badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;font-size:0.65rem;">ממתינה</span>
           {% endif %}
@@ -110,6 +112,8 @@
           <span class="pill" style="background:rgba(34,197,94,0.2);color:#22c55e;">מאושרת</span>
           {% elif selected.status == 'rejected' %}
           <span class="pill" style="background:rgba(239,68,68,0.2);color:#ef4444;">נדחתה</span>
+          {% elif selected.status == 'a_revoir' %}
+          <span class="pill" style="background:rgba(249,115,22,0.2);color:#f97316;">לתיקון</span>
           {% else %}
           <span class="pill" style="background:rgba(245,158,11,0.2);color:#f59e0b;">ממתינה לאימות</span>
           {% endif %}
@@ -169,7 +173,7 @@
 
         {# ── Note ── #}
         <div>
-          <label>הערת מאמת <span class="text-xs muted">(חובה לדחייה)</span></label>
+          <label>הערת מאמת <span class="text-xs muted">(חובה לדחייה ולסימון לבדיקה)</span></label>
           <textarea name="note" rows="2" placeholder="לא חובה לשמירה או לאישור">{{ selected.validator_note or '' }}</textarea>
         </div>
 
@@ -177,6 +181,7 @@
         <div class="row gap-2" style="padding-top:0.5rem;flex-wrap:wrap;">
           <button type="submit" class="btn btn-outline">💾 שמור</button>
           <button type="submit" class="btn btn-success" onclick="document.querySelector('#qform [name=action]').value='approve'">✓ שמור ואשר</button>
+          <button type="submit" class="btn" style="background:rgba(249,115,22,0.15);color:#f97316;" formnovalidate onclick="document.querySelector('#qform [name=action]').value='flag'">🚩 סמן לבדיקה</button>
           <button type="submit" class="btn btn-destructive" formnovalidate onclick="document.querySelector('#qform [name=action]').value='reject'">✗ דחה</button>
         </div>
       </form>

@@ -7,8 +7,8 @@
     <p class="text-sm muted">סקירת מצב מאגר השאלות</p>
   </div>
 
-  <div class="grid grid-3">
-    {% set cards = [('ממתינות לאימות', counts.pending, '⏳', 'var(--warning)'),('מאושרות', counts.approved, '✅', 'var(--success)'),('נדחו', counts.rejected, '❌', 'var(--destructive)')] %}
+  <div class="grid grid-4 grid-2-mobile-1">
+    {% set cards = [('ממתינות לאימות', counts.pending, '⏳', 'var(--warning)'),('לתיקון', counts.a_revoir, '🚩', '#f97316'),('מאושרות', counts.approved, '✅', 'var(--success)'),('נדחו', counts.rejected, '❌', 'var(--destructive)')] %}
     {% for label, value, icon, color in cards %}
     <div class="card">
       <div style="height:2.5rem;width:2.5rem;border-radius:0.5rem;display:flex;align-items:center;justify-content:center;background:{{ color }}26;">{{ icon }}</div>
@@ -56,6 +56,7 @@
         <a href="{{ url_for('admin.questions') }}" class="btn btn-outline">📋 כל השאלות</a>
         <a href="{{ url_for('admin.import_questions') }}" class="btn btn-primary">⬆️ ייבוא שאלות חדשות</a>
         <a href="{{ url_for('admin.questions', status='pending') }}" class="btn btn-outline">✅ אימות שאלות ממתינות ({{ counts.pending }})</a>
+        <a href="{{ url_for('admin.questions', status='a_revoir') }}" class="btn btn-outline">🚩 שאלות לתיקון ({{ counts.a_revoir }})</a>
         <a href="{{ url_for('admin.reports') }}" class="btn btn-outline">🚩 דיווחים אישיים ({{ reports_count }})</a>
         <a href="{{ url_for('admin.export_rejected') }}" class="btn btn-outline">⬇️ ייצוא שאלות שנדחו ({{ counts.rejected }}) JSON</a>
       </div>

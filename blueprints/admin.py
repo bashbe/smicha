@@ -106,7 +106,7 @@ def denied():
 def dashboard():
     """Admin dashboard: overview of question status and subject distribution."""
     qs = Question.query.with_entities(Question.status, Question.subject_id).all()
-    counts = {"pending": 0, "approved": 0, "rejected": 0}
+    counts = {"pending": 0, "approved": 0, "a_revoir": 0, "rejected": 0}
     by_subject_id: dict[str, int] = {}
     for status, subject_id in qs:
         if status in counts:
@@ -334,7 +334,7 @@ def import_questions():
                             siman=ins.get("siman"),
                             seif=ins.get("seif"),
                             parcours=ins.get("parcours"),
-                            status="approved",
+                            status="pending",
                             created_by=user.id,
                         )
                     )
@@ -447,7 +447,7 @@ def reports():
 @staff_required
 def confirm_report(report_id):
     """Le signalement est justifié : retrait de la question pour TOUT LE
-    MONDE (status -> "pending"), elle rejoint la file standard de
+    MONDE (status -> "a_revoir"), elle rejoint la file "à revoir" de
     /admin/questions pour correction/rejet."""
     user = current_user()
     rep = QuestionReport.query.get_or_404(report_id)
@@ -455,7 +455,7 @@ def confirm_report(report_id):
 
     if q.status == "approved":
         previous = q.as_dict()
-        q.status = "pending"
+        q.status = "a_revoir"
         db.session.add(
             QuestionEdit(
                 question_id=q.id, editor_id=user.id, action="reported",
@@ -600,6 +600,23 @@ def edit_question(qid):
         _resolve_open_reports(q.id, user.id, "confirmed")
         db.session.commit()
         flash("נדחתה", "success")
+        return redirect(url_for("admin.questions", **redirect_params))
+
+    if action == "flag":
+        if not note:
+            flash("הערה דרושה לסימון לבדיקה", "error")
+            return redirect(url_for("admin.questions", **redirect_params))
+        q.status = "a_revoir"
+        q.validated_by = user.id
+        q.validator_note = note
+        db.session.add(
+            QuestionEdit(
+                question_id=q.id, editor_id=user.id, action="flagged",
+                note=note, previous_content=previous, new_content=q.as_dict(),
+            )
+        )
+        db.session.commit()
+        flash("השאלה סומנה לבדיקה", "success")
         return redirect(url_for("admin.questions", **redirect_params))
 
     question_type = request.form.get("question_type") or q.question_type

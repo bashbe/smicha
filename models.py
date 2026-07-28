@@ -146,10 +146,11 @@ class Question(db.Model):
     difficulty = db.Column(db.Integer, default=2, nullable=False)
     section = db.Column(db.JSON, default=lambda: ["shulchan_aruch"], nullable=False)
     tags = db.Column(db.JSON, default=list)
-    # Toute question est acceptée par défaut ("approved"). Elle ne repasse en
-    # "pending" que si un étudiant la signale (bouton "signaler" côté player) ;
-    # l'admin la traite alors dans /admin/questions (filtre statut "pending").
-    status = db.Column(db.String(16), default="approved", nullable=False, index=True)
+    # 4 états : "pending" (défaut à l'import — visible seulement en /admin/questions,
+    # jamais aux étudiants) → "approved" (validée, visible de tous) ou "a_revoir"
+    # (signalée par un validator/super_admin depuis l'admin ou un signalement étudiant
+    # confirmé — à corriger) → "rejected" (décision finale depuis "a_revoir" ou "pending").
+    status = db.Column(db.String(16), default="pending", nullable=False, index=True)
     created_by = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"))
     validated_by = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"))
     validator_note = db.Column(db.Text)
