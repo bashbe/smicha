@@ -117,7 +117,9 @@ en production.**
 ## Vérification (agent Haiku — texte source seul, Sefaria indisponible)
 
 - [~] Lot 1 (ehy 26) — agent Haiku lancé en arrière-plan, rapport attendu dans `docs/verification_ehy_26.md`
-- [~] Lot 2 (ehy 27) — agent Haiku lancé en arrière-plan, rapport attendu dans `docs/verification_ehy_27.md`
+- [x] Lot 2 (ehy 27) — **vérifié, RAS** : 37/37 validées par le script, aucune carte issue du
+  passage corrompu, aucun problème de fidélité/type/hébreu détecté. Rapport complet dans
+  `docs/verification_ehy_27.md`. Prêt pour import.
 - [~] Lot 3 (ehy 29) — agent Haiku lancé en arrière-plan, rapport attendu dans `docs/verification_ehy_29.md`
 
 Les 3 vérifications ont été lancées en parallèle (au lieu de strictement séquentielles) car
