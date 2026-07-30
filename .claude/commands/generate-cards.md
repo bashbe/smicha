@@ -147,6 +147,12 @@ leçons de l'Étape 1** :
    `true_false` seulement si vraiment pertinent (minorité du lot).
    **Une seule section par carte** ; un din commun à deux parties du texte → une carte
    `shulchan_aruch` + une carte complémentaire `tur` (angle différent, pas un doublon).
+   **`tags`** : ce champ nourrit désormais les *tags cachés* (voir CLAUDE.md, système de
+   tags à deux niveaux) — génère-en **beaucoup, sans retenue**, quitte à ce qu'ils se
+   ressemblent fortement d'une carte à l'autre ou entre cartes voisines (ratisser large :
+   favorise le rappel, pas la précision). Ne cherche PAS à limiter à 2-3 tags par carte ici
+   — cette contrainte d'affichage est gérée en aval par les *tags visibles*
+   (`/admin/tags`, skill `/tag-clustering`), jamais par la génération elle-même.
 3. **Repasser sur le texte source** et auditer chaque question (fidélité, pertinence, bon type,
    bonne section).
 4. **Générer puis auditer les réponses** (pas trop faciles, halakhiquement exactes, distracteurs

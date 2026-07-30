@@ -266,10 +266,12 @@ Un profil `onboarded` sans aucune ligne (base pré-migration) est automatiquemen
 | `seif` | Integer | Numéro de sous-section (entier positif, obligatoire) |
 | `hint` | Text | Indice (optionnel) |
 | `source_ref` | String | Référence source |
-| `tags` | JSON | Liste de tags libres (optionnel) |
+| `tags` | JSON | **DEPRECATED** — remplacé par la relation many-to-many `hidden_tags` (voir [`hidden_tags` / `visible_tags` / `tag_rules`](#hidden_tags--visible_tags--tag_rules) ci-dessous). Conservé en base pour la migration/rollback (`scripts/migrate_tags.py`), plus jamais lu ni écrit par le code applicatif |
 | `created_by` / `validated_by` | FK users | |
 
-Méthodes : `as_dict()` (inclut `subject_id` et `subject` — le titre résolu via la relation `Subject`, ou `None`), `section_list()`.
+Relations : `hidden_tags` (M2M via `question_hidden_tags`, voir ci-dessous). Propriété `tag_names` — liste des noms de `HiddenTag` attachés, remplace l'ancien `tags` JSON dans le code.
+
+Méthodes : `as_dict()` (inclut `subject_id` et `subject` — le titre résolu via la relation `Subject`, ou `None` ; la clé `"tags"` renvoie désormais `tag_names`, pas la colonne dépréciée), `section_list()`.
 
 ---
 
@@ -288,6 +290,40 @@ Un sujet (« נושא ») regroupe les questions d'un même thème **à l'intér
 Contrainte unique `(parcours, siman, title)`. Gestion dans `subjects.py` :
 - `get_or_create_subject(parcours, siman, title)` — lookup-or-create par correspondance exacte, appelé à chaque import/édition de question (le format JSON continue de porter `sujet` en texte libre, voir [Format JSON des questions](#format-json-des-questions)) ;
 - `rename_subject(subject_id, new_title)` — renomme le titre affiché (`POST /admin/subjects/rename`, une seule ligne modifiée). Si le nouveau titre entre en collision avec un autre sujet du même siman, **fusionne** les deux : questions et `Progression` du sujet source sont réassignées au sujet cible, puis le sujet source est supprimé — reproduit l'ancien comportement de fusion implicite (deux textes renommés vers la même valeur finissaient dans le même groupe).
+
+---
+
+### `hidden_tags` / `visible_tags` / `tag_rules`
+
+Système de tags à deux niveaux, scopés par **`parcours`** (pas par siman — un tag doit
+s'appliquer à toutes les cartes d'un parcours, pas être ré-inventé à chaque siman) :
+
+- **`hidden_tags`** (`HiddenTag`) — tags fins et nombreux, générés en masse par
+  `/generate-cards` (quitte à beaucoup se ressembler), **jamais montrés à l'étudiant**.
+  Contrainte unique `(parcours, name)`. Reliés aux questions par la table M2M
+  `question_hidden_tags` (remplace l'ancienne colonne `questions.tags` JSON, dépréciée —
+  voir [`questions`](#questions)). `Question.tag_names` expose la liste de noms.
+- **`visible_tags`** (`VisibleTag`) — peu nombreux (2-3 par carte en pratique), affichés et
+  filtrables par l'étudiant (`/app/revision/sujet`). Contrainte unique `(parcours, name)`.
+- **`tag_rules`** (`TagRule`) — règle `(ensemble de hidden_tags, logique) -> visible_tag` :
+  | Colonne | Notes |
+  |---|---|
+  | `visible_tag_id` | Tag visible ciblé |
+  | `hidden_tags` | M2M via `tag_rule_hidden_tags` — l'ensemble de tags cachés de la condition |
+  | `logic` | `"or"` (l'un suffit) ou `"and"` (tous requis) |
+  | `status` | `"active"` (en vigueur) / `"suggested"` (proposée par `/tag-clustering`, en attente) / `"rejected"` (tranchée négativement, mémorisée pour ne pas re-suggérer) |
+  | `source` | `"manual"` (créée dans `/admin/tags`) / `"skill"` (`/tag-clustering`) |
+
+  Un seul tag caché avec `logic="or"` = mapping simple. Plusieurs tags visibles déclenchés
+  simultanément pour une même carte n'est que la conséquence de plusieurs `TagRule` actives
+  dont les conditions sont satisfaites en même temps — pas de structure combinée nécessaire.
+
+Résolution dans `tags.py` :
+- `get_or_create_hidden_tag(parcours, name)` / `get_or_create_visible_tag(parcours, name)` — lookup-or-create, sur le modèle de `subjects.get_or_create_subject()` ;
+- `sync_question_hidden_tags(question, parcours, names)` — remplace la relation `hidden_tags` d'une question par les noms donnés (résolus/créés), utilisé à l'import et à l'édition ;
+- `visible_tags_for(question)` — calcule les tags visibles d'une question : ensemble de ses `hidden_tags` testé contre chaque `TagRule` `active` du même parcours (`any(...)` si `logic="or"`, `all(...)` si `logic="and"`), union des tags visibles qui matchent. Une carte sans règle qui matche n'a simplement aucun tag visible — normal tant qu'un admin (ou `/tag-clustering`) n'a pas mappé ses tags cachés.
+
+Gestion admin dans `/admin/tags` (voir [routes](#back-office-admin) et [Rôles](#rôles-et-authentification)) : création/renommage/suppression de `VisibleTag`, liaison manuelle `hidden_tags → visible_tag` (ET/OU), et approbation/rejet des suggestions du skill `/tag-clustering`.
 
 ---
 
@@ -407,7 +443,7 @@ la question reste `approved` globalement mais est retirée **uniquement** pour `
 
 | Champ JSON | Type | Description |
 |---|---|---|
-| `tags` | array of strings | Mots-clés libres (ex : `["המתנה", "מחלוקת"]`) |
+| `tags` | array of strings | Tags **cachés** (ex : `["המתנה", "מחלוקת"]`) — jamais montrés à l'étudiant tels quels ; résolus vers des `HiddenTag` à l'import/édition (voir [`hidden_tags` / `visible_tags` / `tag_rules`](#hidden_tags--visible_tags--tag_rules)). `/generate-cards` doit en générer beaucoup, quitte à ce qu'ils se ressemblent — la limitation à 2-3 tags affichés est gérée en aval par les tags visibles, pas ici |
 
 ### Champs spécifiques par type
 
@@ -496,6 +532,13 @@ Dans Claude Code, la commande **`/generate-cards`** (`.claude/commands/generate-
 applique ce prompt et valide le lot généré avec `question_types.normalize_imported_question()`
 avant livraison.
 
+Une fois des cartes importées, la commande **`/tag-clustering`**
+(`.claude/commands/tag-clustering.md`) regroupe les tags cachés d'un parcours par thème et
+propose des associations vers des tags visibles (voir [`hidden_tags` / `visible_tags` /
+`tag_rules`](#hidden_tags--visible_tags--tag_rules)) — ses suggestions arrivent en statut
+`"suggested"` dans `/admin/tags`, sans effet sur les étudiants tant qu'un admin ne les a pas
+approuvées.
+
 ### Exemple de lot JSON valide
 
 ```json
@@ -582,8 +625,8 @@ avant livraison.
 | GET | `/app/revision/jour/<parcours>` | Session de révision du jour restreinte à un parcours actif ; valeur spéciale `all` = tous les parcours actifs. Parcours inconnu/non activé → redirection vers le sélecteur |
 | GET | `/app/revision/siman` | Liste des simanim déjà appris (parcours → siman → cartes par sujet) |
 | GET | `/app/revision/siman/<subject_id>` | Session de révision sur un sujet déjà appris d'un siman |
-| GET | `/app/revision/sujet` | Liste des tags (`Question.tags`) ayant ≥ 3 cartes déjà apprises |
-| GET | `/app/revision/sujet/<tag>` | Session de révision sur toutes les cartes déjà apprises portant ce tag |
+| GET | `/app/revision/sujet` | Liste des **tags visibles** (calculés par `tags.visible_tags_for()`, voir [`hidden_tags` / `visible_tags` / `tag_rules`](#hidden_tags--visible_tags--tag_rules)) ayant ≥ 3 cartes déjà apprises |
+| GET | `/app/revision/sujet/<tag>` | Session de révision sur toutes les cartes déjà apprises dont un tag visible correspond |
 | GET | `/app/revision/aleatoire` | Session de révision aléatoire (max 10 cartes déjà apprises, retirée à chaque visite) |
 | POST | `/app/advance-revisions` | Avance toutes les cartes dues de 1 jour (outil de test) |
 | POST | `/app/reset-progress` | Efface UserAnswer + FsrsCard + Progression (nucléaire) |
@@ -610,6 +653,10 @@ avant livraison.
 | POST | `/admin/reports/<report_id>/confirm` | Signalement jugé justifié — retire la question pour tout le monde (`Question.status="pending"`, rejoint `/admin/questions`) et classe tous les signalements "open" de la question en `"confirmed"` |
 | POST | `/admin/reports/<report_id>/dismiss` | Signalement jugé injustifié — classe ce signalement en `"dismissed"`, la question redevient visible pour ce seul étudiant |
 | POST | `/admin/subjects/rename` | Renomme le titre d'un [`Subject`](#subjects) par ID (une seule ligne modifiée), depuis `/admin/dashboard` (bloc « שאלות לפי נושא ») — si le nouveau titre entre en collision avec un autre sujet du même siman, fusionne les deux (questions + `Progression` réassignées, ancien sujet supprimé) |
+| GET | `/admin/tags` | Gestion des [tags cachés/visibles](#hidden_tags--visible_tags--tag_rules) pour un parcours (`?parcours=<code>`) : tags visibles, associations actives, suggestions du skill `/tag-clustering` |
+| POST | `/admin/tags/visible` | Créer / renommer / supprimer un `VisibleTag` (`action=create\|rename\|delete`) — **super_admin uniquement** |
+| POST | `/admin/tags/rules` | Créer une association manuelle `hidden_tags → visible_tag` (ET/OU) — **super_admin uniquement** |
+| POST | `/admin/tags/rules/<rule_id>/<action>` | `approve` (suggestion → active) / `reject` (suggestion → rejected) / `delete` (retire une règle) — **super_admin uniquement** |
 | POST | `/admin/reset-db` | **super_admin uniquement** — réinitialise les données tout en restaurant le compte propriétaire protégé avec le même ID/mot de passe/rôle (confirmation texte `"RESET"` requise) |
 
 ---

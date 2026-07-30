@@ -135,6 +135,81 @@ class Subject(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
 
+class HiddenTag(db.Model):
+    """Tag caché : granulaire, généré en masse par /generate-cards, jamais montré
+    à l'étudiant. Scopé par parcours (comme VisibleTag) — pas par siman : un tag
+    caché doit pouvoir s'appliquer à toutes les cartes d'un parcours, pas être
+    ré-inventé à chaque siman (voir CLAUDE.md pour la logique de scope)."""
+
+    __tablename__ = "hidden_tags"
+    __table_args__ = (db.UniqueConstraint("parcours", "name", name="uq_hidden_tag_parcours_name"),)
+
+    id = db.Column(db.String(36), primary_key=True, default=_uuid)
+    parcours = db.Column(db.String(64), nullable=False, index=True)
+    name = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+
+class VisibleTag(db.Model):
+    """Tag visible : peu nombreux, affiché et filtrable par l'étudiant
+    (/app/revision/sujet). Dérivé des tags cachés d'une question via les
+    TagRule actives du même parcours (voir tags.py::visible_tags_for)."""
+
+    __tablename__ = "visible_tags"
+    __table_args__ = (db.UniqueConstraint("parcours", "name", name="uq_visible_tag_parcours_name"),)
+
+    id = db.Column(db.String(36), primary_key=True, default=_uuid)
+    parcours = db.Column(db.String(64), nullable=False, index=True)
+    name = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+
+# M2M question <-> tag caché (remplace l'ancienne colonne Question.tags JSON,
+# conservée en base mais dépréciée — voir Question.tags ci-dessous).
+question_hidden_tags = db.Table(
+    "question_hidden_tags",
+    db.Column("question_id", db.String(36), db.ForeignKey("questions.id", ondelete="CASCADE"), primary_key=True),
+    db.Column("hidden_tag_id", db.String(36), db.ForeignKey("hidden_tags.id", ondelete="CASCADE"), primary_key=True),
+)
+
+# M2M tag_rule <-> tags cachés impliqués dans sa condition (voir TagRule.logic).
+tag_rule_hidden_tags = db.Table(
+    "tag_rule_hidden_tags",
+    db.Column("rule_id", db.String(36), db.ForeignKey("tag_rules.id", ondelete="CASCADE"), primary_key=True),
+    db.Column("hidden_tag_id", db.String(36), db.ForeignKey("hidden_tags.id", ondelete="CASCADE"), primary_key=True),
+)
+
+
+class TagRule(db.Model):
+    """Règle : (ensemble de tags cachés, logique ET/OU) -> un tag visible.
+
+    Un seul tag caché avec logic="or" = mapping simple. Plusieurs tags cachés
+    avec logic="or" = "l'un OU l'autre suffit". logic="and" = "les deux à la
+    fois requis". Plusieurs tags visibles déclenchés simultanément pour une
+    même carte n'est que la conséquence naturelle de plusieurs TagRule actives
+    dont les conditions sont satisfaites en même temps — pas de structure
+    supplémentaire nécessaire pour ce cas.
+    """
+
+    __tablename__ = "tag_rules"
+
+    id = db.Column(db.String(36), primary_key=True, default=_uuid)
+    visible_tag_id = db.Column(
+        db.String(36), db.ForeignKey("visible_tags.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    logic = db.Column(db.String(8), default="or", nullable=False)  # "or" | "and"
+    # active = en vigueur (affecte les étudiants) ; suggested = proposée par le
+    # skill de regroupement, en attente d'arbitrage admin ; rejected = tranchée
+    # négativement, mémorisée pour ne pas re-suggérer la même règle.
+    status = db.Column(db.String(16), default="active", nullable=False, index=True)
+    source = db.Column(db.String(16), default="manual", nullable=False)  # manual | skill
+    created_by = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    visible_tag = db.relationship("VisibleTag")
+    hidden_tags = db.relationship("HiddenTag", secondary=tag_rule_hidden_tags)
+
+
 class Question(db.Model):
     __tablename__ = "questions"
 
@@ -145,6 +220,10 @@ class Question(db.Model):
     explanation = db.Column(db.Text)
     difficulty = db.Column(db.Integer, default=2, nullable=False)
     section = db.Column(db.JSON, default=lambda: ["shulchan_aruch"], nullable=False)
+    # DEPRECATED — remplacé par la relation many-to-many `hidden_tags`
+    # (voir HiddenTag/question_hidden_tags ci-dessus). Conservée en base pour
+    # la migration/rollback (scripts/migrate_tags.py) ; plus jamais lue ni
+    # écrite par le code applicatif.
     tags = db.Column(db.JSON, default=list)
     # 4 états : "pending" (défaut à l'import — visible seulement en /admin/questions,
     # jamais aux étudiants) → "approved" (validée, visible de tous) ou "a_revoir"
@@ -168,6 +247,12 @@ class Question(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     subject = db.relationship("Subject")
+    hidden_tags = db.relationship("HiddenTag", secondary=question_hidden_tags, order_by="HiddenTag.name")
+
+    @property
+    def tag_names(self) -> list[str]:
+        """Hidden tag names attached to this question (replaces the deprecated `tags` JSON column)."""
+        return [t.name for t in self.hidden_tags]
 
     def section_list(self) -> list[str]:
         """Return the question's exam sections as a normalized list.
@@ -190,7 +275,7 @@ class Question(db.Model):
             "explanation": self.explanation,
             "difficulty": self.difficulty,
             "section": self.section,
-            "tags": self.tags or [],
+            "tags": self.tag_names,
             "status": self.status,
             "subject_id": self.subject_id,
             "subject": self.subject.title if self.subject else None,

@@ -27,6 +27,8 @@ from models import (  # noqa: E402
     db,
 )
 from subjects import get_or_create_subject  # noqa: E402
+from tags import get_or_create_hidden_tag, get_or_create_visible_tag  # noqa: E402
+from models import TagRule  # noqa: E402
 
 TODAY = date.today()
 
@@ -309,8 +311,12 @@ def test_flagged_and_pending_cards_hidden_from_revision():
         q_reported = _make_question("p1", siman=1, seif=1)
         q_pending = _make_question("p1", siman=1, seif=2)
         q_visible = _make_question("p1", siman=1, seif=3)
+        hidden_t1 = get_or_create_hidden_tag("p1", "t1")
+        visible_t1 = get_or_create_visible_tag("p1", "t1")
+        db.session.add(TagRule(visible_tag_id=visible_t1.id, logic="or", status="active",
+                                hidden_tags=[hidden_t1]))
         for q in (q_reported, q_pending, q_visible):
-            q.tags = ["t1"]
+            q.hidden_tags = [hidden_t1]
         q_pending.status = "pending"
         db.session.commit()
 

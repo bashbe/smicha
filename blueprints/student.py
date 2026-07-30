@@ -24,17 +24,22 @@ from models import (
     db,
 )
 from question_types import PARCOURS_DESCRIPTIONS, PARCOURS_LABELS, VALID_PARCOURS, normalize_db_question
+from tags import visible_tags_for
 
 bp = Blueprint("student", __name__, url_prefix="/app")
 
 
+def _visible_tag_names(q) -> list[str]:
+    """Visible tag names for a question — the only tags ever shown to students."""
+    return [t.name for t in visible_tags_for(q)]
+
+
 def _tag_counts(qs: list) -> dict[str, int]:
-    """Count occurrences of each free-text tag among the given questions."""
+    """Count occurrences of each visible tag among the given questions."""
     counts: dict[str, int] = {}
     for q in qs:
-        for t in (q.tags or []):
-            if t:
-                counts[t] = counts.get(t, 0) + 1
+        for t in _visible_tag_names(q):
+            counts[t] = counts.get(t, 0) + 1
     return counts
 
 
@@ -515,7 +520,7 @@ def _load_chapitre(sp, subject_id: str, extra_filters: list, allowed: set[str] |
         {
             "id": q.id, "difficulty": q.difficulty, "seif": q.seif,
             "subject": title, "subject_id": subject_id, "siman": q.siman,
-            "parcours": q.parcours, "tags": q.tags or [], "section": q.section or [],
+            "parcours": q.parcours, "tags": _visible_tag_names(q), "section": q.section or [],
             "normalized": normalize_db_question(q.as_dict()),
         }
         for q in rows
@@ -668,7 +673,7 @@ def _render_revision_jour(sp, actifs: list[StudentParcours]):
             "subject_id": q.subject_id,
             "siman": q.siman,
             "parcours": q.parcours,
-            "tags": q.tags or [],
+            "tags": _visible_tag_names(q),
             "section": q.section or [],
             "normalized": nq,
         })
@@ -794,7 +799,7 @@ def revision_siman_detail(subject_id: str):
         {
             "id": q.id, "difficulty": q.difficulty, "seif": q.seif,
             "subject": subj.title, "subject_id": subject_id, "siman": q.siman,
-            "parcours": q.parcours, "tags": q.tags or [], "section": q.section or [],
+            "parcours": q.parcours, "tags": _visible_tag_names(q), "section": q.section or [],
             "normalized": normalize_db_question(q.as_dict()),
         }
         for q in rows
@@ -847,7 +852,7 @@ def revision_sujet_detail(tag: str):
             Question.status == "approved", Question.id.in_(learned_ids),
             Question.parcours.in_(codes),
         ).order_by(Subject.title.asc(), Question.siman.asc(), Question.seif.asc()).all()
-        if question_in_sections(q, allowed) and tag in (q.tags or []) and q.id not in hidden_ids
+        if question_in_sections(q, allowed) and tag in _visible_tag_names(q) and q.id not in hidden_ids
     ]
 
     if not rows:
@@ -858,7 +863,7 @@ def revision_sujet_detail(tag: str):
         {
             "id": q.id, "difficulty": q.difficulty, "seif": q.seif,
             "subject": q.subject.title if q.subject else None, "subject_id": q.subject_id,
-            "siman": q.siman, "parcours": q.parcours, "tags": q.tags or [], "section": q.section or [],
+            "siman": q.siman, "parcours": q.parcours, "tags": _visible_tag_names(q), "section": q.section or [],
             "normalized": normalize_db_question(q.as_dict()),
         }
         for q in rows
@@ -893,7 +898,7 @@ def revision_aleatoire():
         {
             "id": q.id, "difficulty": q.difficulty, "seif": q.seif,
             "subject": q.subject.title if q.subject else None, "subject_id": q.subject_id,
-            "siman": q.siman, "parcours": q.parcours, "tags": q.tags or [], "section": q.section or [],
+            "siman": q.siman, "parcours": q.parcours, "tags": _visible_tag_names(q), "section": q.section or [],
             "normalized": normalize_db_question(q.as_dict()),
         }
         for q in sample

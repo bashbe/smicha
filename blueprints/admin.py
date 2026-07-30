@@ -20,6 +20,7 @@ from chapter_topics import siman_topic as get_siman_topic
 from models import (
     APP_ROLES,
     FsrsCard,
+    HiddenTag,
     Progression,
     Question,
     QuestionEdit,
@@ -32,19 +33,26 @@ from models import (
     StudentParcours,
     StudentProfile,
     Subject,
+    TagRule,
     User,
     UserAnswer,
     UserRole,
+    VisibleTag,
     db,
 )
 from question_types import (
     PARCOURS_LABELS,
     QUESTION_TYPES,
+    VALID_PARCOURS,
     normalize_imported_question,
     sync_question_row_from_payload,
 )
 from subjects import get_or_create_subject
 from subjects import rename_subject as rename_subject_by_id
+from tags import (
+    get_or_create_visible_tag,
+    sync_question_hidden_tags,
+)
 from backup_service import backup_directory, create_backup, delete_backup
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -67,6 +75,7 @@ def inject_reports_count():
         "open_suggestions_count": QuestionSuggestion.query.filter_by(status="open").count(),
         "pending_questions_count": Question.query.filter_by(status="pending").count(),
         "flagged_questions_count": Question.query.filter_by(status="a_revoir").count(),
+        "suggested_tag_rules_count": TagRule.query.filter_by(status="suggested").count(),
     }
 
 
@@ -661,26 +670,25 @@ def import_questions():
                 ins = norm["insert"]
                 try:
                     subj = get_or_create_subject(ins.get("parcours"), ins.get("siman"), ins.get("subject"))
-                    db.session.add(
-                        Question(
-                            question_type=ins["question_type"],
-                            text=ins["text"],
-                            payload=ins["payload"],
-                            choices=ins["choices"],
-                            correct_answer=ins["correct_answer"],
-                            explanation=ins["explanation"],
-                            difficulty=ins["difficulty"],
-                            section=ins["section"],
-                            tags=ins["tags"],
-                            source_ref=ins["source_ref"],
-                            subject_id=subj.id,
-                            siman=ins.get("siman"),
-                            seif=ins.get("seif"),
-                            parcours=ins.get("parcours"),
-                            status="pending",
-                            created_by=user.id,
-                        )
+                    question = Question(
+                        question_type=ins["question_type"],
+                        text=ins["text"],
+                        payload=ins["payload"],
+                        choices=ins["choices"],
+                        correct_answer=ins["correct_answer"],
+                        explanation=ins["explanation"],
+                        difficulty=ins["difficulty"],
+                        section=ins["section"],
+                        source_ref=ins["source_ref"],
+                        subject_id=subj.id,
+                        siman=ins.get("siman"),
+                        seif=ins.get("seif"),
+                        parcours=ins.get("parcours"),
+                        status="pending",
+                        created_by=user.id,
                     )
+                    sync_question_hidden_tags(question, ins.get("parcours"), ins["tags"])
+                    db.session.add(question)
                     db.session.flush()
                     inserted += 1
                 except Exception:  # noqa: BLE001
@@ -896,7 +904,7 @@ def questions():
 
     if tag_filter:
         needle = tag_filter.lower()
-        all_questions = [q for q in all_questions if any(needle in (t or "").lower() for t in (q.tags or []))]
+        all_questions = [q for q in all_questions if any(needle in (t or "").lower() for t in q.tag_names)]
 
     selected = None
     if all_questions:
@@ -940,6 +948,11 @@ def questions():
         "q": search, "siman": siman_filter, "seif": seif_filter, "tag": tag_filter,
         "group": grouping,
     }
+    hidden_tag_options = []
+    if selected and selected.parcours:
+        hidden_tag_options = [
+            t.name for t in HiddenTag.query.filter_by(parcours=selected.parcours).order_by(HiddenTag.name).all()
+        ]
     return render_template(
         "admin/questions.html",
         questions=all_questions,
@@ -949,6 +962,7 @@ def questions():
         question_types=QUESTION_TYPES,
         type_label=TYPE_LABEL,
         parcours_labels=PARCOURS_LABELS,
+        hidden_tag_options=hidden_tag_options,
         selected_stats=selected_stats,
         work_counts={
             "pending": Question.query.filter_by(status="pending").count(),
@@ -1073,7 +1087,7 @@ def edit_question(qid):
     q.parcours = row.get("parcours")
     q.difficulty = int(row.get("difficulty") or 2)
     q.section = row.get("section") or ["shulchan_aruch"]
-    q.tags = row.get("tags") or []
+    sync_question_hidden_tags(q, row.get("parcours"), row.get("tags") or [])
     q.source_ref = draft["source_ref"]
     q.validator_note = note or None
 
@@ -1170,6 +1184,115 @@ def topics():
         })
 
     return render_template("admin/topics.html", groups=groups)
+
+
+def _tags_parcours_options() -> list[str]:
+    """Parcours codes that actually have hidden tags, plus every VALID_PARCOURS
+    (so a brand-new parcours with no tags yet still shows up in the selector)."""
+    codes = {p for (p,) in db.session.query(HiddenTag.parcours).distinct().all()}
+    codes.update(VALID_PARCOURS)
+    return sorted(codes)
+
+
+@bp.route("/tags")
+@staff_required
+def tags_page():
+    options = _tags_parcours_options()
+    parcours = request.args.get("parcours") or (options[0] if options else "")
+    visible = VisibleTag.query.filter_by(parcours=parcours).order_by(VisibleTag.name).all()
+    hidden = HiddenTag.query.filter_by(parcours=parcours).order_by(HiddenTag.name).all()
+    active_rules = (
+        TagRule.query.join(VisibleTag)
+        .filter(VisibleTag.parcours == parcours, TagRule.status == "active")
+        .order_by(VisibleTag.name).all()
+    )
+    suggested_rules = (
+        TagRule.query.join(VisibleTag)
+        .filter(VisibleTag.parcours == parcours, TagRule.status == "suggested")
+        .order_by(TagRule.created_at.asc()).all()
+    )
+    return render_template(
+        "admin/tags.html",
+        parcours_options=options, selected_parcours=parcours, parcours_labels=PARCOURS_LABELS,
+        visible_tags=visible, hidden_tags=hidden,
+        active_rules=active_rules, suggested_rules=suggested_rules,
+    )
+
+
+@bp.route("/tags/visible", methods=["POST"])
+@staff_required
+def tags_visible():
+    if not current_user().has_role("super_admin"):
+        return redirect(url_for("admin.denied"))
+    parcours = request.form.get("parcours") or ""
+    action = request.form.get("action")
+    if action == "create":
+        name = (request.form.get("name") or "").strip()
+        if name:
+            get_or_create_visible_tag(parcours, name)
+            db.session.commit()
+            flash(f'Visible tag "{name}" created.', "success")
+    elif action == "rename":
+        tag = VisibleTag.query.get(request.form.get("visible_tag_id"))
+        new_name = (request.form.get("name") or "").strip()
+        if tag is not None and new_name:
+            tag.name = new_name
+            db.session.commit()
+            flash("Visible tag renamed.", "success")
+    elif action == "delete":
+        tag = VisibleTag.query.get(request.form.get("visible_tag_id"))
+        if tag is not None:
+            TagRule.query.filter_by(visible_tag_id=tag.id).delete(synchronize_session=False)
+            db.session.delete(tag)
+            db.session.commit()
+            flash("Visible tag deleted.", "success")
+    return redirect(url_for("admin.tags_page", parcours=parcours))
+
+
+@bp.route("/tags/rules", methods=["POST"])
+@staff_required
+def tags_rules_create():
+    if not current_user().has_role("super_admin"):
+        return redirect(url_for("admin.denied"))
+    actor = current_user()
+    parcours = request.form.get("parcours") or ""
+    visible_tag_id = request.form.get("visible_tag_id")
+    hidden_tag_ids = request.form.getlist("hidden_tag_ids")
+    logic = "and" if request.form.get("logic") == "and" else "or"
+    visible_tag = VisibleTag.query.get(visible_tag_id)
+    hidden_tags = HiddenTag.query.filter(HiddenTag.id.in_(hidden_tag_ids)).all() if hidden_tag_ids else []
+    if visible_tag is None or not hidden_tags:
+        flash("Choose a visible tag and at least one hidden tag.", "error")
+    else:
+        rule = TagRule(visible_tag_id=visible_tag.id, logic=logic, status="active",
+                        source="manual", created_by=actor.id)
+        rule.hidden_tags = hidden_tags
+        db.session.add(rule)
+        db.session.commit()
+        flash("Tag association created.", "success")
+    return redirect(url_for("admin.tags_page", parcours=parcours))
+
+
+@bp.route("/tags/rules/<rule_id>/<action>", methods=["POST"])
+@staff_required
+def tags_rules_action(rule_id, action):
+    if not current_user().has_role("super_admin"):
+        return redirect(url_for("admin.denied"))
+    rule = TagRule.query.get_or_404(rule_id)
+    parcours = rule.visible_tag.parcours
+    if action == "approve":
+        rule.status = "active"
+        db.session.commit()
+        flash("Suggestion approved.", "success")
+    elif action == "reject":
+        rule.status = "rejected"
+        db.session.commit()
+        flash("Suggestion rejected.", "success")
+    elif action == "delete":
+        db.session.delete(rule)
+        db.session.commit()
+        flash("Tag association removed.", "success")
+    return redirect(url_for("admin.tags_page", parcours=parcours))
 
 
 @bp.route("/reset-db", methods=["POST"])
