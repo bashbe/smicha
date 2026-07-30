@@ -1,0 +1,375 @@
+[
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "פילגש ופנויה",
+    "siman": 26,
+    "seif": 1,
+    "difficulty_level": 1,
+    "exam_section": "tur",
+    "question_text": "לפי הגמרא בסנהדרין (על הפסוק בשמואל ב, על דוד המלך), מהו ההבדל בין ׳נשים׳ ל׳פילגשים׳?",
+    "options": [
+      { "number": 1, "text": "נשים - בכתובה ובקידושין, פילגשים - בלא כתובה ובלא קידושין", "is_correct": true },
+      { "number": 2, "text": "נשים - בקידושין בלבד, פילגשים - בכתובה בלבד", "is_correct": false },
+      { "number": 3, "text": "אין הבדל של ממש, שני המונחים מתארים אותו מעמד", "is_correct": false },
+      { "number": 4, "text": "נשים - נישאו כדת משה וישראל, פילגשים - נישאו כדת הגויים", "is_correct": false }
+    ],
+    "explanation": "הגמרא בסנהדרין כא. דורשת: ׳נשים - בכתובה ובקידושין, פילגשים - בלא כתובה ובלא קידושין׳ (כגרסת הגמרא שלפנינו; יש גורסים להיפך לגבי הכתובה).",
+    "tags": ["פילגש"],
+    "source": { "chelek": "ehy", "siman": 26, "seif": 1 }
+  },
+  {
+    "type": "multiple_opinions_dropdown",
+    "parcours": "chupa_kidushin",
+    "sujet": "פילגש ופנויה",
+    "siman": 26,
+    "seif": 1,
+    "difficulty_level": 3,
+    "exam_section": "tur",
+    "question_text": "מהו גדר ה׳פילגש׳ ולמי היא מותרת, לפי כל אחת משיטות הראשונים הבאות?",
+    "dropdown_choices": [
+      "בלא כתובה ובלא קידושין, ומותרת רק למלך",
+      "בלא כתובה אך בקידושין, ומותרת אף להדיוט",
+      "בלא כתובה ובלא קידושין, ומותרת אף להדיוט אם מייחדה אליו לשם אישות"
+    ],
+    "decisors": [
+      { "id": "d1", "name": "רמב״ם (להבנת כסף משנה)", "correct_choice": "בלא כתובה ובלא קידושין, ומותרת רק למלך" },
+      { "id": "d2", "name": "רמב״ם (להבנת מגיד משנה)", "correct_choice": "בלא כתובה אך בקידושין, ומותרת אף להדיוט" },
+      { "id": "d3", "name": "ראב״ד ורמב״ן", "correct_choice": "בלא כתובה ובלא קידושין, ומותרת אף להדיוט אם מייחדה אליו לשם אישות" }
+    ],
+    "explanation": "שלוש שיטות בהבנת דין פילגש: להבנת כסף משנה ברמב״ם - מותרת רק למלך; להבנת מגיד משנה ברמב״ם - מותרת אף להדיוט אם יש קידושין; לראב״ד ורמב״ן - מותרת אף להדיוט בלא כתובה וקידושין, ובלבד שמייחדה אליו.",
+    "tags": ["פילגש", "מחלוקת ראשונים"],
+    "source": { "chelek": "ehy", "siman": 26, "seif": 1 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "פילגש ופנויה",
+    "siman": 26,
+    "seif": 1,
+    "difficulty_level": 2,
+    "exam_section": "shulchan_aruch",
+    "question_text": "כיצד פסק הרמ״א לגבי פנויה המיוחדת לאיש אחד וטובלת אליו לנידתה?",
+    "options": [
+      { "number": 1, "text": "מותרת לכתחילה לכל הדעות", "is_correct": false },
+      { "number": 2, "text": "אסורה לכל הדעות", "is_correct": false },
+      { "number": 3, "text": "הביא מחלוקת: יש מתירים (ראב״ד וסיעתו) ויש אוסרים (רמב״ם)", "is_correct": true },
+      { "number": 4, "text": "מותרת רק אם היא גרושה", "is_correct": false }
+    ],
+    "explanation": "הרמ״א הביא מחלוקת: יש מתירים כשיטת הראב״ד וסיעתו, ויש אוסרים כשיטת הרמב״ם (להבנת כסף משנה ומגיד משנה).",
+    "tags": ["פילגש"],
+    "source": { "chelek": "ehy", "siman": 26, "seif": 1 }
+  },
+  {
+    "type": "true_false",
+    "parcours": "chupa_kidushin",
+    "sujet": "מעמד אשה שנבעלה שלא לשם קידושין",
+    "siman": 26,
+    "seif": 1,
+    "difficulty_level": 1,
+    "exam_section": "shulchan_aruch",
+    "statement_text": "לפי השו״ע, אשה שנבעלה דרך זנות שלא לשם קידושין, אף אם ייחדה אותו לו, נחשבת כאשתו ואינה יכולה לצאת ממנו.",
+    "correct_answer": false,
+    "explanation": "השו״ע פסק (עפ״י הרמב״ם והטור) שאין האשה נחשבת אשת איש אלא ע״י קידושין כראוי; אם בא עליה דרך זנות - אינה נחשבת כאשתו כלל, ואדרבה כופין אותו להוציאה מביתו.",
+    "source": { "chelek": "ehy", "siman": 26, "seif": 1 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "מעמד אשה שנבעלה שלא לשם קידושין",
+    "siman": 26,
+    "seif": 1,
+    "difficulty_level": 2,
+    "exam_section": "shulchan_aruch",
+    "question_text": "לדעת הב״ש, באיזה מקרה נחשבים ביאה וייחוד לשם אישות כ׳עדים בשעת ביאה׳, ולפיכך מקודשת?",
+    "options": [
+      { "number": 1, "text": "כאשר הביאה נעשתה בסתר ולא בגלוי", "is_correct": false },
+      { "number": 2, "text": "כאשר היה גלוי לכל שהוא נושא אותה לשם אישות", "is_correct": true },
+      { "number": 3, "text": "כאשר האשה הסכימה בפירוש בעל פה להתקדש", "is_correct": false },
+      { "number": 4, "text": "בכל מקרה של ייחוד, ללא תנאי נוסף", "is_correct": false }
+    ],
+    "explanation": "הב״ש (ס״ק א) מחלק: אם הביאה נעשתה שלא בגלוי - אינה מקודשת כלל; אך אם היה גלוי לכל שנושא אותה לשם אישות - הרי זה כעדים בשעת ביאה, ומקודשת.",
+    "source": { "chelek": "ehy", "siman": 26, "seif": 1 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "נישואין אזרחיים - חזקת אין אדם עושה בעילתו בעילת זנות",
+    "siman": 26,
+    "seif": 1,
+    "difficulty_level": 2,
+    "exam_section": "tur",
+    "question_text": "מהי החזקה שממנה יש שלמדו לחשוש לקידושין כאשר איש ואשה חיים יחד ונבעלים, לדעת בית הלל בגיטין?",
+    "options": [
+      { "number": 1, "text": "חזקה אין אדם עושה בעילתו בעילת זנות, אלא לשם קידושין בעל", "is_correct": true },
+      { "number": 2, "text": "חזקה אין אדם חוטא ולא לו", "is_correct": false },
+      { "number": 3, "text": "חזקה כל דבר שבחזקת רבים כרבים דמי", "is_correct": false },
+      { "number": 4, "text": "אין חזקה כזו כלל בש״ס", "is_correct": false }
+    ],
+    "explanation": "בגיטין פא: מבואר טעם בית הלל (במחלוקתם עם בית שמאי לגבי המגרש אשתו ולנה עמו בפונדק): חזקה אין אדם עושה בעילתו בעילת זנות, אלא לשם קידושין בעל.",
+    "source": { "chelek": "ehy", "siman": 26, "seif": 1 }
+  },
+  {
+    "type": "multiple_opinions_dropdown",
+    "parcours": "chupa_kidushin",
+    "sujet": "נישואין אזרחיים - חזקת אין אדם עושה בעילתו בעילת זנות",
+    "siman": 26,
+    "seif": 1,
+    "difficulty_level": 3,
+    "exam_section": "tur",
+    "question_text": "על מי חלה החזקה ׳אין אדם עושה בעילתו בעילת זנות׳, לפי הדעות הבאות?",
+    "dropdown_choices": [
+      "על כל פנויה שנבעלה בפני עדים, בכל מקרה",
+      "רק על אשתו (כגון שקידש על תנאי) או על גרושתו - לא על פנוי הבא על פנויה סתם"
+    ],
+    "decisors": [
+      { "id": "d1", "name": "מקצת מן הגאונים", "correct_choice": "על כל פנויה שנבעלה בפני עדים, בכל מקרה" },
+      { "id": "d2", "name": "רמב״ם, רא״ש, רשב״א ורמ״ה", "correct_choice": "רק על אשתו (כגון שקידש על תנאי) או על גרושתו - לא על פנוי הבא על פנויה סתם" }
+    ],
+    "explanation": "מקצת מן הגאונים הורו שהחזקה חלה על כל פנויה שנבעלה בפני עדים. אולם דעת הרמב״ם רא״ש רשב״א ורמ״ה שהחזקה נאמרה רק באשתו או בגרושתו, אך בפנוי הבא על הפנויה סתם - אין חוששין. וכן פסק השו״ע (סי׳ קמט ס״ה).",
+    "source": { "chelek": "ehy", "siman": 26, "seif": 1 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "נישואין אזרחיים",
+    "siman": 26,
+    "seif": 1,
+    "difficulty_level": 2,
+    "exam_section": "shulchan_aruch",
+    "question_text": "מה פסק הרמ״א (עפ״י הריב״ש) לגבי גוי ומשומדת שנישאו כדיני הגויים ולאחר מכן נתגיירו?",
+    "options": [
+      { "number": 1, "text": "צריכים גט מספק, שמא היו שם קידושין", "is_correct": false },
+      { "number": 2, "text": "אין כאן חשש קידושין כלל, ומותרת לצאת ממנו בלא גט", "is_correct": true },
+      { "number": 3, "text": "צריכים גט ודאי, מדין נישואין אזרחיים", "is_correct": false },
+      { "number": 4, "text": "הדבר תלוי במספר השנים שדרו יחד", "is_correct": false }
+    ],
+    "explanation": "הרמ״א פסק כריב״ש: גוי שנשא גויה, וכן משומד שנשא משומדת, בנימוסי הגויים ונתגיירו אח״כ - אין כאן חשש קידושין כלל, אע״פ ששהו יחד שנים רבות, וכ״פ השו״ע (סי׳ קמט ס״ו). אמנם אם דרו יחד אחר הגיור עצמו - צריכה גט מטעם החזקה.",
+    "source": { "chelek": "ehy", "siman": 26, "seif": 1 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "נישואין אזרחיים",
+    "siman": 26,
+    "seif": 1,
+    "difficulty_level": 2,
+    "exam_section": "shulchan_aruch",
+    "question_text": "לדעת הח״מ, אנוסים השומרים מצוות בצנעה שהוכרחו להינשא בחוקות הגויים - האם ניתן להקל ולהתירה בלא גט?",
+    "options": [
+      { "number": 1, "text": "כן, שהרי לא נעשו קידושין כדת משה וישראל", "is_correct": false },
+      { "number": 2, "text": "לא, שהרי נתייחדו בפני רבים לשם נישואין, ואין כאן בעילת זנות", "is_correct": true },
+      { "number": 3, "text": "כן, ובלבד שלא טבלה לנידתה", "is_correct": false },
+      { "number": 4, "text": "השאלה תלויה במנהג המדינה בלבד", "is_correct": false }
+    ],
+    "explanation": "הח״מ (ס״ק ג) כתב שאין להקל להתירה בלא גט, שהרי נתייחדו בפני אנוסים רבים לשם נישואין, ואינו עושה בעילתו בעילת זנות, ובפרט אם טבלה לנידתה.",
+    "source": { "chelek": "ehy", "siman": 26, "seif": 1 }
+  },
+  {
+    "type": "multiple_opinions_dropdown",
+    "parcours": "chupa_kidushin",
+    "sujet": "נישואין אזרחיים - פסיקת האחרונים",
+    "siman": 26,
+    "seif": 1,
+    "difficulty_level": 3,
+    "exam_section": "ptei_teshuva",
+    "question_text": "בשאלת הצורך בגט לאחר נישואין אזרחיים (ללא חשש קידושין אמיתי), כיצד פסקו הפוסקים הבאים?",
+    "dropdown_choices": [
+      "מעיקר הדין אין צורך בגט כלל",
+      "יש להצריך גט, מחשש שיאמרו שיוצאה בלא גט"
+    ],
+    "decisors": [
+      { "id": "d1", "name": "אגרות משה, יביע אומר וציץ אליעזר", "correct_choice": "מעיקר הדין אין צורך בגט כלל" },
+      { "id": "d2", "name": "מערכי לב", "correct_choice": "יש להצריך גט, מחשש שיאמרו שיוצאה בלא גט" }
+    ],
+    "explanation": "רוב האחרונים (יביע אומר, אגרות משה, ציץ אליעזר ועוד) פסקו שמעיקר הדין אין צורך בגט לאחר נישואין אזרחיים ללא חשש קידושין אמיתי. אולם מערכי לב החמיר להצריך גט, מחשש שיאמרו ׳אשת איש יוצאה בלא גט׳.",
+    "source": { "chelek": "ehy", "siman": 26, "seif": 1 }
+  },
+  {
+    "type": "true_false",
+    "parcours": "chupa_kidushin",
+    "sujet": "נישואין אזרחיים",
+    "siman": 26,
+    "seif": 1,
+    "difficulty_level": 2,
+    "exam_section": "ptei_teshuva",
+    "statement_text": "פנוי ופנויה החיים יחד בדירה משותפת, ואינם מעוניינים כלל בחיי משפחה (ילדים וכדו׳), דינם חמור יותר מנישואין אזרחיים.",
+    "correct_answer": false,
+    "explanation": "כשחיים כמשפחה (עם ילדים משותפים וכדו׳) ונראים כנשואים - דינם כנישואין אזרחיים. אך כשאין להם עניין בחיי משפחה ורק גרים יחד בדירה משותפת - יש צד להקל אף יותר מנישואין אזרחיים.",
+    "source": { "chelek": "ehy", "siman": 26, "seif": 1 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "חופה בלבד לעניין קידושין",
+    "siman": 26,
+    "seif": 2,
+    "difficulty_level": 2,
+    "exam_section": "shulchan_aruch",
+    "question_text": "האם חופה בלבד (הכנסת האשה לחופה) מקדשת אותה, לדעת השו״ע?",
+    "options": [
+      { "number": 1, "text": "כן, חופה קונה לגמרי כדין קידושין", "is_correct": false },
+      { "number": 2, "text": "לא, ואין בכך אף ספק", "is_correct": false },
+      { "number": 3, "text": "לא מדינא, אך יש הסוברים שהוא ספק", "is_correct": true },
+      { "number": 4, "text": "כן, אך רק מדרבנן", "is_correct": false }
+    ],
+    "explanation": "השו״ע פסק: ׳אם הכניס אשה לחופה אינה מתקדשת בכך, וי״א שהוא ספק׳ - דהיינו מעיקר הדין החופה אינה מועילה, אך יש לחוש לדעת המחמירים.",
+    "source": { "chelek": "ehy", "siman": 26, "seif": 2 }
+  },
+  {
+    "type": "multiple_opinions_dropdown",
+    "parcours": "chupa_kidushin",
+    "sujet": "חופה בלבד לעניין קידושין",
+    "siman": 26,
+    "seif": 2,
+    "difficulty_level": 3,
+    "exam_section": "tur",
+    "question_text": "האם חופה בלבד מועילה לקדש את האשה, לפי הדעות הבאות בראשונים?",
+    "dropdown_choices": [
+      "חופה אינה קונה כלל לעניין קידושין",
+      "יש לחוש מספק לדברי רב הונא שחופה קונה"
+    ],
+    "decisors": [
+      { "id": "d1", "name": "רוב הראשונים (רמב״ן, רא״ש, רי״ף להבנת רא״ש)", "correct_choice": "חופה אינה קונה כלל לעניין קידושין" },
+      { "id": "d2", "name": "רבינו תם", "correct_choice": "יש לחוש מספק לדברי רב הונא שחופה קונה" }
+    ],
+    "explanation": "רוב הראשונים פסקו שחופה אינה קונה לעניין קידושין, כסתמא דגמ׳ שלא כרב הונא, ומאחר שהלכה כרבא נגד אביי. רבינו תם חשש מספק לדברי רב הונא, מאחר שכל קושיות רבא על שיטתו נתורצו.",
+    "source": { "chelek": "ehy", "siman": 26, "seif": 2 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "חופה בלבד לעניין קידושין",
+    "siman": 26,
+    "seif": 2,
+    "difficulty_level": 3,
+    "exam_section": "ptei_teshuva",
+    "question_text": "קידש אלמנה בחופה בלבד (ולא בכסף, שטר או ביאה) - לדעת שער המלך, מה דינה?",
+    "options": [
+      { "number": 1, "text": "צריכה גט מספק, ככל אשה שקידשוה בחופה", "is_correct": true },
+      { "number": 2, "text": "פטורה לגמרי מגט, שער המלך פוטר אלמנה מדין זה", "is_correct": false },
+      { "number": 3, "text": "צריכה גט ודאי, שאלמנה חמורה יותר מבתולה בעניין זה", "is_correct": false },
+      { "number": 4, "text": "הדין תלוי אם היא גם נידה", "is_correct": false }
+    ],
+    "explanation": "לדעת שער המלך גם באלמנה יש להצריכה גט מספק מחשש קידושי חופה, כדין כל אשה. לדעת הדגול מרבבה, בזה מודה רבינו תם שאין צורך בגט.",
+    "source": { "chelek": "ehy", "siman": 26, "seif": 2 }
+  },
+  {
+    "type": "true_false",
+    "parcours": "chupa_kidushin",
+    "sujet": "מעמד אשת איש לאחר קידושין",
+    "siman": 26,
+    "seif": 3,
+    "difficulty_level": 1,
+    "exam_section": "shulchan_aruch",
+    "statement_text": "לאחר שנתקדשה האשה, היא נחשבת כאשת איש לענין חיוב הבא עליה, וזקוקה לגט כדי להתירה לשוק.",
+    "correct_answer": true,
+    "explanation": "כך פסקו הרמב״ם והטושו״ע: משנתקדשה האשה נחשבת כאשת איש לחייב הבא עליה, וצריכה גט להתירה לשוק.",
+    "source": { "chelek": "ehy", "siman": 26, "seif": 3 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "קידושי ביאה",
+    "siman": 26,
+    "seif": 4,
+    "difficulty_level": 2,
+    "exam_section": "shulchan_aruch",
+    "question_text": "מה מקור התוקף של קידושי ביאה, ומדוע בכל זאת אסרו חכמים לנהוג כך?",
+    "options": [
+      { "number": 1, "text": "תוקפם מדאורייתא, וחכמים אסרו לקדש כך משום פריצות", "is_correct": true },
+      { "number": 2, "text": "תוקפם מדרבנן בלבד, ומדאורייתא אין קידושין תופסים בביאה", "is_correct": false },
+      { "number": 3, "text": "אין להם תוקף כלל, לא מדאורייתא ולא מדרבנן", "is_correct": false },
+      { "number": 4, "text": "תוקפם מדאורייתא רק כשיש עדים בשעת הביאה עצמה בלבד", "is_correct": false }
+    ],
+    "explanation": "השו״ע פסק: האשה מתקדשת בשלוש דרכים - בכסף, בשטר או בביאה מן התורה, אבל חכמים אסרו לקדש בביאה משום פריצות; ואם עבר וקידש כך - הקידושין תופסים.",
+    "source": { "chelek": "ehy", "siman": 26, "seif": 4 }
+  },
+  {
+    "type": "multiple_opinions_dropdown",
+    "parcours": "chupa_kidushin",
+    "sujet": "עונש המקדש בביאה, בשוק או בלא שידוכין",
+    "siman": 26,
+    "seif": 4,
+    "difficulty_level": 3,
+    "exam_section": "tur",
+    "question_text": "האם מכים את המקדש בביאה, בשוק, או בלא שידוכין, לפי הדעות הבאות?",
+    "dropdown_choices": [
+      "מכין על כל אחד מהמעשים הללו (ביאה, שוק, בלא שידוכין)",
+      "מכין רק על המקדש בביאה בלא שידוכין - בשאר אין מכין"
+    ],
+    "decisors": [
+      { "id": "d1", "name": "רמב״ם (לישנא קמא)", "correct_choice": "מכין על כל אחד מהמעשים הללו (ביאה, שוק, בלא שידוכין)" },
+      { "id": "d2", "name": "רא״ש (כמנהג נהרדעי)", "correct_choice": "מכין רק על המקדש בביאה בלא שידוכין - בשאר אין מכין" }
+    ],
+    "explanation": "הרמב״ם פסק כלישנא קמא בגמרא, שמלקין על כל אחד מהמעשים. הרא״ש כתב שהעולם נהגו כנהרדעי, שאין מלקין אלא על המקדש בביאה בלא שידוכין.",
+    "source": { "chelek": "ehy", "siman": 26, "seif": 4 }
+  },
+  {
+    "type": "true_false",
+    "parcours": "chupa_kidushin",
+    "sujet": "עונש המקדש בביאה, בשוק או בלא שידוכין",
+    "siman": 26,
+    "seif": 4,
+    "difficulty_level": 2,
+    "exam_section": "shulchan_aruch",
+    "statement_text": "הרמ״א כתב שלא ראה מימיו שהכו את מי שקידש בלא שידוכין.",
+    "correct_answer": true,
+    "explanation": "הרמ״א פסק כרא״ש: יש הסוברים שאין מכין את המקדש בכסף או בשטר אפילו בשוק ובלא שידוכין, והוסיף: ׳ולא ראיתי מימי שהכו מי שקידש בלא שידוכין׳.",
+    "source": { "chelek": "ehy", "siman": 26, "seif": 4 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "קידושין בלילה",
+    "siman": 26,
+    "seif": 4,
+    "difficulty_level": 3,
+    "exam_section": "tur",
+    "question_text": "מהו מקור הספק שמא קידושין הנעשים בלילה פסולים?",
+    "options": [
+      { "number": 1, "text": "מהיקש קידושין לגירושין (״ויצאה והיתה״), וגירושין נלמדים מפסול חליצה בלילה", "is_correct": true },
+      { "number": 2, "text": "מכך שאסור לערוך חתונות בלילה מטעמי צניעות", "is_correct": false },
+      { "number": 3, "text": "מכך שאין עדים כשרים לדון בלילה בשום עניין", "is_correct": false },
+      { "number": 4, "text": "מגזירה מפורשת בשו״ע האוסרת לקדש בלילה", "is_correct": false }
+    ],
+    "explanation": "לעניין חליצה קיי״ל שפסולה בלילה, כדין תחילת דין שאין דנין בלילה. יש מהראשונים שלמדו מכך שאף גט פסול בלילה (שעל ידו גובה כתובתה), ומכאן נסתפקו שמא הוא הדין לקידושין, שהוקשו לגט (״מקיש הויה ליציאה״).",
+    "source": { "chelek": "ehy", "siman": 26, "seif": 4 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "קידושין בלילה",
+    "siman": 26,
+    "seif": 4,
+    "difficulty_level": 3,
+    "exam_section": "ptei_teshuva",
+    "question_text": "מה ההבדל בין קידושי כסף לקידושי שטר הנעשים בלילה, לפי חילוקו של שער המלך?",
+    "options": [
+      { "number": 1, "text": "קידושי כסף כשרים לכל הדעות; קידושי שטר שנויים במחלוקת", "is_correct": true },
+      { "number": 2, "text": "קידושי שטר כשרים לכל הדעות; קידושי כסף שנויים במחלוקת", "is_correct": false },
+      { "number": 3, "text": "שניהם כשרים לכל הדעות בלילה", "is_correct": false },
+      { "number": 4, "text": "שניהם פסולים בלילה מספק", "is_correct": false }
+    ],
+    "explanation": "שער המלך חילק: קידושי כסף (או שוה כסף כנהוג בימינו) כשרים בלילה לדברי הכל, שכן לא הוקשו לגט (ההיקש הוא רק בקידושי שטר, לדעת הר״ן והרשב״א עפ״י הירושלמי). בקידושי שטר נסתפקו מהר״י מינץ והרא״ם.",
+    "source": { "chelek": "ehy", "siman": 26, "seif": 4 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "קידושין בלילה",
+    "siman": 26,
+    "seif": 4,
+    "difficulty_level": 1,
+    "exam_section": "ptei_teshuva",
+    "question_text": "מהי הכרעת רוב הפוסקים (ילקוט יוסף ונטעי גבריאל) הלכה למעשה לגבי קידושין בלילה?",
+    "options": [
+      { "number": 1, "text": "אסור לקדש בלילה בשום אופן", "is_correct": false },
+      { "number": 2, "text": "מותר לקדש בלילה, וכן מנהג העולם, ויש מחמירין", "is_correct": true },
+      { "number": 3, "text": "מותר לקדש בלילה רק בקידושי שטר", "is_correct": false },
+      { "number": 4, "text": "יש להמתין לכתחילה עד הבוקר, אך בדיעבד הקידושין תקפים", "is_correct": false }
+    ],
+    "explanation": "ילקוט יוסף ונטעי גבריאל הביאו שדעת רוב הפוסקים להתיר קידושין בלילה, וכן מנהג העולם, אף שיש מחמירין (הסוברים כאור זרוע ומקישים הויה ליציאה אף בקידושי כסף).",
+    "source": { "chelek": "ehy", "siman": 26, "seif": 4 }
+  }
+]

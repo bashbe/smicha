@@ -1,0 +1,463 @@
+[
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "מתנה על מנת להחזיר",
+    "siman": 29,
+    "seif": 1,
+    "difficulty_level": 2,
+    "exam_section": "shulchan_aruch",
+    "question_text": "אמר לאשה ׳הרי את מקודשת לי בטבעת זו על מנת שתחזיריה לי׳ - האם מקודשת?",
+    "options": [
+      { "number": 1, "text": "כן, מדין מתנה על מנת להחזיר", "is_correct": false },
+      { "number": 2, "text": "לא, אינה מקודשת", "is_correct": true },
+      { "number": 3, "text": "מקודשת רק אם לא כפל את התנאי", "is_correct": false },
+      { "number": 4, "text": "כן, אך רק מדרבנן", "is_correct": false }
+    ],
+    "explanation": "אמר רבא (קידושין ו:): הילך מנה על מנת שתחזירהו לי - במכר לא קנה, באשה אינה מקודשת. הטעם: אין אשה נקנית בחליפין, ומתנה כזו דומה לקניין סודר.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 1 }
+  },
+  {
+    "type": "multiple_opinions_dropdown",
+    "parcours": "chupa_kidushin",
+    "sujet": "מתנה על מנת להחזיר",
+    "siman": 29,
+    "seif": 1,
+    "difficulty_level": 3,
+    "exam_section": "tur",
+    "question_text": "מדוע מתנה על מנת להחזיר (מתעמ״ל) אינה מקדשת את האשה, לפי הדעות הבאות?",
+    "dropdown_choices": [
+      "מדאורייתא היא מקודשת, אלא שחכמים הפקיעו את הקידושין מחשש קניין סודר",
+      "מעיקר הדין אין כאן קידושין כלל, שהאשה אינה מקבלת לידה כלום ואינה נהנית"
+    ],
+    "decisors": [
+      { "id": "d1", "name": "תוספות ורא״ש", "correct_choice": "מדאורייתא היא מקודשת, אלא שחכמים הפקיעו את הקידושין מחשש קניין סודר" },
+      { "id": "d2", "name": "הרמב״ם", "correct_choice": "מעיקר הדין אין כאן קידושין כלל, שהאשה אינה מקבלת לידה כלום ואינה נהנית" }
+    ],
+    "explanation": "תוספות ורא״ש ביארו שמדאורייתא מתעמ״ל שמה מתנה ומקודשת, אלא שחכמים הפקיעו קידושין אלו מחשש שיבואו להתיר קידושין בקניין סודר. הרמב״ם ביאר שמעיקר הדין אין כאן קידושין כלל, שהאשה אינה נהנית ואינה מקבלת דבר לידה.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 1 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "מתנה על מנת להחזיר",
+    "siman": 29,
+    "seif": 1,
+    "difficulty_level": 2,
+    "exam_section": "shulchan_aruch",
+    "question_text": "נתן לאשה מתנה לזמן קצוב, וקידשה בהנאה שיש לה משימוש בחפץ תוך אותו זמן - מהו הדין, לדעת הרמ״א?",
+    "options": [
+      { "number": 1, "text": "מקודשת, שהרי את ההנאה מהזמן אינה מחזירה לו", "is_correct": true },
+      { "number": 2, "text": "אינה מקודשת, כדין מתעמ״ל רגיל", "is_correct": false },
+      { "number": 3, "text": "הוי ספק קידושין", "is_correct": false },
+      { "number": 4, "text": "מקודשת רק אם היא אדם חשוב", "is_correct": false }
+    ],
+    "explanation": "הר״ן כתב שי״מ מקודשת וי״מ אינה מקודשת, וראשון נראה עיקר; וכ״פ הרמ״א. הב״ש הוסיף טעם: את ההנאה שנהנתה מהזמן אינה יכולה להחזיר, ולכן אינה כמתעמ״ל.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 1 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "מתנה על מנת להחזיר",
+    "siman": 29,
+    "seif": 1,
+    "difficulty_level": 3,
+    "exam_section": "shulchan_aruch",
+    "question_text": "האשה עצמה נתנה לאיש מתנה על מנת שיחזירנה לה לאחר שלושים יום, וקידשה בה תוך שלושים יום - מהו הדין, לפי תשובת הרא״ש?",
+    "options": [
+      { "number": 1, "text": "מקודשת, שזוהי מתנה גמורה שלא גזרו בה", "is_correct": true },
+      { "number": 2, "text": "אינה מקודשת, כדין מתעמ״ל רגיל", "is_correct": false },
+      { "number": 3, "text": "הוי ספק קידושין", "is_correct": false },
+      { "number": 4, "text": "הדין תלוי אם המתנה היא חפץ או מעות", "is_correct": false }
+    ],
+    "explanation": "הרא״ש בתשובה כתב: אם האשה נתנה לאיש מתעמ״ל לאחר שלושים יום, וקידשה בזה תוך שלושים - מקודשת, כיון שזוהי מתנה גמורה שלא גזרו בה חשש קניין סודר. וכ״פ הרמ״א.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 1 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "קידושין מדין ערב",
+    "siman": 29,
+    "seif": 2,
+    "difficulty_level": 2,
+    "exam_section": "shulchan_aruch",
+    "question_text": "אמרה לאיש ׳תן מנה לפלוני ואתקדש אני לך׳, ונתן לו, ואמר לה ׳הרי את מקודשת לי בהנאת מתנה זו שנתתי על פיך׳ - מהו הדין?",
+    "options": [
+      { "number": 1, "text": "מקודשת מדין ערב", "is_correct": true },
+      { "number": 2, "text": "אינה מקודשת, שהיא עצמה לא קיבלה לידה כלום", "is_correct": false },
+      { "number": 3, "text": "הוי ספק קידושין בלבד", "is_correct": false },
+      { "number": 4, "text": "מקודשת רק אם פלוני הוא קרוב משפחתה", "is_correct": false }
+    ],
+    "explanation": "הגמרא (קידושין ו:-ז.) לומדת: כשם שהערב משעבד עצמו אף שלא הגיעה ההנאה לידו, כך האשה מקנה עצמה אף שלא הגיעה ההנאה לידה - מקודשת מדין ערב.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 2 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "קידושין מדין ערב",
+    "siman": 29,
+    "seif": 2,
+    "difficulty_level": 3,
+    "exam_section": "tur",
+    "question_text": "לדעת רש״י, רמב״ם, רשב״א, ר״ן ורי״ו, מה תנאי הכרחי כדי שיחולו קידושי ׳ערב׳ (תן מנה לפלוני ואתקדש אני לך)?",
+    "options": [
+      { "number": 1, "text": "שיאמר האיש בעצמו ׳התקדשי לי׳", "is_correct": true },
+      { "number": 2, "text": "שהאשה תיתן את הכסף בעצמה לפלוני", "is_correct": false },
+      { "number": 3, "text": "שיהיה זה סכום גדול מפרוטה בהרבה", "is_correct": false },
+      { "number": 4, "text": "שהעדים יכתבו שטר על כך", "is_correct": false }
+    ],
+    "explanation": "רש״י, הרמב״ם, הרשב״א, הר״ן והרי״ו ביארו שהסוגיה מדברת כשאמר הוא ׳התקדשי לי׳; שאם לא כן, הוי כנתן הוא ואמרה היא (ספק קידושין), שצריך דיבור שלו דוקא.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 2 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "קידושין מדין ערב",
+    "siman": 29,
+    "seif": 2,
+    "difficulty_level": 3,
+    "exam_section": "ptei_teshuva",
+    "question_text": "אמרה ׳הרוויח זמן מלווה לפלוני ואתקדש אני לך׳ (ולא הלוואה חדשה, אלא הארכת פירעון של הלוואה קיימת) - מהו הדין לפי הרשב״א?",
+    "options": [
+      { "number": 1, "text": "מקודשת, כדין הלוואת מנה לפלוני", "is_correct": false },
+      { "number": 2, "text": "אינה מקודשת, שאין הערב משתעבד אחר ההלוואה עצמה", "is_correct": true },
+      { "number": 3, "text": "הוי ספק קידושין", "is_correct": false },
+      { "number": 4, "text": "מקודשת רק אם המלווה הוא קרוב משפחתה", "is_correct": false }
+    ],
+    "explanation": "הרשב״א בתשובה חילק: הלוואת מנה חדשה לפלוני על פיה - מקודשת, כשם שהערב מוכן לשעבד עצמו כדי שילוו לחברו. אך הרווחת זמן פירעון בהלוואה קיימת - אינה מקודשת, שאין הערב משתעבד אחר ההלוואה עצמה. הח״מ והב״ש הקשו על חילוק זה, וכתבו שיש כאן הנאה שווה פרוטה לפחות.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 2 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "קידושין מדין עבד כנעני",
+    "siman": 29,
+    "seif": 5,
+    "difficulty_level": 2,
+    "exam_section": "shulchan_aruch",
+    "question_text": "אמר לאשה ׳הילך מנה והתקדשי לפלוני׳, ונתן את המנה לפלוני - מהו הדין, ומאיזה דין נלמד?",
+    "options": [
+      { "number": 1, "text": "מקודשת מדין עבד כנעני", "is_correct": true },
+      { "number": 2, "text": "אינה מקודשת, שהאשה לא קיבלה שום הנאה", "is_correct": false },
+      { "number": 3, "text": "הוי ספק קידושין בלבד", "is_correct": false },
+      { "number": 4, "text": "מקודשת רק אם פלוני הסכים לכך בפירוש מראש", "is_correct": false }
+    ],
+    "explanation": "הגמרא (קידושין ז.) לומדת מדין עבד כנעני: כשם שהעבד קונה עצמו לחירות אף שאחרים פודים אותו בממונם ואינו חסר, כך האיש קונה את האשה אף שאינו חסר ממון בעצמו (שנתן לפלוני).",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 5 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "קידושין הנלמדים מערב ומעבד כנעני",
+    "siman": 29,
+    "seif": 3,
+    "difficulty_level": 3,
+    "exam_section": "tur",
+    "question_text": "אמרה ׳תן מנה לפלוני ואקדש אני לו׳ - מדוע קידושין אלו נלמדים משני הדינים גם יחד (ערב ועבד כנעני)?",
+    "options": [
+      { "number": 1, "text": "מערב למדים שהאשה מקנה עצמה אף שאינה מקבלת הנאה, ומעבד כנעני למדים שהאיש קונה אף שאינו חסר ממון", "is_correct": true },
+      { "number": 2, "text": "מערב למדים דין האיש בלבד, ומעבד כנעני למדים דין האשה בלבד", "is_correct": false },
+      { "number": 3, "text": "אין צורך בשני הדינים, דין אחד מספיק ללמד את כל הדין", "is_correct": false },
+      { "number": 4, "text": "שני הדינים סותרים זה את זה, ולכן הקידושין בטלים מספק", "is_correct": false }
+    ],
+    "explanation": "הגמרא (קידושין ז.) מבארת: מדין ערב אנו למדים שהאשה מקנה עצמה אף שאינה מקבלת הנאה, ומדין עבד כנעני אנו למדים שהאיש קונה את האשה אף שאינו חסר ממון - שני הדינים יחד.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 3 }
+  },
+  {
+    "type": "true_false",
+    "parcours": "chupa_kidushin",
+    "sujet": "המקדש במשכון",
+    "siman": 29,
+    "seif": 6,
+    "difficulty_level": 1,
+    "exam_section": "shulchan_aruch",
+    "statement_text": "אמר לאשה ׳התקדשי לי במנה׳, והניח לה משכון עד שיתן לה את המנה - מקודשת.",
+    "correct_answer": false,
+    "explanation": "רבא אמר רב נחמן (קידושין ח.): ׳מנה אין כאן, משכון אין כאן׳ - אינה מקודשת, שהמנה לא הגיע לידה, והמשכון ניתן רק להבטחת השעבוד ואינו שלה.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 6 }
+  },
+  {
+    "type": "multiple_opinions_dropdown",
+    "parcours": "chupa_kidushin",
+    "sujet": "המקדש במשכון",
+    "siman": 29,
+    "seif": 6,
+    "difficulty_level": 3,
+    "exam_section": "tur",
+    "question_text": "אם התחייב עצמו בקניין ליתן את המנה, או כתב לה שטר עליו - האם מועיל לקדשה מיד, לפי הדעות הבאות?",
+    "dropdown_choices": [
+      "לא מועיל, שהמנה עדיין נשאר אצלו ולא הגיע לידה",
+      "מועיל, שיש כאן התחייבות אמיתית"
+    ],
+    "decisors": [
+      { "id": "d1", "name": "רמב״ן ורשב״א", "correct_choice": "לא מועיל, שהמנה עדיין נשאר אצלו ולא הגיע לידה" },
+      { "id": "d2", "name": "ראב״ד", "correct_choice": "מועיל, שיש כאן התחייבות אמיתית" }
+    ],
+    "explanation": "רמב״ן ורשב״א פירשו ש׳מנה אין כאן׳ פירושו שהמנה נשאר אגוד אצלו, ולכן אף התחייבות בקניין או שטר אינם מועילים. הראב״ד פירש ש׳מנה אין כאן׳ פירושו שאינו חייב לה מנה כלל, ולכן אם התחייב עצמו בקניין - מועיל, שיש כאן התחייבות אמיתית.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 6 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "המקדש במשכון",
+    "siman": 29,
+    "seif": 6,
+    "difficulty_level": 2,
+    "exam_section": "shulchan_aruch",
+    "question_text": "כיצד פסק הרמ״א לגבי המקדש במשכון וכתב לה גם שטר על החוב?",
+    "options": [
+      { "number": 1, "text": "כרשב״א וסיעתו - אף שטר אינו מועיל לקידושין", "is_correct": true },
+      { "number": 2, "text": "כראב״ד - שטר מועיל לקידושין ודאיים", "is_correct": false },
+      { "number": 3, "text": "הוי ספק קידושין בכל מקרה", "is_correct": false },
+      { "number": 4, "text": "לא התייחס כלל לדין השטר", "is_correct": false }
+    ],
+    "explanation": "הרמ״א פסק כרשב״א וסיעתו: אף אם נתן לה שטר על הדינר - אין זה קידושין. אמנם הח״מ חלק וכתב שאם התחייב בקניין או כתב שטר - הוי ספק קידושין, שחוששים לשתי הדעות.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 6 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "המקדש במשכון",
+    "siman": 29,
+    "seif": 6,
+    "difficulty_level": 3,
+    "exam_section": "shulchan_aruch",
+    "question_text": "אמר לה ׳התקדשי בדינר, ותזכי בגוף המשכון שאני נותן לך׳ - מהו הדין לפי הרמ״א?",
+    "options": [
+      { "number": 1, "text": "מקודשת", "is_correct": true },
+      { "number": 2, "text": "אינה מקודשת, כדין משכון רגיל", "is_correct": false },
+      { "number": 3, "text": "הוי ספק קידושין", "is_correct": false },
+      { "number": 4, "text": "תלוי אם המשכון שווה בדיוק כדינר", "is_correct": false }
+    ],
+    "explanation": "הרמ״א (עפ״י רי״ו) פסק שמקודשת: כאן גוף הקידושין הוא המשכון עצמו, שהקנה לה בפירוש, ולא הדינר - ולכן אינו נחשב ׳אגוד גביה׳ כבמשכון סתם.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 6 }
+  },
+  {
+    "type": "true_false",
+    "parcours": "chupa_kidushin",
+    "sujet": "קניין סודר לעניין קידושין",
+    "siman": 29,
+    "seif": 6,
+    "difficulty_level": 2,
+    "exam_section": "tur",
+    "statement_text": "אשה אינה מתקדשת בקניין סודר (חליפין), אף אם שוה הרבה יותר מפרוטה.",
+    "correct_answer": true,
+    "explanation": "הגמרא (קידושין ג.): חליפין איתנהו בפחות משוה פרוטה, ואשה בפחות משוה פרוטה לא מקניא נפשה. רש״י פירש שגנאי לה להתקדש בדבר שאינו שוה פרוטה; ר״ת פירש שקניין סודר אינו בכלל קניין כסף כלל.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 6 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "פתרון לחתן ששכח את הטבעת",
+    "siman": 29,
+    "seif": 6,
+    "difficulty_level": 3,
+    "exam_section": "ptei_teshuva",
+    "question_text": "חתן ששכח את טבעת הקידושין בביתו, ורוצה לקדש את הכלה על ידי שיקנה לה את הטבעת (הנמצאת בביתו) בקניין סודר - האם מועיל, לדעת רוב האחרונים?",
+    "options": [
+      { "number": 1, "text": "כן, יכול להגביה חפץ שלה ולהקנות לה כך את הטבעת שבביתו", "is_correct": true },
+      { "number": 2, "text": "לא, זהו בדיוק קניין סודר האסור לקידושין", "is_correct": false },
+      { "number": 3, "text": "מועיל רק אם הטבעת כבר רשומה על שם הכלה", "is_correct": false },
+      { "number": 4, "text": "מועיל רק בנוכחות רב מוסמך דווקא", "is_correct": false }
+    ],
+    "explanation": "רוב האחרונים חלקו על הב״ש, וביארו שהחפץ המדובר בשלטי גיבורים הוא הקנאת מנה מסוים בהקפה, ולא הקנאת חפץ מסוים הנמצא כרגע. כשהאיש מקנה לאשה חפץ מסוים (טבעתו) על ידי הגבהת חפץ שלה, הרי זה קידושי שוה כסף רגילים ומועיל.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 6 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "פתרון לחתן ששכח את הטבעת",
+    "siman": 29,
+    "seif": 6,
+    "difficulty_level": 2,
+    "exam_section": "ptei_teshuva",
+    "question_text": "מדוע ממליצים חלק מהפוסקים (טיב קידושין ועוד) להימנע מלקדש בטבעת שקיבל החתן מאחר במתנה על מנת להחזיר?",
+    "options": [
+      { "number": 1, "text": "כדי לא להיכנס למחלוקת הפוסקים המטילה חשש בעצם הקידושין", "is_correct": true },
+      { "number": 2, "text": "כי הדבר אסור לגמרי ללא כל מחלוקת", "is_correct": false },
+      { "number": 3, "text": "כי המנהג לקדש בטבעת שאולה בלבד ולא במתנה", "is_correct": false },
+      { "number": 4, "text": "כי יש בכך משום איסור גזל", "is_correct": false }
+    ],
+    "explanation": "עדיף לקדש במטבע של החתן עצמו (אף שיש הסוברים שאין מקדשין במטבע), מאשר להיכנס למחלוקת הפוסקים על מתעמ״ל שקיבל מאחר, שמטילה חשש בעצם הקידושין - כפי שכתבו כמה אחרונים (טיב קידושין, ערוך השולחן ועוד).",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 6 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "התקדשי לי במנה - נתן דינר",
+    "siman": 29,
+    "seif": 7,
+    "difficulty_level": 2,
+    "exam_section": "shulchan_aruch",
+    "question_text": "אמר לאשה ׳התקדשי לי במאה דינרים (מנה)׳, ונתן לה דינר אחד בלבד - מהו הדין, לפי רבי אלעזר?",
+    "options": [
+      { "number": 1, "text": "מקודשת מיד, וישלים לה את השאר", "is_correct": true },
+      { "number": 2, "text": "אינה מקודשת עד שישלים לה את כל הסכום", "is_correct": false },
+      { "number": 3, "text": "הוי ספק קידושין עד שישלים", "is_correct": false },
+      { "number": 4, "text": "מקודשת רק אם האשה מוחלת בפירוש על השאר", "is_correct": false }
+    ],
+    "explanation": "אמר ר׳ אלעזר (קידושין ח.): התקדשי לי במנה, ונתן לה דינר - הרי זו מקודשת וישלים, כיון שאמר לה ׳מנה׳ ונתן דינר, הרי זה כאומר ׳על מנת׳, וכל האומר ׳על מנת׳ כאומר ׳מעכשיו׳ דמי.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 7 }
+  },
+  {
+    "type": "multiple_opinions_dropdown",
+    "parcours": "chupa_kidushin",
+    "sujet": "התקדשי לי במנה - נתן דינר",
+    "siman": 29,
+    "seif": 7,
+    "difficulty_level": 3,
+    "exam_section": "shulchan_aruch",
+    "question_text": "מתי מקודשת מיד עם קבלת הדינר הראשון, ומתי צריכים להשלים תחילה, לפי ההבחנה בין ׳מנה סתם׳ ל׳מנה זו׳?",
+    "dropdown_choices": [
+      "מקודשת מיד רק ב׳מנה סתם׳; ב׳מנה זו׳ - יכולים לחזור בהם עד שישלים",
+      "אין הבדל בין הלשונות - הכל תלוי אם היה מונה והולך בפועל"
+    ],
+    "decisors": [
+      { "id": "d1", "name": "רי״ף ורמב״ם (וכ״פ השו״ע)", "correct_choice": "מקודשת מיד רק ב׳מנה סתם׳; ב׳מנה זו׳ - יכולים לחזור בהם עד שישלים" },
+      { "id": "d2", "name": "רא״ש וטור (וכ״פ הרמ״א)", "correct_choice": "אין הבדל בין הלשונות - הכל תלוי אם היה מונה והולך בפועל" }
+    ],
+    "explanation": "לרי״ף ולרמב״ם, וכ״פ השו״ע: אם אמר ׳מנה׳ סתם - מקודשת מיד; אם אמר ׳מנה זו׳ - יכולים לחזור עד שישלים. לרא״ש ולטור, וכ״פ הרמ״א: הקובע הוא אם היה מונה והולך בפועל, ולא הלשון עצמה.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 7 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "מנה זה ונמצא חסר",
+    "siman": 29,
+    "seif": 7,
+    "difficulty_level": 2,
+    "exam_section": "shulchan_aruch",
+    "question_text": "קידשה ב׳מנה זה׳, ונמצא בתוכו דינר של נחושת שלא הכירה בו מתחילה - מהו הדין?",
+    "options": [
+      { "number": 1, "text": "אינה מקודשת", "is_correct": true },
+      { "number": 2, "text": "מקודשת ודאי", "is_correct": false },
+      { "number": 3, "text": "מקודשת בכל מקרה, ובלבד שתחליף את המטבע", "is_correct": false },
+      { "number": 4, "text": "הדבר תלוי אם היא בתולה או אלמנה", "is_correct": false }
+    ],
+    "explanation": "השו״ע פסק: נמצא ׳מנה זה׳ חסר דינר, או נמצא בו דינר נחושת, ולא הכירה בו תחילה - אינה מקודשת. ואם היא יכולה להוציא את הדינר הרע על ידי הדחק - הרי זו מקודשת.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 7 }
+  },
+  {
+    "type": "multiple_opinions_dropdown",
+    "parcours": "chupa_kidushin",
+    "sujet": "מנה זה ונמצא חסר",
+    "siman": 29,
+    "seif": 7,
+    "difficulty_level": 3,
+    "exam_section": "tur",
+    "question_text": "כשנמצא ה׳מנה זה׳ חסר, מה משמעות דברי הברייתא ׳אינה מקודשת׳, לפי הדעות הבאות?",
+    "dropdown_choices": [
+      "האיש והאשה יכולים לחזור בהם מהקידושין (ואם שתקה - מקודשת, שמחלה)",
+      "הקידושין בטלים מאליהם, וצריך אמירה ונתינה מחדש"
+    ],
+    "decisors": [
+      { "id": "d1", "name": "רש״י", "correct_choice": "האיש והאשה יכולים לחזור בהם מהקידושין (ואם שתקה - מקודשת, שמחלה)" },
+      { "id": "d2", "name": "רמב״ן ור״ן", "correct_choice": "הקידושין בטלים מאליהם, וצריך אמירה ונתינה מחדש" }
+    ],
+    "explanation": "לרש״י, ׳אינה מקודשת׳ פירושו שיכולים לחזור בהם מהקידושין, ואם שתקה - מקודשת, שמחלה על החוסר. לרמב״ן ולר״ן, הקידושין הראשונים בטלים מאליהם לגמרי, וצריך אמירה ונתינה מחדש כדי לקדשה.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 7 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "מחלוקת על סכום הקידושין",
+    "siman": 29,
+    "seif": 8,
+    "difficulty_level": 3,
+    "exam_section": "shulchan_aruch",
+    "question_text": "בני זוג נחלקו על סך הקידושין (הוא הציע מנה, היא דרשה מאתיים), הלכו לבתיהם, ולאחר זמן חזרו והתפייסו וקידש - כיצד קובעים את הסכום הסופי, לפי התוספתא?",
+    "options": [
+      { "number": 1, "text": "אם האיש תבע את האשה - יעשו דברי האשה; אם האשה תבעה את האיש - יעשו דברי האיש", "is_correct": true },
+      { "number": 2, "text": "תמיד יעשו דברי האיש, שהוא הנותן", "is_correct": false },
+      { "number": 3, "text": "תמיד יעשו דברי האשה, שהיא המקבלת", "is_correct": false },
+      { "number": 4, "text": "יחלקו תמיד בסכום האמצעי שביניהם", "is_correct": false }
+    ],
+    "explanation": "התוספתא: ׳זה אומר במנה וזה אומר במאתיים, והלך זה לביתו וזה לביתו, ואח״כ תבעו זה את זה וקדשו. אם האיש תבע את האשה - יעשו דברי האשה, ואם האשה תבעה את האיש - יעשו דברי האיש׳, וכ״פ השו״ע.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 8 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "התקדשי לי בכוס זה",
+    "siman": 29,
+    "seif": 9,
+    "difficulty_level": 3,
+    "exam_section": "shulchan_aruch",
+    "question_text": "אמר לאשה ׳התקדשי לי בכוס זה׳, והכוס מלא יין - במה מקודשת, לפי הרמב״ם ורבינו תם (כפי שפסק השו״ע)?",
+    "options": [
+      { "number": 1, "text": "בכוס בלבד, ולא במה שבתוכו", "is_correct": true },
+      { "number": 2, "text": "במה שבתוכו בלבד, ולא בכוס", "is_correct": false },
+      { "number": 3, "text": "בשניהם יחד, שהיין והכוס מצטרפים", "is_correct": false },
+      { "number": 4, "text": "אינה מקודשת כלל בכוס מלא יין", "is_correct": false }
+    ],
+    "explanation": "השו״ע פסק כרמב״ם ורבינו תם: בכוס מלא מים - מקודשת בשניהם (שהמים בטלים לכוס); בכוס מלא יין - מקודשת בכוס בלבד (שהכוס חשוב מהיין, ואין היין בטל אליו); בכוס מלא שמן - מקודשת במה שבתוכו בלבד.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 9 }
+  },
+  {
+    "type": "true_false",
+    "parcours": "chupa_kidushin",
+    "sujet": "כל הבה מיהבה לאו כלום הוא",
+    "siman": 29,
+    "seif": 10,
+    "difficulty_level": 2,
+    "exam_section": "shulchan_aruch",
+    "statement_text": "אשה שביקשה מאיש חוט של ענק (תכשיט), והוא שאל ׳אם אתן ליך תתקדשי לי?׳, והיא ענתה ׳הבה מיהבה׳ (תן כבר) - מקודשת.",
+    "correct_answer": false,
+    "explanation": "אמר רב חמא: כל ׳הבה מיהבה׳ לאו כלום הוא, ואינה מקודשת - שדבריה אינם נראים אלא כבקשה לקבל את החפץ, ולא כהסכמה לקידושין.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 10 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "כל הבה מיהבה לאו כלום הוא",
+    "siman": 29,
+    "seif": 10,
+    "difficulty_level": 3,
+    "exam_section": "tur",
+    "question_text": "מהי ההלכה הפסוקה במקרה ׳הב לה כפלויה דיכולה׳ (ביקשה שכר לפועליה), לאחר מחלוקת רבינא ורב סמא בר רקתא?",
+    "options": [
+      { "number": 1, "text": "אינה מקודשת, כרב סמא בר רקתא", "is_correct": true },
+      { "number": 2, "text": "מקודשת, כרבינא", "is_correct": false },
+      { "number": 3, "text": "הוי ספק קידושין", "is_correct": false },
+      { "number": 4, "text": "הדבר תלוי אם הפועלים כבר קיבלו את שכרם", "is_correct": false }
+    ],
+    "explanation": "רבינא סבר מקודשת, רב סמא בר רקתא סבר אינה מקודשת (כתגא דמלכא - ככתר המלך, שאין הדברים נראים כרצון להתקדש). והלכתא: אינה מקודשת.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 10 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "תן לי מעט מאלו - האם מקודשת",
+    "siman": 29,
+    "seif": 10,
+    "difficulty_level": 2,
+    "exam_section": "shulchan_aruch",
+    "question_text": "היו לו מיני כלים או מאכל, ואמרה לו ׳תן לי מעט מאלו׳, ואמר לה ׳אם אתן ליך תהיי מקודשת לי?׳, וענתה ׳הן׳ ונתן לה - מהו הדין?",
+    "options": [
+      { "number": 1, "text": "מקודשת", "is_correct": true },
+      { "number": 2, "text": "אינה מקודשת, כדין ׳הבה מיהבה׳", "is_correct": false },
+      { "number": 3, "text": "הוי ספק קידושין", "is_correct": false },
+      { "number": 4, "text": "מקודשת רק אם החפץ שווה יותר מדינר", "is_correct": false }
+    ],
+    "explanation": "השו״ע פסק (עפ״י הרמב״ם והרשב״א): אם ענתה ׳הן׳ בתשובה לשאלתו ׳אם אתן ליך תהיי מקודשת לי׳, ונתן לה - הרי זו מקודשת. אבל אם ענתה ׳תן לי׳ סתם, או בלשון שעניינה ׳אל תשחק עמי, רק תן לי׳ - אינה מקודשת.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 10 }
+  },
+  {
+    "type": "multiple_choice",
+    "parcours": "chupa_kidushin",
+    "sujet": "תן לי מעט מאלו - האם מקודשת",
+    "siman": 29,
+    "seif": 10,
+    "difficulty_level": 3,
+    "exam_section": "ptei_teshuva",
+    "question_text": "אמר לה ׳תן לי מעט מאלו, תתקדשי לי בזה?׳, ׳תן׳, ׳הרי את מקודשת...׳, וקיבלה בשתיקה (ולא ענתה בפירוש) - כיצד פסקו השו״ע והרמ״א?",
+    "options": [
+      { "number": 1, "text": "מקודשת", "is_correct": true },
+      { "number": 2, "text": "אינה מקודשת", "is_correct": false },
+      { "number": 3, "text": "אין הכרעה בדבר, והשאלה נותרה פתוחה", "is_correct": false },
+      { "number": 4, "text": "תלוי אם היו עדים בשעת הנתינה עצמה", "is_correct": false }
+    ],
+    "explanation": "הרשב״א פסק שאינה מקודשת, אולם הרא״ש הראב״ד והרמב״ן פסקו שמקודשת, וכ״פ השו״ע והרמ״א. הר״ן הכריע דהוי ספק קידושין, וכן נראה מהב״ש.",
+    "source": { "chelek": "ehy", "siman": 29, "seif": 10 }
+  }
+]
