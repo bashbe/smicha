@@ -94,9 +94,10 @@ faudra que l'utilisateur revérifie le PDF original à cet endroit s'il veut ce 
 | **Total** | | | **84** | |
 
 Les 3 lots ont été générés d'un coup comme demandé (pas d'attente de jugement utilisateur entre
-les lots). Reste à faire : vérification par agent Haiku (voir section dédiée — Sefaria
-indisponible dans cette session, vérification limitée au texte source sauvegardé), puis import
-réel via `/admin/import` après revue humaine.
+les lots). Vérification par agent Haiku terminée pour les 3 lots (voir section dédiée) — 1 seule
+correction nécessaire (carte n°7 du lot ehy 29), déjà appliquée et revalidée. **Les 3 lots sont
+prêts pour import via `/admin/import`**, sous réserve d'une dernière revue humaine (et d'une
+vérification croisée Sefaria dans un environnement qui y a accès, non disponible ici).
 
 ## ⚠️ Contrainte réseau — API Sefaria inaccessible depuis cette session
 
@@ -122,7 +123,19 @@ en production.**
 - [x] Lot 2 (ehy 27) — **vérifié, RAS** : 37/37 validées par le script, aucune carte issue du
   passage corrompu, aucun problème de fidélité/type/hébreu détecté. Rapport complet dans
   `docs/verification_ehy_27.md`. Prêt pour import.
-- [~] Lot 3 (ehy 29) — agent Haiku lancé en arrière-plan, rapport attendu dans `docs/verification_ehy_29.md`
+- [x] Lot 3 (ehy 29) — **vérifié, 1 problème détecté et corrigé** : la carte n°7 ("קידושין מדין
+  ערב") était en `multiple_opinions_dropdown` mais ses "decisors" étaient en réalité deux LIBELLÉS
+  DE CAS ("הלווה מנה לפלוני..." / "הרוויח זמן מלווה לפלוני...") et non deux poskim en désaccord —
+  une seule et même position du Rosh Be'ah (רשב"א) distinguant deux cas, mal formatée en fausse
+  machloket. Corrigée en `multiple_choice` (question posée sur le cas "הרוויח זמן מלווה" isolément).
+  Revalidé : 26/26, 0 erreur. Toutes les 25 autres cartes : RAS. Rapport complet dans
+  `docs/verification_ehy_29.md`.
+
+**Leçon à retenir pour les prochaines générations** : vérifier systématiquement, pour chaque
+`multiple_opinions_dropdown`, que les `decisors` sont bien des POSKIM NOMMÉS en désaccord réel sur
+LE MÊME cas — jamais des libellés de cas différents habillés en "decisors". C'est l'erreur exacte
+que l'étape 7 du skill `/generate-cards` (validation) ne détecte pas automatiquement (elle vérifie
+la structure JSON, pas la sémantique), d'où l'utilité de la vérification humaine/agent dédiée.
 
 Les 3 vérifications ont été lancées en parallèle (au lieu de strictement séquentielles) car
 les 3 lots étaient déjà tous générés d'un coup, conformément à la consigne utilisateur. Chaque
