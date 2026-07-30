@@ -227,16 +227,29 @@ def analytics():
     activity = [{"label": item["label"], "answers": item["answers"], "users": len(item["users"])} for item in activity_by_day.values()]
     chart_max = max([point["answers"] for point in activity] or [1])
 
-    siman_options_query = Question.query
-    if parcours:
-        siman_options_query = siman_options_query.filter(Question.parcours == parcours)
-    siman_options = sorted({row[0] for row in siman_options_query.with_entities(Question.siman).filter(Question.siman.isnot(None)).all()})
-    subject_options_query = Subject.query
-    if parcours:
-        subject_options_query = subject_options_query.filter(Subject.parcours == parcours)
-    if siman is not None:
-        subject_options_query = subject_options_query.filter(Subject.siman == siman)
-    subject_options = subject_options_query.order_by(Subject.title).all()
+    all_subjects = Subject.query.order_by(Subject.parcours, Subject.siman, Subject.created_at).all()
+    subject_numbers: dict[str, int] = {}
+    subject_counters: dict[tuple[str, int], int] = {}
+    for item in all_subjects:
+        key = (item.parcours, item.siman)
+        subject_counters[key] = subject_counters.get(key, 0) + 1
+        subject_numbers[item.id] = subject_counters[key]
+    scope_catalog = {
+        "simanim": [
+            {"parcours": path, "siman": number}
+            for path, number in db.session.query(Question.parcours, Question.siman)
+            .filter(Question.parcours.isnot(None), Question.siman.isnot(None)).distinct().all()
+        ],
+        "subjects": [
+            {"id": item.id, "parcours": item.parcours, "siman": item.siman, "number": subject_numbers[item.id], "title": item.title}
+            for item in all_subjects
+        ],
+    }
+    siman_options = sorted({item["siman"] for item in scope_catalog["simanim"] if not parcours or item["parcours"] == parcours})
+    subject_options = [
+        item for item in all_subjects
+        if (not parcours or item.parcours == parcours) and (siman is None or item.siman == siman)
+    ]
 
     scope_parts = []
     if parcours:
@@ -246,7 +259,7 @@ def analytics():
     if subject_id:
         subject = next((item for item in subject_options if item.id == subject_id), Subject.query.get(subject_id))
         if subject:
-            scope_parts.append(subject.title)
+            scope_parts.append(f"Subject #{subject_numbers.get(subject.id, '—')}")
     scope_label = " · ".join(scope_parts) if scope_parts else "All learning paths"
 
     platform = {
@@ -260,7 +273,8 @@ def analytics():
         "admin/analytics.html", aggregate=aggregate, platform=platform, activity=activity,
         chart_max=chart_max, parcours_labels=PARCOURS_LABELS, siman_options=siman_options,
         subject_options=subject_options, selected_parcours=parcours, selected_siman=siman,
-        selected_subject=subject_id, scope_label=scope_label,
+        selected_subject=subject_id, scope_label=scope_label, subject_numbers=subject_numbers,
+        scope_catalog=scope_catalog,
     )
 
 

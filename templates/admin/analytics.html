@@ -12,11 +12,12 @@
 </div></section>
 
 <section class="admin-panel" style="margin-bottom:2rem"><div class="admin-section-heading"><div><h2>Learning scope</h2><p>{{ scope_label }}</p></div></div>
-  <form method="get" class="admin-form-grid stats-scope-form">
-    <div><label>Learning path</label><select name="parcours" onchange="this.form.submit()"><option value="">All learning paths</option>{% for code,label in parcours_labels.items() %}<option value="{{ code }}" {{ 'selected' if selected_parcours == code }}>{{ label }}</option>{% endfor %}</select></div>
-    <div><label>Siman</label><select name="siman" onchange="this.form.submit()"><option value="">All simanim</option>{% for value in siman_options %}<option value="{{ value }}" {{ 'selected' if selected_siman == value }}>Siman {{ value }}</option>{% endfor %}</select></div>
-    <div><label>Intra-siman subject</label><select name="subject" onchange="this.form.submit()"><option value="">All subjects</option>{% for subject in subject_options %}<option value="{{ subject.id }}" {{ 'selected' if selected_subject == subject.id }} dir="rtl">{{ subject.title }}</option>{% endfor %}</select></div>
-    <div style="align-self:end"><a class="admin-btn" href="{{ url_for('admin.analytics') }}">Reset scope</a></div>
+  <form method="get" class="admin-form-grid stats-scope-form" id="stats-scope-form" data-catalog='{{ scope_catalog|tojson }}'>
+    <div><label>Learning path</label><select name="parcours" id="stats-parcours"><option value="">All learning paths</option>{% for code,label in parcours_labels.items() %}<option value="{{ code }}" {{ 'selected' if selected_parcours == code }}>{{ label }}</option>{% endfor %}</select></div>
+    <div><label>Siman</label><select name="siman" id="stats-siman"><option value="">All simanim</option>{% for value in siman_options %}<option value="{{ value }}" {{ 'selected' if selected_siman == value }}>Siman {{ value }}</option>{% endfor %}</select></div>
+    <div><label>Find subject by</label><select id="stats-subject-mode"><option value="number">Number</option><option value="title">Title</option></select></div>
+    <div><label id="stats-subject-label">Intra-siman subject number</label><select name="subject" id="stats-subject"><option value="">All subjects</option>{% for subject in subject_options %}<option value="{{ subject.id }}" {{ 'selected' if selected_subject == subject.id }}>Subject #{{ subject_numbers.get(subject.id) }}</option>{% endfor %}</select></div>
+    <div style="align-self:end" class="row gap-1"><button class="admin-btn admin-btn-primary">Filter</button><a class="admin-btn" href="{{ url_for('admin.analytics') }}">Reset</a></div>
   </form>
 </section>
 
@@ -34,4 +35,46 @@
   </section>
   <aside class="admin-panel"><div class="admin-section-heading"><div><h2>Content alerts</h2><p>Open items in this scope.</p></div></div><div class="admin-health-row"><span>Student reports</span><strong>{{ aggregate.reports }}</strong></div><div class="admin-health-row"><span>Validator suggestions</span><strong>{{ aggregate.suggestions }}</strong></div><a href="{{ url_for('admin.questions') }}" class="admin-text-link">Open questions →</a></aside>
 </div>
+{% endblock %}
+{% block head %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var form = document.getElementById('stats-scope-form');
+    if (!form) return;
+    var catalog = JSON.parse(form.dataset.catalog);
+    var path = document.getElementById('stats-parcours');
+    var siman = document.getElementById('stats-siman');
+    var subject = document.getElementById('stats-subject');
+    var subjectMode = document.getElementById('stats-subject-mode');
+    var subjectLabel = document.getElementById('stats-subject-label');
+    function replaceOptions(select, options, placeholder, selected) {
+      select.replaceChildren(new Option(placeholder, ''));
+      options.forEach(function (item) {
+        var option = new Option(item.label, item.value);
+        option.selected = String(item.value) === String(selected);
+        select.add(option);
+      });
+    }
+    function refreshSimanim() {
+      var selected = siman.value;
+      var values = catalog.simanim.filter(function (item) { return !path.value || item.parcours === path.value; })
+        .map(function (item) { return item.siman; }).filter(function (value, index, list) { return list.indexOf(value) === index; }).sort(function (a, b) { return a - b; });
+      replaceOptions(siman, values.map(function (value) { return { value: value, label: 'Siman ' + value }; }), 'All simanim', selected);
+      if (selected && !values.includes(Number(selected))) siman.value = '';
+    }
+    function refreshSubjects() {
+      var selected = subject.value;
+      var values = catalog.subjects.filter(function (item) {
+        return (!path.value || item.parcours === path.value) && (!siman.value || String(item.siman) === siman.value);
+      }).sort(function (a, b) { return a.number - b.number; });
+      var byTitle = subjectMode.value === 'title';
+      subjectLabel.textContent = byTitle ? 'Intra-siman subject title' : 'Intra-siman subject number';
+      replaceOptions(subject, values.map(function (item) { return { value: item.id, label: byTitle ? item.title : 'Subject #' + item.number }; }), 'All subjects', selected);
+      if (selected && !values.some(function (item) { return item.id === selected; })) subject.value = '';
+    }
+    path.addEventListener('change', function () { refreshSimanim(); refreshSubjects(); });
+    siman.addEventListener('change', refreshSubjects);
+    subjectMode.addEventListener('change', refreshSubjects);
+  });
+</script>
 {% endblock %}
