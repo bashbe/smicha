@@ -5,6 +5,5 @@
   <a class="{{ 'active' if active_content_tab == 'flagged' }}" href="{{ url_for('admin.questions', status='a_revoir') }}">Flagged <span class="admin-nav-count">{{ flagged_questions_count }}</span></a>
   <a class="{{ 'active' if active_content_tab == 'reports' }}" href="{{ url_for('admin.reports') }}">Reports <span class="admin-nav-count">{{ open_reports_count }}</span></a>
   <a class="{{ 'active' if active_content_tab == 'suggestions' }}" href="{{ url_for('admin.suggestions') }}">Suggestions <span class="admin-nav-count">{{ open_suggestions_count }}</span></a>
-  <a class="{{ 'active' if active_content_tab == 'structure' }}" href="{{ url_for('admin.topics') }}">Structure</a>
   <a class="{{ 'active' if active_content_tab == 'import' }}" href="{{ url_for('admin.import_questions') }}">Import</a>
 </nav>

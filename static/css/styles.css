@@ -2320,6 +2320,12 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
 .admin-shell label { color:var(--admin-muted); font-size:.72rem; font-weight:700; }
 .admin-shell input, .admin-shell select, .admin-shell textarea { border-color:var(--admin-line); background:#fff; color:var(--admin-ink); }
 .admin-action-bar { position:sticky; bottom:0; display:flex; justify-content:flex-end; gap:.55rem; flex-wrap:wrap; padding:1rem 0 0; background:linear-gradient(transparent,#fff 20%); }
+.admin-subject-siman { padding:1rem 0; border-top:1px solid var(--admin-line); }
+.admin-subject-siman:first-of-type { border-top:0; }
+.admin-subject-list { display:grid; gap:.45rem; margin-top:.8rem; padding:.8rem; border-radius:.55rem; background:var(--admin-soft); }
+.admin-subject-list > p { margin:0 0 .15rem; color:var(--admin-muted); font-size:.72rem; font-weight:700; }
+.admin-subject-row { display:grid; grid-template-columns:7rem minmax(0,1fr); align-items:center; gap:.7rem; }
+.admin-subject-row span { color:var(--admin-muted); font-size:.75rem; }
 .stats-scope-form { grid-template-columns:repeat(4,1fr); }
 .admin-activity-chart { display:flex; align-items:end; gap:.2rem; height:12rem; padding-top:1rem; border-bottom:1px solid var(--admin-line); }
 .admin-chart-column { position:relative; display:flex; flex:1; min-width:0; height:100%; align-items:end; justify-content:center; cursor:default; }
@@ -2356,6 +2362,7 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
 @media (max-width: 480px) {
   .admin-work-grid, .admin-metric-grid, .admin-editor-stats, .admin-form-grid, .stats-scope-form { grid-template-columns:1fr; }
   .admin-work-card { min-height:7.8rem; }
+  .admin-subject-row { grid-template-columns:1fr; gap:.25rem; }
   .admin-toolbar > * { width:100% !important; }
   .admin-action-bar .admin-btn { flex:1; }
 }

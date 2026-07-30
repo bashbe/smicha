@@ -1,7 +1,29 @@
 {% extends "admin/_layout.html" %}
-{% block title %}Structure — Kinyan Admin{% endblock %}
+{% block title %}Subjects — Kinyan Admin{% endblock %}
 {% block content %}
-<div class="admin-page-header"><div><p class="admin-eyebrow">CONTENT</p><h1>Learning structure</h1><p>Manage the chapter titles shown to students. Question subjects are edited in the question bank.</p></div></div>
-{% set content_tab = 'structure' %}{% include "admin/_content_tabs.html" %}
-{% if groups %}<form method="post" class="stack">{% for g in groups %}<section class="admin-panel"><div class="admin-section-heading"><div><h2>{{ g.label }}</h2><p>{{ g.simanim|length }} chapters</p></div></div><div class="stack-sm">{% for s in g.simanim %}<div class="admin-form-grid" style="grid-template-columns:6rem 1fr;align-items:end"><div><label>Siman</label><input value="{{ s.siman }}" disabled /></div><div><label>Student-facing chapter title</label><input type="hidden" name="siman_parcours" value="{{ g.parcours }}"/><input type="hidden" name="siman_num" value="{{ s.siman }}"/><input dir="rtl" name="siman_topic" value="{{ s.topic }}" placeholder="Chapter title"/></div></div>{% endfor %}</div></section>{% endfor %}<div><button class="admin-btn admin-btn-primary">Save structure</button></div></form>{% else %}<div class="admin-panel admin-empty">No chapters are available yet.</div>{% endif %}
+<div class="admin-page-header"><div><p class="admin-eyebrow">SUBJECTS</p><h1>Simanim & subjects</h1><p>Manage the titles students see for each siman and its intra-siman subjects.</p></div></div>
+{% if groups %}
+<form method="post" class="stack">
+  {% for group in groups %}
+  <section class="admin-panel">
+    <div class="admin-section-heading"><div><h2>{{ group.label }}</h2><p>{{ group.simanim|length }} simanim</p></div></div>
+    {% for siman in group.simanim %}
+    <div class="admin-subject-siman">
+      <div class="admin-form-grid" style="grid-template-columns:7rem minmax(0,1fr);align-items:end">
+        <div><label>Siman</label><input value="{{ siman.siman }}" disabled/></div>
+        <div><label>Siman title</label><input type="hidden" name="siman_parcours" value="{{ group.parcours }}"/><input type="hidden" name="siman_num" value="{{ siman.siman }}"/><input name="siman_topic" value="{{ siman.topic }}" dir="rtl" placeholder="Siman title"/></div>
+      </div>
+      <div class="admin-subject-list">
+        <p>Intra-siman subjects</p>
+        {% for subject in siman.subjects %}
+        <div class="admin-subject-row"><span>Subject {{ loop.index }}</span><input type="hidden" name="subject_id" value="{{ subject.id }}"/><input name="subject_title" value="{{ subject.title }}" dir="rtl" aria-label="Subject title"/></div>
+        {% else %}<p class="admin-empty">No subjects yet.</p>{% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </section>
+  {% endfor %}
+  <div><button class="admin-btn admin-btn-primary">Save titles</button></div>
+</form>
+{% else %}<div class="admin-panel admin-empty">No simanim or subjects are available yet.</div>{% endif %}
 {% endblock %}

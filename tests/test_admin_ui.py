@@ -75,6 +75,7 @@ def test_primary_admin_pages_render_in_english():
         expected = {
             "/admin/dashboard": b"Needs attention",
             "/admin/questions": b"Question bank",
+            "/admin/subjects": b"Simanim & subjects",
             "/admin/users": b"Users",
             "/admin/backups": b"Backups",
             "/admin/data": b"Database explorer",
@@ -89,6 +90,19 @@ def test_primary_admin_pages_render_in_english():
         )
         assert scoped.status_code == 200
         assert b"Selected scope" in scoped.data
+
+        response = client.post(
+            "/admin/subjects",
+            data={
+                "siman_parcours": "bassar_bechalav",
+                "siman_num": "87",
+                "siman_topic": "",
+                "subject_id": question.subject_id,
+                "subject_title": "Renamed subject",
+            },
+        )
+        assert response.status_code == 302
+        assert db.session.get(Subject, question.subject_id).title == "Renamed subject"
 
 
 def test_validator_cannot_edit_question_content():

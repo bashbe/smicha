@@ -228,12 +228,6 @@ def analytics():
     chart_max = max([point["answers"] for point in activity] or [1])
 
     all_subjects = Subject.query.order_by(Subject.parcours, Subject.siman, Subject.created_at).all()
-    subject_numbers: dict[str, int] = {}
-    subject_counters: dict[tuple[str, int], int] = {}
-    for item in all_subjects:
-        key = (item.parcours, item.siman)
-        subject_counters[key] = subject_counters.get(key, 0) + 1
-        subject_numbers[item.id] = subject_counters[key]
     scope_catalog = {
         "simanim": [
             {"parcours": path, "siman": number}
@@ -241,7 +235,7 @@ def analytics():
             .filter(Question.parcours.isnot(None), Question.siman.isnot(None)).distinct().all()
         ],
         "subjects": [
-            {"id": item.id, "parcours": item.parcours, "siman": item.siman, "number": subject_numbers[item.id], "title": item.title}
+            {"id": item.id, "parcours": item.parcours, "siman": item.siman, "title": item.title}
             for item in all_subjects
         ],
     }
@@ -259,7 +253,7 @@ def analytics():
     if subject_id:
         subject = next((item for item in subject_options if item.id == subject_id), Subject.query.get(subject_id))
         if subject:
-            scope_parts.append(f"Subject #{subject_numbers.get(subject.id, '—')}")
+            scope_parts.append(subject.title)
     scope_label = " · ".join(scope_parts) if scope_parts else "All learning paths"
 
     platform = {
@@ -273,7 +267,7 @@ def analytics():
         "admin/analytics.html", aggregate=aggregate, platform=platform, activity=activity,
         chart_max=chart_max, parcours_labels=PARCOURS_LABELS, siman_options=siman_options,
         subject_options=subject_options, selected_parcours=parcours, selected_siman=siman,
-        selected_subject=subject_id, scope_label=scope_label, subject_numbers=subject_numbers,
+        selected_subject=subject_id, scope_label=scope_label,
         scope_catalog=scope_catalog,
     )
 
@@ -1064,9 +1058,13 @@ def edit_question(qid):
     return redirect(url_for("admin.questions", **redirect_params))
 
 
+@bp.route("/subjects", methods=["GET", "POST"])
 @bp.route("/topics", methods=["GET", "POST"])
 @staff_required
 def topics():
+    actor = current_user()
+    if not actor.has_role("super_admin"):
+        return redirect(url_for("admin.denied"))
     if request.method == "POST":
         siman_rows = list(zip(
             request.form.getlist("siman_parcours"),
@@ -1074,7 +1072,31 @@ def topics():
             request.form.getlist("siman_topic"),
         ))
         save_topics(siman_rows)
-        flash("Learning structure saved.", "success")
+        for subject_id, new_title in zip(
+            request.form.getlist("subject_id"), request.form.getlist("subject_title")
+        ):
+            subject = Subject.query.get(subject_id)
+            title = (new_title or "").strip()
+            if subject is None or not title or title == subject.title:
+                continue
+            result = rename_subject_by_id(subject_id, title)
+            if result is None:
+                continue
+            note = (
+                f'Subject merged into "{title}"' if result["merged_into"]
+                else f'Subject renamed from "{result["old_title"]}" to "{title}"'
+            )
+            target = result["subject"]
+            for question in result["questions"]:
+                previous = result["previous"][question.id]
+                db.session.add(QuestionEdit(
+                    question_id=question.id, editor_id=actor.id, action="edited",
+                    previous_content=previous,
+                    new_content=dict(previous, subject_id=target.id, subject=target.title),
+                    note=note,
+                ))
+        db.session.commit()
+        flash("Siman and subject titles saved.", "success")
         return redirect(url_for("admin.topics"))
 
     rows = (
@@ -1089,6 +1111,9 @@ def topics():
         if seif is not None:
             by_parcours[parcours][siman].add(seif)
 
+    subjects_by_siman: dict[tuple[str, int], list[Subject]] = {}
+    for subject in Subject.query.order_by(Subject.parcours, Subject.siman, Subject.created_at).all():
+        subjects_by_siman.setdefault((subject.parcours, subject.siman), []).append(subject)
     groups = []
     for parcours in sorted(by_parcours.keys()):
         simanim = []
@@ -1097,6 +1122,7 @@ def topics():
                 "siman": siman,
                 "topic": get_siman_topic(parcours, siman) or "",
                 "seifim": sorted(by_parcours[parcours][siman]),
+                "subjects": subjects_by_siman.get((parcours, siman), []),
             })
         groups.append({
             "parcours": parcours,
