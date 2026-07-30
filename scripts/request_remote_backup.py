@@ -2,7 +2,7 @@
 
 Required environment variables:
   BACKUP_API_URL=https://your-app.pythonanywhere.com/api/backup-db
-  BACKUP_API_KEY=<the same secret configured on the application>
+  BACKUP_API_KEY=<the key created in the application's Backups page>
 """
 from __future__ import annotations
 

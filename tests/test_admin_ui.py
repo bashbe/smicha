@@ -10,7 +10,7 @@ os.environ["DATABASE_URL"] = "sqlite://"
 os.environ["AUTO_SYNC_DB"] = "0"
 
 from app import create_app  # noqa: E402
-from models import Question, StudentProfile, Subject, User, UserRole, db  # noqa: E402
+from models import BackupApiToken, Question, StudentProfile, Subject, User, UserRole, db  # noqa: E402
 
 
 def _fresh_app():
@@ -103,6 +103,11 @@ def test_primary_admin_pages_render_in_english():
         )
         assert response.status_code == 302
         assert db.session.get(Subject, question.subject_id).title == "Renamed subject"
+
+        response = client.post("/admin/backup-api-keys", data={"label": "Secondary scheduler"})
+        assert response.status_code == 200
+        assert b"Copy this key now" in response.data
+        assert BackupApiToken.query.filter_by(label="Secondary scheduler").count() == 1
 
 
 def test_validator_cannot_edit_question_content():

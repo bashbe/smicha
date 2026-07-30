@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-import secrets
+import hashlib
+import hmac
 from datetime import date, datetime, timedelta
 
 from flask import Blueprint, current_app, jsonify, request
@@ -21,6 +22,7 @@ from fsrs import (
 import calibration
 from models import (
     FsrsCard,
+    BackupApiToken,
     ItemStats,
     Progression,
     Question,
@@ -69,17 +71,22 @@ bp = Blueprint("api", __name__, url_prefix="/api")
 @bp.post("/backup-db")
 def backup_db():
     """Trigger a server-side database backup with the dedicated API key."""
-    configured_key = current_app.config.get("BACKUP_API_KEY")
-    if not configured_key:
-        return jsonify(error="backup API disabled"), 404
     supplied_key = request.headers.get("X-Backup-API-Key", "")
-    if not secrets.compare_digest(supplied_key, configured_key):
+    token = BackupApiToken.query.filter_by(
+        token_hash=hashlib.sha256(supplied_key.encode()).hexdigest()
+    ).first() if supplied_key else None
+    configured_key = current_app.config.get("BACKUP_API_KEY")
+    is_configured_key = bool(configured_key) and hmac.compare_digest(supplied_key, configured_key)
+    if (not token or token.revoked_at) and not is_configured_key:
         return jsonify(error="invalid backup API key"), 401
     try:
         backup = create_backup()
     except Exception:
         current_app.logger.exception("Remote backup failed")
         return jsonify(error="backup failed"), 500
+    if token and not token.revoked_at:
+        token.last_used_at = datetime.utcnow()
+        db.session.commit()
     return jsonify(
         ok=True,
         filename=backup.filename,

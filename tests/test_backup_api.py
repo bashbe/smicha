@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import sys
+import hashlib
 from datetime import datetime
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -13,11 +14,19 @@ os.environ["DATABASE_URL"] = "sqlite://"
 os.environ["AUTO_SYNC_DB"] = "0"
 
 from app import create_app  # noqa: E402
+from models import BackupApiToken, db  # noqa: E402
 
 
 def test_remote_backup_requires_the_dedicated_key():
     app = create_app()
-    app.config.update(TESTING=True, BACKUP_API_KEY="test-backup-key")
+    app.config.update(TESTING=True)
+    with app.app_context():
+        db.drop_all()
+        db.create_all()
+        db.session.add(BackupApiToken(
+            label="test", token_hash=hashlib.sha256(b"test-backup-key").hexdigest()
+        ))
+        db.session.commit()
     client = app.test_client()
 
     assert client.post("/api/backup-db").status_code == 401
@@ -32,13 +41,16 @@ def test_remote_backup_requires_the_dedicated_key():
     create.assert_called_once_with()
 
 
-def test_remote_backup_is_disabled_without_a_key():
+def test_remote_backup_rejects_requests_when_no_key_exists():
     app = create_app()
-    app.config.update(TESTING=True, BACKUP_API_KEY=None)
-    assert app.test_client().post("/api/backup-db").status_code == 404
+    app.config.update(TESTING=True)
+    with app.app_context():
+        db.drop_all()
+        db.create_all()
+    assert app.test_client().post("/api/backup-db").status_code == 401
 
 
 if __name__ == "__main__":
     test_remote_backup_requires_the_dedicated_key()
-    test_remote_backup_is_disabled_without_a_key()
+    test_remote_backup_rejects_requests_when_no_key_exists()
     print("backup API tests passed")

@@ -268,6 +268,20 @@ class BackupRecord(db.Model):
     created_by = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"))
 
 
+class BackupApiToken(db.Model):
+    """API keys allowed to trigger a backup; only their SHA-256 hash is stored."""
+
+    __tablename__ = "backup_api_tokens"
+
+    id = db.Column(db.String(36), primary_key=True, default=_uuid)
+    label = db.Column(db.String(100), nullable=False)
+    token_hash = db.Column(db.String(64), nullable=False, unique=True, index=True)
+    created_by = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    last_used_at = db.Column(db.DateTime)
+    revoked_at = db.Column(db.DateTime)
+
+
 class EmergencyApiToken(db.Model):
     """Jeton d'urgence : seul son condensat est conservé en base."""
 

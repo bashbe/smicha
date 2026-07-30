@@ -26,6 +26,7 @@ from models import (
     QuestionReport,
     QuestionSuggestion,
     BackupRecord,
+    BackupApiToken,
     EmergencyApiToken,
     EmergencyApiAudit,
     StudentParcours,
@@ -335,7 +336,45 @@ def backups():
             current_app.logger.exception("Backup failed")
             flash(f"Backup failed: {exc}", "error")
         return redirect(url_for("admin.backups"))
-    return render_template("admin/backups.html", backups=BackupRecord.query.order_by(BackupRecord.created_at.desc()).all())
+    return _render_backups()
+
+
+def _render_backups(plaintext_backup_api_key=None):
+    return render_template(
+        "admin/backups.html",
+        backups=BackupRecord.query.order_by(BackupRecord.created_at.desc()).all(),
+        backup_api_tokens=BackupApiToken.query.order_by(BackupApiToken.created_at.desc()).all(),
+        plaintext_backup_api_key=plaintext_backup_api_key,
+    )
+
+
+@bp.route("/backup-api-keys", methods=["POST"])
+@staff_required
+def create_backup_api_key():
+    actor = current_user()
+    if not actor.has_role("super_admin"):
+        return redirect(url_for("admin.denied"))
+    label = (request.form.get("label") or "Remote scheduler").strip()[:100]
+    plaintext_key = secrets.token_urlsafe(32)
+    db.session.add(BackupApiToken(
+        label=label or "Remote scheduler",
+        token_hash=hashlib.sha256(plaintext_key.encode()).hexdigest(),
+        created_by=actor.id,
+    ))
+    db.session.commit()
+    return _render_backups(plaintext_backup_api_key=plaintext_key)
+
+
+@bp.route("/backup-api-keys/<token_id>/revoke", methods=["POST"])
+@staff_required
+def revoke_backup_api_key(token_id):
+    if not current_user().has_role("super_admin"):
+        return redirect(url_for("admin.denied"))
+    token = BackupApiToken.query.get_or_404(token_id)
+    if not token.revoked_at:
+        token.revoked_at = datetime.utcnow()
+        db.session.commit()
+    return redirect(url_for("admin.backups"))
 
 
 @bp.route("/backups/<backup_id>/keep", methods=["POST"])
