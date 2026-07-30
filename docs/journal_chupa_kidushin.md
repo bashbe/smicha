@@ -66,11 +66,15 @@ faudra que l'utilisateur revérifie le PDF original à cet endroit s'il veut ce 
 
 ### Lot 2 — ehy siman 27 (לשונות קידושין)
 
-- Statut : en attente
+- Statut : **généré et validé** (37 questions, 0 erreur)
 - Fichier : `generated_questions_ehy_27.json`
 - Contenu source : seifים א (לשונות ודאים), ג (לשונות מסופקים), ד (לא אמר "לי"), סעיף ללא מספר
-  (עוד לשונות), ו (הריני אישך / הרי את חמי), ז-ח (נתנה היא ואמרה היא / נתן הוא ואמרה היא), ט
-  (נתנה היא ואמר הוא), י (שיעור פרוטה). Exclut le passage corrompu p.13 (voir anomalie ci-dessus).
+  (עוד לשונות), ו (הריני אישך / הרי את חמי), ז (נתנה היא ואמרה היא / נתן הוא ואמרה היא), ט
+  (קידושין בהנאת מתנה לאדם חשוב, נתנה היא ואמר הוא), י (שיעור פרוטה). Exclut le passage corrompu
+  p.13 (voir anomalie ci-dessus) — aucune carte générée sur ce passage.
+- Répartition : 21 multiple_choice, 11 multiple_opinions_dropdown, 5 true_false.
+- Note : סעיפים ב, ה et ח du texte source n'apparaissaient pas dans l'extrait fourni (numérotation
+  telle quelle dans le document) — rien à générer pour eux.
 
 ### Lot 3 — ehy siman 29 (נתינת הכסף, משכון, קנין סודר, מנה חסר, כוס, "הבה מיהבה")
 
@@ -79,7 +83,23 @@ faudra que l'utilisateur revérifie le PDF original à cet endroit s'il veut ce 
 - Contenu source : seifim א (מתעמ"ל / קידושין ע"מ להחזיר), ב-ה (ערב, עבד כנעני), ו (משכון, קנין
   סודר), ז (מנה/דינר), ח (מחלוקת על הסכום), ט (כוס זה), י (הבה מיהבה).
 
-## Vérification (agent Haiku + Sefaria)
+## ⚠️ Contrainte réseau — API Sefaria inaccessible depuis cette session
+
+Testé : `curl` vers `www.sefaria.org` (directement et via l'agent-proxy) renvoie **403 sur le
+CONNECT** — `gateway answered 403 to CONNECT (policy denial or upstream failure)`
+(`$HTTPS_PROXY/__agentproxy/status` confirme `recentRelayFailures` sur `www.sefaria.org:443`).
+Selon `/root/.ccr/README.md`, un 403 du proxy signifie que l'hôte est bloqué par la politique
+réseau de cette session/organisation — **il ne faut pas réessayer ni contourner**.
+
+**Conséquence** : l'étape prévue par l'utilisateur (« un agent avec haiku va vérifier en
+s'aidant de l'API Sefaria ») **ne peut pas être exécutée telle quelle** dans cet environnement.
+Adaptation retenue : l'agent de vérification (Haiku) travaille uniquement à partir du texte
+source déjà sauvegardé (`docs/source_texts/heichal_shlomo_chupa_vekidushin_ehy_26-27-29.txt`) et
+du schéma (`question_types.py`), sans confirmation croisée Sefaria. **Il faudra qu'un humain (ou
+une session avec accès Sefaria) refasse la vérification croisée Sefaria avant l'import définitif
+en production.**
+
+## Vérification (agent Haiku — texte source seul, Sefaria indisponible)
 
 - [ ] Lot 1 — à lancer après génération
 - [ ] Lot 2 — à lancer après génération
