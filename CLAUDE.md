@@ -52,7 +52,9 @@ de chelek dans le champ optionnel `source` du JSON d'import (voir
 - `chelek: "ehy"` = אבן העזר
 - `chelek: "chum"` = חושן משפט
 
-Les fichiers de lot générés suivent la même convention de nommage :
+Les fichiers de lot générés suivent la même convention de nommage, sous
+`docs/generated_questions/` (fichiers de travail, non liés au code de l'app — voir
+« Organisation des fichiers non liés à l'app » ci-dessous) :
 `generated_questions_ehy_<siman>.json` / `generated_questions_chum_<siman>.json`,
 de même que tout dossier de textes sources Sefaria sauvegardés pour validation
 (`ehy_<siman>.*` / `chum_<siman>.*`). Ce préfixe est un **pense-bête textuel**,
@@ -110,3 +112,22 @@ de vérification.
 > l'historique des imports `chupa_kidushin` (journal de génération dans
 > `docs/journal_chupa_kidushin.md` s'il existe encore) pour connaître l'état
 > réel des données avant de migrer.
+
+## Organisation des fichiers non liés à l'app (contenu, pas code)
+
+Pour garder la racine du repo lisible, tout ce qui est **contenu de génération de cartes**
+(pas du code d'app, pas de la config) vit sous `docs/` :
+
+| Dossier | Contenu |
+|---|---|
+| `docs/generated_questions/` | Lots JSON produits par `/generate-cards` (`generated_questions_<parcours>_<siman>.json`) — fichiers de travail, gitignorés par défaut (voir `.gitignore`), commités seulement pour la continuité d'une session ou sur demande explicite |
+| `docs/source_texts/` | Textes source complets sauvegardés pour reproductibilité/vérification (extraits de séfarim fournis par l'utilisateur, ex. שו"ת היכל שלמה, טור ושו"ע) |
+| `docs/sefaria_sources/` | Textes récupérés depuis l'API Sefaria via `scripts/fetch_sefaria_text.py` (voir plus haut) |
+| `docs/journal_*.md`, `docs/audit_*.md`, `docs/verification_*.md` | Journaux de génération et rapports d'audit/vérification, par parcours et par session |
+
+Racine du repo réservée au code de l'app, à sa config, et aux docs de tooling qu'un chemin en
+dur référence (`prompt_generation_questions.md`, `generate_cards_lessons.md`,
+`sample_questions.json`, `siman_seif_topics.json` — voir README pour ce qu'ils font). Avant de
+déplacer un fichier à la racine qui ressemble à du contenu généré, vérifie d'abord qu'aucun
+chemin en dur (code Python, README, CLAUDE.md, `.claude/commands/*.md`) ne le référence par son
+emplacement actuel — sinon corrige ces références en même temps que le déplacement.
