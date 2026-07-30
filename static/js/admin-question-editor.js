@@ -87,7 +87,7 @@
   window.addDecisor = addDecisor;
 
   // ── Parcours/sujet preview text (siman, seif and tags are edited directly in the card) ──
-  const PARCOURS_LABELS = { bassar_bechalav: "בשר בחלב" };
+  const PARCOURS_LABELS = { bassar_bechalav: "בשר בחלב", chupa_kidushin: "חופה וקידושין" };
   function updateParcoursSubject() {
     const el = document.getElementById("admin-card-parcours-subject");
     if (!el) return;

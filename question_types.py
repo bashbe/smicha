@@ -15,13 +15,24 @@ QUESTION_TYPES = [
 ]
 
 VALID_SECTIONS = ("shulchan_aruch", "tur", "psikei_admur", "ptei_teshuva")
-VALID_PARCOURS = ("bassar_bechalav",)
+# NOTE — parcours multi-chelek (voir CLAUDE.md, section "Parcours multi-chelek") :
+# "chupa_kidushin" est le premier parcours à couvrir des simanim venant de DEUX
+# chalakim différents du Choulhan Aroukh (Even haEzer ET 'Hochen Mishpat). Les
+# numéros de siman peuvent donc se chevaucher entre les deux chalakim — le champ
+# `siman` (Integer) ne porte aucune notion de chelek. En attendant une vraie
+# adaptation du modèle de données, chaque question de ce parcours doit indiquer
+# son chelek via un préfixe dans `source_ref` : "ehy" (אבן העזר) ou "chum" (חושן
+# משפט), ex. source_ref="ehy סי' כו סע' א". Voir CLAUDE.md pour le détail.
+VALID_PARCOURS = ("bassar_bechalav", "chupa_kidushin")
 # Hebrew display labels — keep in sync with PARCOURS_LABELS in static/js/chapitre.js
 # and static/js/admin-question-editor.js.
-PARCOURS_LABELS = {"bassar_bechalav": "בשר בחלב"}
+PARCOURS_LABELS = {"bassar_bechalav": "בשר בחלב", "chupa_kidushin": "חופה וקידושין"}
 # Sous-titre affiché sous chaque parcours dans l'onboarding et les paramètres.
 # Ajouter un parcours = une entrée dans VALID_PARCOURS + PARCOURS_LABELS + ici.
-PARCOURS_DESCRIPTIONS = {"bassar_bechalav": "הלכות בשר בחלב — סימנים פ״ז–צ״ז"}
+PARCOURS_DESCRIPTIONS = {
+    "bassar_bechalav": "הלכות בשר בחלב — סימנים פ״ז–צ״ז",
+    "chupa_kidushin": "הלכות חופה וקידושין — אבן העזר (ehy) וחושן משפט (chum)",
+}
 
 HEBREW_RE = re.compile(r"[֐-׿]")
 LATIN_RE = re.compile(r"[A-Za-zÀ-ÖØ-öø-ÿ]")
