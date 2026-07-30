@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import secrets
 from datetime import date, datetime, timedelta
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 
 from auth_helpers import current_user
 from fsrs import (
@@ -33,6 +34,7 @@ from models import (
 )
 from points import compute_daily_points, compute_points, compute_stability_points
 from question_types import PARCOURS_LABELS, is_correct_answer, normalize_db_question
+from backup_service import create_backup
 
 # Max gap between two consecutive answers still counted as the same combo
 # session. Beyond this the server-side combo resets (see /api/answer).
@@ -62,6 +64,28 @@ def _due_count_for_parcours(user_id: str, parcours: str, today) -> int:
 
 
 bp = Blueprint("api", __name__, url_prefix="/api")
+
+
+@bp.post("/backup-db")
+def backup_db():
+    """Trigger a server-side database backup with the dedicated API key."""
+    configured_key = current_app.config.get("BACKUP_API_KEY")
+    if not configured_key:
+        return jsonify(error="backup API disabled"), 404
+    supplied_key = request.headers.get("X-Backup-API-Key", "")
+    if not secrets.compare_digest(supplied_key, configured_key):
+        return jsonify(error="invalid backup API key"), 401
+    try:
+        backup = create_backup()
+    except Exception:
+        current_app.logger.exception("Remote backup failed")
+        return jsonify(error="backup failed"), 500
+    return jsonify(
+        ok=True,
+        filename=backup.filename,
+        size_bytes=backup.size_bytes,
+        created_at=backup.created_at.isoformat() + "Z",
+    ), 201
 
 
 @bp.post("/answer")

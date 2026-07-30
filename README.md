@@ -108,6 +108,7 @@ Toutes les variables se trouvent dans `config.py` et sont surchargeables par var
 | `FLASK_PORT` | `5000` | Port d'écoute (lu dans `app.py`) |
 | `GITHUB_WEBHOOK_SECRET` | `None` | Secret HMAC-SHA256 partagé avec le webhook GitHub — voir [Déploiement continu](#déploiement-continu-pythonanywhere). `None` désactive l'endpoint |
 | `BACKUP_DIR` | `db_backups/` | Dossier privé des sauvegardes administrées |
+| `BACKUP_API_KEY` | `None` | Clé dédiée requise pour `POST /api/backup-db`; sans elle, l’endpoint est désactivé |
 | `EMERGENCY_SQL_API_ENABLED` | `0` | Active explicitement l'API SQL d'urgence ; laisser désactivé hors incident |
 | `EMERGENCY_SQL_API_MAX_TTL_MINUTES` | `60` | Durée maximale d'un jeton SQL d'urgence (5 à 60 minutes) |
 | `PYTHONANYWHERE_USERNAME` | `None` | Nom d'utilisateur PythonAnywhere — seul requis pour le reload automatique via `touch` du fichier WSGI (fonctionne sur tous les plans, y compris gratuit) |
@@ -613,7 +614,17 @@ avant livraison.
 
 ---
 
-### API JSON (`/api/*`) — `@login_required`
+### API JSON (`/api/*`)
+
+Les endpoints étudiants ci-dessous exigent une session connectée. L’endpoint de sauvegarde distant
+utilise uniquement la clé `BACKUP_API_KEY` et n’est pas disponible tant que cette variable n’est pas définie.
+
+#### `POST /api/backup-db`
+
+Crée une sauvegarde sur le serveur de l’application. Envoyer la clé dans l’en-tête
+`X-Backup-API-Key`. Réponse `201` : `{"ok": true, "filename": "…", "size_bytes": 123}`.
+Le script [`scripts/request_remote_backup.py`](scripts/request_remote_backup.py) est prévu pour
+l’appeler depuis un autre compte PythonAnywhere.
 
 #### `POST /api/answer`
 
@@ -1050,6 +1061,7 @@ de compte. Cette restriction ne s'applique pas aux comptes créés par `seed.py`
 - `/admin/questions` est la source principale de modification, validation et analyse des questions. Les écrans de signalements et de suggestions y renvoient, sans dupliquer l’éditeur.
 - Depuis le lecteur, un `validator` envoie une **suggestion** : elle ne modifie jamais la question. Un `super_admin` peut ouvrir directement l’éditeur de cette question.
 - La tâche `python -m scripts.run_backup` crée une sauvegarde cohérente et conserve les sauvegardes ordinaires des sept derniers jours. Une sauvegarde marquée à conserver dans `/admin/backups` reste présente jusqu’à sa suppression manuelle. Voir `docs/pythonanywhere_backups.md` pour la tâche PythonAnywhere de minuit.
+- `POST /api/backup-db` permet de déclencher cette même sauvegarde depuis un autre hébergeur avec la seule clé `BACKUP_API_KEY`; l’endpoint est désactivé si la clé n’est pas définie.
 - L’API SQL d’urgence est désactivée sans `EMERGENCY_SQL_API_ENABLED=1`. Elle exige un jeton éphémère créé par un super-admin, une requête HMAC horodatée (60 secondes) et inscrit chaque tentative dans l’audit. Elle est réservée aux incidents : une requête SQL arbitraire confère par nature des droits complets sur les données.
 
 Décorateurs disponibles dans `auth_helpers.py` :

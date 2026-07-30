@@ -46,3 +46,6 @@ class Config:
     EMERGENCY_SQL_API_ENABLED = os.environ.get("EMERGENCY_SQL_API_ENABLED") == "1"
     EMERGENCY_SQL_API_MAX_TTL_MINUTES = min(max(int(os.environ.get("EMERGENCY_SQL_API_MAX_TTL_MINUTES", "60")), 5), 60)
     BACKUP_DIR = os.environ.get("BACKUP_DIR", os.path.join(os.path.dirname(__file__), "db_backups"))
+    # Endpoint de déclenchement distant des sauvegardes. Désactivé tant que la
+    # clé n'est pas explicitement définie dans l'environnement de production.
+    BACKUP_API_KEY = os.environ.get("BACKUP_API_KEY")
