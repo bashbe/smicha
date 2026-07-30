@@ -154,7 +154,7 @@
     return nq.correctKey === key;
   }
 
-  const PARCOURS_LABELS = { bassar_bechalav: "בשר בחלב" };
+  const PARCOURS_LABELS = { bassar_bechalav: "בשר בחלב", chupa_kidushin: "חופה וקידושין" };
   function parcoursLabel(p) { return PARCOURS_LABELS[p] || p || ""; }
 
   // Mirrors the section labels used in templates/admin/questions.html and

@@ -938,6 +938,15 @@ Un étudiant peut préparer **plusieurs parcours en parallèle**, chacun avec sa
 - **Ajouter un parcours au catalogue** = 3 entrées dans `question_types.py` : `VALID_PARCOURS`,
   `PARCOURS_LABELS`, `PARCOURS_DESCRIPTIONS` — onboarding, paramètres et sélecteur de révision se
   mettent à jour automatiquement.
+- **Parcours multi-chelek (`chupa_kidushin`)** : premier parcours à couvrir des simanim de
+  **deux chalakim différents** du Choulhan Aroukh (Even haEzer ET 'Hochen Mishpat). Le champ
+  `siman` (Integer) ne porte aucune notion de chelek, donc les numéros de siman peuvent se
+  chevaucher entre les deux parties. **Solution provisoire** (à adapter structurellement plus
+  tard — voir CLAUDE.md, section « Parcours multi-chelek ») : chaque question précise son chelek
+  via le champ optionnel `source` du JSON d'import, ex. `"source": {"chelek": "ehy", "siman": 26,
+  "seif": 1, "posek": "..."}` (`ehy` = אבן העזר, `chum` = חושן משפט) — stocké tel quel dans
+  `Question.source_ref`. Les fichiers de lot générés suivent la même convention de nommage :
+  `generated_questions_ehy_<siman>.json` / `generated_questions_chum_<siman>.json`.
 - **Base existante** : `python -m scripts.migrate_multi_parcours` crée la table et rattache chaque
   profil onboardé à `bassar_bechalav` en copiant les champs dépréciés (le fallback de
   `get_active_parcours()` fait de même à la volée si besoin).
@@ -1256,6 +1265,7 @@ sans avoir besoin d'une console PythonAnywhere.
 - **Filtrage strict des sections** : une question n'est proposée que si **toutes** ses sections sont dans celles de l'étudiant (`question.sections ⊆ student.sections`). Exemple : une question `["shulchan_aruch", "tur"]` est invisible pour un étudiant qui n'a que `shulchan_aruch`. Pas d'alias, pas d'implicite (sauf `shulchan_aruch` toujours injecté par `allowed_sections()`).
 - **Champs obligatoires des questions** : `parcours`, `sujet`/`subject`, `siman`, `seif` sont requis depuis l'import. Modifier leur validation dans `question_types.py` **doit** s'accompagner d'une mise à jour de ce README et de `sample_questions.json`.
 - **`VALID_PARCOURS`** dans `question_types.py` est la liste des parcours autorisés. Ajouter un parcours = ajouter ici + `PARCOURS_LABELS` + `PARCOURS_DESCRIPTIONS` + mettre à jour ce README.
+- **`chupa_kidushin`** est un parcours multi-chelek (Even haEzer + 'Hochen Mishpat, préfixes `ehy`/`chum` dans `source_ref`, faute de colonne `chelek` dédiée) — voir CLAUDE.md avant d'y ajouter du contenu ou de retoucher `question_types.py`/le pipeline d'import le concernant.
 - **Filtrage par parcours actifs** : tout le parcours étudiant filtre sur `Question.parcours.in_(parcours actifs)`. Une question avec `parcours = NULL` est **invisible** pour tous les étudiants (la migration `migrate_multi_parcours` log un warning si de telles questions existent).
 - **Parcours désactivé** : ses cartes dues s'accumulent invisiblement ; à la réactivation l'étudiant retrouve tout le backlog d'un coup (le compteur du sélecteur de révision le rend explicite).
 - **Tests** : le cœur SRS est couvert par `tests/test_fsrs.py` et `tests/test_calibration.py`
