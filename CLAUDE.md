@@ -58,10 +58,28 @@ de même que tout dossier de textes sources Sefaria sauvegardés pour validation
 (`ehy_<siman>.*` / `chum_<siman>.*`). Ce préfixe est un **pense-bête textuel**,
 il n'empêche aucune collision réelle côté base de données.
 
-`scripts/fetch_sefaria_text.py` (stdlib uniquement) récupère le texte d'un siman depuis l'API
-Sefaria et l'enregistre dans `docs/sefaria_sources/` avec cette même convention — à lancer depuis
-un environnement ayant un accès réseau non restreint (l'API Sefaria est bloquée dans les sessions
+`scripts/fetch_sefaria_text.py` (stdlib uniquement) récupère un siman depuis l'API Sefaria et
+l'enregistre dans `docs/sefaria_sources/` avec cette même convention — à lancer depuis un
+environnement ayant un accès réseau non restreint (l'API Sefaria est bloquée dans les sessions
 Claude Code de ce projet, voir `docs/journal_chupa_kidushin.md`).
+
+**Il récupère toutes les couches que l'examen couvre, pas seulement le Choulhan Aroukh** — sinon
+une carte taguée `tur` ou `ptei_teshuva` reste invérifiable :
+
+| exam_section | couches récupérées |
+|---|---|
+| `shulchan_aruch` | Choulhan Aroukh, חלקת מחוקק, בית שמואל (+ ט"ז/ש"ך si présents) |
+| `tur` | טור, בית יוסף, דרכי משה |
+| `ptei_teshuva` | פתחי תשובה (+ ביאור הגר"א) |
+
+Les œuvres autonomes (SA, Tour, Beit Yossef, Darkei Moshe) sont récupérées par titre
+(`DIRECT_WORKS` dans le script) ; les commentaires sont **découverts via l'API `links`** de
+Sefaria plutôt que codés en dur, leurs titres exacts n'ayant pas pu être vérifiés depuis une
+session Claude Code. Lancer `--discover` sur un siman liste ce que Sefaria expose réellement
+(sans rien écrire) : c'est le point de départ si un titre de `DIRECT_WORKS` renvoie un 404.
+Sortie par siman : un fichier par couche (`ehy_26_beit_shmuel.txt`…) plus un
+`ehy_26_ALL.txt` groupé par section d'examen — c'est ce dernier qu'il faut donner à un agent
+de vérification.
 
 ### 🔧 Prompt pour un futur agent — à faire dès que possible
 
