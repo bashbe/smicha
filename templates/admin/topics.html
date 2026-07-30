@@ -2,6 +2,6 @@
 {% block title %}Structure — Kinyan Admin{% endblock %}
 {% block content %}
 <div class="admin-page-header"><div><p class="admin-eyebrow">CONTENT</p><h1>Learning structure</h1><p>Manage the chapter titles shown to students. Question subjects are edited in the question bank.</p></div></div>
-<nav class="admin-content-tabs"><a href="{{ url_for('admin.questions') }}">Questions</a><a href="{{ url_for('admin.reports') }}">Reports</a><a href="{{ url_for('admin.suggestions') }}">Suggestions</a><a class="active" href="{{ url_for('admin.topics') }}">Structure</a></nav>
+{% set content_tab = 'structure' %}{% include "admin/_content_tabs.html" %}
 {% if groups %}<form method="post" class="stack">{% for g in groups %}<section class="admin-panel"><div class="admin-section-heading"><div><h2>{{ g.label }}</h2><p>{{ g.simanim|length }} chapters</p></div></div><div class="stack-sm">{% for s in g.simanim %}<div class="admin-form-grid" style="grid-template-columns:6rem 1fr;align-items:end"><div><label>Siman</label><input value="{{ s.siman }}" disabled /></div><div><label>Student-facing chapter title</label><input type="hidden" name="siman_parcours" value="{{ g.parcours }}"/><input type="hidden" name="siman_num" value="{{ s.siman }}"/><input dir="rtl" name="siman_topic" value="{{ s.topic }}" placeholder="Chapter title"/></div></div>{% endfor %}</div></section>{% endfor %}<div><button class="admin-btn admin-btn-primary">Save structure</button></div></form>{% else %}<div class="admin-panel admin-empty">No chapters are available yet.</div>{% endif %}
 {% endblock %}

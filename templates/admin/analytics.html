@@ -1,7 +1,37 @@
 {% extends "admin/_layout.html" %}
-{% block title %}Analytics — Kinyan Admin{% endblock %}
+{% block title %}Stats — Kinyan Admin{% endblock %}
 {% block content %}
-<div class="admin-page-header"><div><p class="admin-eyebrow">CONTENT</p><h1>{{ title }}</h1><p>Performance signals used to identify unclear or difficult content.</p></div><a class="admin-btn" href="{{ url_for('admin.questions') }}">Back to content</a></div>
-<div class="admin-metric-grid"><div class="admin-metric"><span>Questions</span><strong>{{ stats.questions }}</strong></div><div class="admin-metric"><span>Answers</span><strong>{{ stats.answers }}</strong></div><div class="admin-metric"><span>Accuracy</span><strong>{{ stats.accuracy ~ '%' if stats.accuracy is not none else '—' }}</strong></div><div class="admin-metric"><span>Average response time</span><strong>{{ stats.avg_time ~ ' ms' if stats.avg_time else '—' }}</strong></div></div>
-<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Question</th><th>Answers</th><th>Accuracy</th><th></th></tr></thead><tbody>{% for q,count,accuracy in rows %}<tr><td dir="rtl">{{ q.text|truncate(100) }}</td><td>{{ count }}</td><td>{{ ((accuracy or 0)*100)|round|int }}%</td><td><a class="admin-text-link" href="{{ url_for('admin.questions',id=q.id) }}">Open →</a></td></tr>{% else %}<tr><td colspan="4">No answer data for this selection.</td></tr>{% endfor %}</tbody></table></div>
+<div class="admin-page-header"><div><p class="admin-eyebrow">STATS</p><h1>Platform statistics</h1><p>Global health first; then drill into a learning path, siman or intra-siman subject.</p></div></div>
+
+<section><div class="admin-section-heading"><div><h2>Platform overview</h2><p>Account and operational metrics for the entire platform.</p></div></div>
+<div class="admin-metric-grid">
+  <div class="admin-metric"><span>Registered users</span><strong>{{ platform.registered }}</strong><small>all accounts</small></div>
+  <div class="admin-metric"><span>New users</span><strong>{{ platform.new_7d }}</strong><small>{{ platform.new_30d }} in the last 30 days</small></div>
+  <div class="admin-metric"><span>Onboarded users</span><strong>{{ platform.onboarded }}</strong><small>completed setup</small></div>
+  <div class="admin-metric"><span>Last backup</span><strong>{{ platform.last_backup.created_at.strftime('%d %b') if platform.last_backup else '—' }}</strong><small>{{ platform.last_backup.created_at.strftime('%H:%M') if platform.last_backup else 'not created' }}</small></div>
+</div></section>
+
+<section class="admin-panel" style="margin-bottom:2rem"><div class="admin-section-heading"><div><h2>Learning scope</h2><p>{{ scope_label }}</p></div></div>
+  <form method="get" class="admin-form-grid stats-scope-form">
+    <div><label>Learning path</label><select name="parcours" onchange="this.form.submit()"><option value="">All learning paths</option>{% for code,label in parcours_labels.items() %}<option value="{{ code }}" {{ 'selected' if selected_parcours == code }}>{{ label }}</option>{% endfor %}</select></div>
+    <div><label>Siman</label><select name="siman" onchange="this.form.submit()"><option value="">All simanim</option>{% for value in siman_options %}<option value="{{ value }}" {{ 'selected' if selected_siman == value }}>Siman {{ value }}</option>{% endfor %}</select></div>
+    <div><label>Intra-siman subject</label><select name="subject" onchange="this.form.submit()"><option value="">All subjects</option>{% for subject in subject_options %}<option value="{{ subject.id }}" {{ 'selected' if selected_subject == subject.id }} dir="rtl">{{ subject.title }}</option>{% endfor %}</select></div>
+    <div style="align-self:end"><a class="admin-btn" href="{{ url_for('admin.analytics') }}">Reset scope</a></div>
+  </form>
+</section>
+
+<section><div class="admin-section-heading"><div><h2>Selected scope</h2><p>{{ scope_label }}</p></div></div>
+<div class="admin-metric-grid">
+  <div class="admin-metric"><span>Questions</span><strong>{{ aggregate.questions }}</strong><small>{{ aggregate.published }} published · {{ aggregate.pending }} pending · {{ aggregate.flagged }} flagged</small></div>
+  <div class="admin-metric"><span>Active learners</span><strong>{{ aggregate.active_7d }}</strong><small>{{ aggregate.active_30d }} in the last 30 days</small></div>
+  <div class="admin-metric"><span>Answers submitted</span><strong>{{ aggregate.answers_7d }}</strong><small>{{ aggregate.answers_30d }} in the last 30 days</small></div>
+  <div class="admin-metric"><span>Answer accuracy</span><strong>{{ aggregate.accuracy_30d ~ '%' if aggregate.accuracy_30d is not none else '—' }}</strong><small>{{ aggregate.avg_time_30d ~ ' ms average response time' if aggregate.avg_time_30d else 'no response data' }}</small></div>
+</div></section>
+
+<div class="admin-dashboard-lower">
+  <section class="admin-panel"><div class="admin-section-heading"><div><h2>Activity · last 30 days</h2><p>Answers submitted per day in this scope.</p></div></div>
+    <div class="admin-activity-chart">{% for point in activity %}<div class="admin-chart-column" title="{{ point.label }}: {{ point.answers }} answers, {{ point.users }} active learners"><div class="admin-chart-bar" style="height:{{ (point.answers / chart_max * 100) if chart_max else 0 }}%"></div>{% if loop.index0 % 5 == 0 %}<small>{{ point.label }}</small>{% endif %}</div>{% endfor %}</div>
+  </section>
+  <aside class="admin-panel"><div class="admin-section-heading"><div><h2>Content alerts</h2><p>Open items in this scope.</p></div></div><div class="admin-health-row"><span>Student reports</span><strong>{{ aggregate.reports }}</strong></div><div class="admin-health-row"><span>Validator suggestions</span><strong>{{ aggregate.suggestions }}</strong></div><a href="{{ url_for('admin.questions') }}" class="admin-text-link">Open questions →</a></aside>
+</div>
 {% endblock %}

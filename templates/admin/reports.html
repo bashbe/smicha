@@ -2,7 +2,7 @@
 {% block title %}Reports — Kinyan Admin{% endblock %}
 {% block content %}
 <div class="admin-page-header"><div><p class="admin-eyebrow">CONTENT</p><h1>Student reports</h1><p>Decide whether a reported question should be removed from circulation.</p></div></div>
-<nav class="admin-content-tabs"><a href="{{ url_for('admin.questions') }}">Questions</a><a class="active" href="{{ url_for('admin.reports') }}">Reports</a><a href="{{ url_for('admin.suggestions') }}">Suggestions</a><a href="{{ url_for('admin.topics') }}">Structure</a></nav>
+{% set content_tab = 'reports' %}{% include "admin/_content_tabs.html" %}
 <div class="stack-sm">
 {% for rep,q,reporter in reports %}
   <article class="admin-panel">

@@ -64,6 +64,8 @@ def inject_reports_count():
     return {
         "open_reports_count": QuestionReport.query.filter_by(status="open").count(),
         "open_suggestions_count": QuestionSuggestion.query.filter_by(status="open").count(),
+        "pending_questions_count": Question.query.filter_by(status="pending").count(),
+        "flagged_questions_count": Question.query.filter_by(status="a_revoir").count(),
     }
 
 
@@ -154,42 +156,112 @@ def dashboard():
 @bp.route("/analytics")
 @staff_required
 def analytics():
-    """One analysis screen, scoped by question, subject or parcours."""
-    scope = request.args.get("scope", "global")
-    ident = request.args.get("id", "")
-    q = db.session.query(Question)
-    title = "Content analytics"
-    if scope == "question" and ident:
-        q = q.filter(Question.id == ident)
-        question = Question.query.get_or_404(ident)
-        title = "Question analytics"
-    elif scope == "subject" and ident:
-        q = q.filter(Question.subject_id == ident)
-        subject = Subject.query.get_or_404(ident)
-        title = f'Subject analytics: {subject.title}'
-    elif scope == "parcours" and ident:
-        q = q.filter(Question.parcours == ident)
-        title = f'Learning path analytics: {PARCOURS_LABELS.get(ident, ident)}'
-    else:
-        scope, ident = "global", ""
-    question_ids = [row[0] for row in q.with_entities(Question.id).all()]
+    """Global reporting with optional path → siman → subject aggregation."""
+    # Individual question statistics belong in the question editor, not here.
+    if request.args.get("scope") == "question" and request.args.get("id"):
+        return redirect(url_for("admin.questions", id=request.args["id"]))
+
+    parcours = request.args.get("parcours", "")
+    siman_raw = request.args.get("siman", "")
+    subject_id = request.args.get("subject", "")
+    try:
+        siman = int(siman_raw) if siman_raw else None
+    except ValueError:
+        siman = None
+
+    scoped_questions = Question.query
+    if parcours:
+        scoped_questions = scoped_questions.filter(Question.parcours == parcours)
+    if siman is not None:
+        scoped_questions = scoped_questions.filter(Question.siman == siman)
+    if subject_id:
+        scoped_questions = scoped_questions.filter(Question.subject_id == subject_id)
+    question_rows = scoped_questions.all()
+    question_ids = [question.id for question in question_rows]
+
+    now = datetime.utcnow()
+    seven_days = now - timedelta(days=7)
+    thirty_days = now - timedelta(days=30)
     answers = UserAnswer.query.filter(UserAnswer.question_id.in_(question_ids)) if question_ids else UserAnswer.query.filter(False)
-    total = answers.count()
-    correct = answers.filter_by(is_correct=True).count()
-    stats = {
-        "questions": len(question_ids), "answers": total,
-        "accuracy": round(100 * correct / total) if total else None,
-        "avg_time": int(answers.with_entities(func.avg(UserAnswer.response_time_ms)).scalar() or 0),
-        "reports": QuestionReport.query.filter(QuestionReport.question_id.in_(question_ids), QuestionReport.status == "open").count() if question_ids else 0,
-        "suggestions": QuestionSuggestion.query.filter(QuestionSuggestion.question_id.in_(question_ids), QuestionSuggestion.status == "open").count() if question_ids else 0,
+    answers_7d = answers.filter(UserAnswer.answered_at >= seven_days)
+    answers_30d = answers.filter(UserAnswer.answered_at >= thirty_days)
+    answers_30d_count = answers_30d.count()
+    correct_30d = answers_30d.filter_by(is_correct=True).count()
+
+    aggregate = {
+        "questions": len(question_ids),
+        "published": sum(question.status == "approved" for question in question_rows),
+        "pending": sum(question.status == "pending" for question in question_rows),
+        "flagged": sum(question.status == "a_revoir" for question in question_rows),
+        "active_7d": db.session.query(func.count(func.distinct(UserAnswer.user_id))).filter(
+            UserAnswer.question_id.in_(question_ids) if question_ids else False,
+            UserAnswer.answered_at >= seven_days,
+        ).scalar() or 0,
+        "active_30d": db.session.query(func.count(func.distinct(UserAnswer.user_id))).filter(
+            UserAnswer.question_id.in_(question_ids) if question_ids else False,
+            UserAnswer.answered_at >= thirty_days,
+        ).scalar() or 0,
+        "answers_7d": answers_7d.count(),
+        "answers_30d": answers_30d_count,
+        "accuracy_30d": round(correct_30d * 100 / answers_30d_count) if answers_30d_count else None,
+        "avg_time_30d": int(answers_30d.with_entities(func.avg(UserAnswer.response_time_ms)).scalar() or 0),
+        "reports": QuestionReport.query.filter(
+            QuestionReport.question_id.in_(question_ids) if question_ids else False,
+            QuestionReport.status == "open",
+        ).count(),
+        "suggestions": QuestionSuggestion.query.filter(
+            QuestionSuggestion.question_id.in_(question_ids) if question_ids else False,
+            QuestionSuggestion.status == "open",
+        ).count(),
     }
-    rows = (
-        db.session.query(Question, func.count(UserAnswer.id), func.avg(UserAnswer.is_correct))
-        .outerjoin(UserAnswer, UserAnswer.question_id == Question.id)
-        .filter(Question.id.in_(question_ids) if question_ids else False)
-        .group_by(Question.id).order_by(func.count(UserAnswer.id).desc()).limit(50).all()
+
+    activity_by_day: dict[str, dict] = {}
+    for offset in range(29, -1, -1):
+        day = (now - timedelta(days=offset)).date()
+        activity_by_day[day.isoformat()] = {"label": day.strftime("%d %b"), "answers": 0, "users": set()}
+    for answer in answers_30d.with_entities(UserAnswer.user_id, UserAnswer.answered_at).all():
+        day_key = answer.answered_at.date().isoformat()
+        if day_key in activity_by_day:
+            activity_by_day[day_key]["answers"] += 1
+            activity_by_day[day_key]["users"].add(answer.user_id)
+    activity = [{"label": item["label"], "answers": item["answers"], "users": len(item["users"])} for item in activity_by_day.values()]
+    chart_max = max([point["answers"] for point in activity] or [1])
+
+    siman_options_query = Question.query
+    if parcours:
+        siman_options_query = siman_options_query.filter(Question.parcours == parcours)
+    siman_options = sorted({row[0] for row in siman_options_query.with_entities(Question.siman).filter(Question.siman.isnot(None)).all()})
+    subject_options_query = Subject.query
+    if parcours:
+        subject_options_query = subject_options_query.filter(Subject.parcours == parcours)
+    if siman is not None:
+        subject_options_query = subject_options_query.filter(Subject.siman == siman)
+    subject_options = subject_options_query.order_by(Subject.title).all()
+
+    scope_parts = []
+    if parcours:
+        scope_parts.append(PARCOURS_LABELS.get(parcours, parcours))
+    if siman is not None:
+        scope_parts.append(f"Siman {siman}")
+    if subject_id:
+        subject = next((item for item in subject_options if item.id == subject_id), Subject.query.get(subject_id))
+        if subject:
+            scope_parts.append(subject.title)
+    scope_label = " · ".join(scope_parts) if scope_parts else "All learning paths"
+
+    platform = {
+        "registered": User.query.count(),
+        "new_7d": User.query.filter(User.created_at >= seven_days).count(),
+        "new_30d": User.query.filter(User.created_at >= thirty_days).count(),
+        "onboarded": StudentProfile.query.filter_by(onboarded=True).count(),
+        "last_backup": BackupRecord.query.order_by(BackupRecord.created_at.desc()).first(),
+    }
+    return render_template(
+        "admin/analytics.html", aggregate=aggregate, platform=platform, activity=activity,
+        chart_max=chart_max, parcours_labels=PARCOURS_LABELS, siman_options=siman_options,
+        subject_options=subject_options, selected_parcours=parcours, selected_siman=siman,
+        selected_subject=subject_id, scope_label=scope_label,
     )
-    return render_template("admin/analytics.html", title=title, stats=stats, rows=rows, scope=scope, ident=ident)
 
 
 @bp.route("/suggestions")

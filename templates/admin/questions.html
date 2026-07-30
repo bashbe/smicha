@@ -6,14 +6,8 @@
   <a href="{{ url_for('admin.import_questions') }}" class="admin-btn admin-btn-primary">Import questions</a>
 </div>
 
-<nav class="admin-content-tabs" aria-label="Content tools">
-  <a class="active" href="{{ url_for('admin.questions') }}">Questions</a>
-  <a href="{{ url_for('admin.questions', status='pending') }}">Pending <span class="admin-nav-count">{{ work_counts.pending }}</span></a>
-  <a href="{{ url_for('admin.questions', status='a_revoir') }}">Flagged <span class="admin-nav-count">{{ work_counts.flagged }}</span></a>
-  <a href="{{ url_for('admin.reports') }}">Reports <span class="admin-nav-count">{{ work_counts.reports }}</span></a>
-  <a href="{{ url_for('admin.suggestions') }}">Suggestions <span class="admin-nav-count">{{ work_counts.suggestions }}</span></a>
-  <a href="{{ url_for('admin.topics') }}">Structure</a>
-</nav>
+{% set content_tab = 'pending' if filters.status == 'pending' else ('flagged' if filters.status == 'a_revoir' else 'questions') %}
+{% include "admin/_content_tabs.html" %}
 
 <form method="get" class="admin-toolbar">
   <input class="search" name="q" value="{{ filters.q }}" placeholder="Search question text or subject…" />
@@ -54,7 +48,7 @@
     {% set qtype = payload.get('type') or selected.question_type or 'multiple_choice' %}
     {% set options_list = payload.get('options') or [{}, {}, {}, {}] %}
     {% set cur_sections = (payload.exam_section if payload.exam_section is iterable and payload.exam_section is not string else [payload.exam_section]) if payload.exam_section else selected.section_list() %}
-    <div class="admin-editor-header"><div><span class="admin-status {{ selected.status }}">{{ {'pending':'Pending review','approved':'Published','a_revoir':'Flagged','rejected':'Rejected'}.get(selected.status,selected.status) }}</span></div><a class="admin-text-link" href="{{ url_for('admin.analytics', scope='question', id=selected.id) }}">Full analytics →</a></div>
+    <div class="admin-editor-header"><div><span class="admin-status {{ selected.status }}">{{ {'pending':'Pending review','approved':'Published','a_revoir':'Flagged','rejected':'Rejected'}.get(selected.status,selected.status) }}</span></div></div>
     <div class="admin-editor-stats">
       <div class="admin-editor-stat"><span>Answers</span><strong>{{ selected_stats.answers }}</strong></div>
       <div class="admin-editor-stat"><span>Accuracy</span><strong>{{ selected_stats.accuracy ~ '%' if selected_stats.accuracy is not none else '—' }}</strong></div>

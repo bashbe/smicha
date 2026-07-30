@@ -69,7 +69,7 @@ def test_primary_admin_pages_render_in_english():
     app = _fresh_app()
     with app.app_context():
         admin = _add_staff("super_admin")
-        _add_question()
+        question = _add_question()
         client = app.test_client()
         _login(client, admin)
         expected = {
@@ -84,6 +84,11 @@ def test_primary_admin_pages_render_in_english():
             response = client.get(path)
             assert response.status_code == 200, path
             assert marker in response.data, path
+        scoped = client.get(
+            f"/admin/analytics?parcours=bassar_bechalav&siman=87&subject={question.subject_id}"
+        )
+        assert scoped.status_code == 200
+        assert b"Selected scope" in scoped.data
 
 
 def test_validator_cannot_edit_question_content():
