@@ -252,3 +252,36 @@ texte source d'origine, pas acceptée telle quelle :
 même noyau) et la répartition des niveaux de difficulté (EH29 très orienté niveau 3) sont des
 jugements pédagogiques raisonnables mais pas des erreurs factuelles — laissées telles quelles,
 à l'appréciation de l'utilisateur/validateur lors de l'import.
+
+## Audit complet contre les vraies sources Sefaria (2026-07-30 soir) — moi-même, à la demande de l'utilisateur
+
+Après l'audit externe ci-dessus, l'utilisateur a demandé un nouvel audit complet. Cette fois-ci,
+fait directement par moi (pas délégué), en utilisant les vraies sources Sefaria multi-couches
+désormais disponibles (`docs/sefaria_sources/ehy_*_ALL.txt` — שו"ע, חלקת מחוקק, בית שמואל, טור,
+בית יוסף, דרכי משה, פתחי תשובה, tous ancrés par סעיף via l'API `links`), pas seulement le support
+de cours. Rapport complet : `docs/audit_complet_sources_reelles_2026-07-30.md`.
+
+**Méthode** : chaque `seif` des 84 cartes recroisé contre le vrai texte du שו"ע (pas le support de
+cours, qui ne numérote pas toujours à l'identique) ; chaque `multiple_opinions_dropdown` recroisé
+contre les commentaires réels pour confirmer que les `decisors` sont des poskim réellement en
+désaccord sur le même cas.
+
+**Résultat** : **84/84 seifim corrects**, **22/22 dropdowns confirmés comme machlokot réelles**,
+**aucune nouvelle erreur de fond**. Un seul point mineur relevé (non corrigé, cosmétique) : la
+carte Q14 de `ehy_27` attribue une position à "הב״ש (בשם ר״י ומהר״ט)" alors que le texte réel
+(בית שמואל כז:יא) cite plus précisément רמב"ם, רא"ש, רי"ו ("להדיא") et מהרי"ט — la position
+elle-même est correcte, seule la liste nominative est raccourcie.
+
+**Limite méthodologique documentée** : certaines cartes `tur` (ex. Q8, Q9, Q15 de `ehy_27`)
+reposent sur des positions de Rishonim citées dans le support de cours, non vérifiables mot pour
+mot contre le טור/בית יוסף/דרכי משה récupérés (Sefaria ne segmente pas toujours ces oeuvres par
+סעיף identique au שו"ע pour ce siman). Restent plausibles et non contredites, mais pas confirmées
+au même niveau de certitude que le reste.
+
+**Nettoyage effectué** : suppression de `docs/sefaria_sources/ehy_26.txt`/`.json`,
+`ehy_27.txt`/`.json`, `ehy_29.txt`/`.json` (version 1 du script — Choulhan Aroukh seul,
+superflus depuis la v3, et déjà source d'une confusion : l'audit externe précédent s'y était
+référé par erreur au lieu des fichiers multi-couches `_ALL.txt`).
+
+**Conclusion** : les 84 cartes sont dans leur meilleur état de fiabilité à ce jour. Prêtes pour
+import via `/admin/import`, sous réserve de la revue humaine habituelle.
