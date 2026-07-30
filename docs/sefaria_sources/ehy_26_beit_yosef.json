@@ -1,0 +1,103 @@
+{
+  "ref": "Beit Yosef, Even HaEzer 26:1",
+  "heRef": "בית יוסף, אבן העזר כ״ו:א׳",
+  "isComplex": true,
+  "text": [],
+  "he": [
+    "אין האשה נחשבת א\"א אלא ע\"י קידושין שנתקדשה כראוי אבל אם בא עליה אדם בלא קדושין לשם זנות לוקה משום לא תהיה קדשה כ\"כ הרמב\"ם בתחלת הלכות אישות והראב\"ד כתב בהשגות אין קדשה אלא מזומנת והיא המופקרת לכל אדם אבל המיחדת עצמה לאיש אחד אין בה מלקות ולא איסור לאו והיא הפלגש הכתובה בתורה וכתב ה\"ה שכן כתבו קצת המפרשים ובסוף תשובות להרמב\"ן כתוב בדין הפלגש: "
+  ],
+  "versions": [
+    {
+      "status": "locked",
+      "priority": "",
+      "license": "Public Domain",
+      "versionNotes": "",
+      "formatAsPoetry": "",
+      "digitizedBySefaria": true,
+      "method": "",
+      "heversionSource": "",
+      "versionUrl": "",
+      "versionTitleInHebrew": "טור אבן העזר, וילנא 1923",
+      "versionNotesInHebrew": "",
+      "shortVersionTitle": "",
+      "shortVersionTitleInHebrew": "",
+      "extendedNotes": "",
+      "extendedNotesHebrew": "",
+      "purchaseInformationImage": "",
+      "purchaseInformationURL": "",
+      "hasManuallyWrappedRefs": "",
+      "language": "he",
+      "title": "Beit Yosef",
+      "versionSource": "https://www.nli.org.il/he/books/NNL_ALEPH001935970",
+      "versionTitle": "Tur Even HaEzer, Vilna, 1923",
+      "actualLanguage": "he",
+      "languageFamilyName": "hebrew",
+      "isSource": true,
+      "isPrimary": true,
+      "direction": "rtl"
+    }
+  ],
+  "textDepth": 3,
+  "sectionNames": [
+    "Siman",
+    "Seif Katan",
+    "Paragraph"
+  ],
+  "addressTypes": [
+    "Siman",
+    "Integer",
+    "Integer"
+  ],
+  "heTitle": "בית יוסף, אבן העזר",
+  "titleVariants": [
+    "Even HaEzer"
+  ],
+  "heTitleVariants": [
+    "אבן העזר"
+  ],
+  "type": "Commentary",
+  "primary_category": "Commentary",
+  "book": "Beit Yosef, Even HaEzer",
+  "categories": [
+    "Halakhah",
+    "Tur",
+    "Commentary"
+  ],
+  "order": "",
+  "sections": [
+    26,
+    1
+  ],
+  "toSections": [
+    26,
+    1
+  ],
+  "baseTexTitles": [],
+  "isDependant": true,
+  "indexTitle": "Beit Yosef",
+  "heIndexTitle": "בית יוסף",
+  "sectionRef": "Beit Yosef, Even HaEzer 26:1",
+  "firstAvailableSectionRef": "Beit Yosef, Even HaEzer 26:1",
+  "heSectionRef": "בית יוסף, אבן העזר כ״ו:א׳",
+  "isSpanning": false,
+  "heVersionTitle": "Tur Even HaEzer, Vilna, 1923",
+  "heVersionTitleInHebrew": "טור אבן העזר, וילנא 1923",
+  "heShortVersionTitle": "",
+  "heShortVersionTitleInHebrew": "",
+  "heVersionSource": "https://www.nli.org.il/he/books/NNL_ALEPH001935970",
+  "heVersionStatus": "locked",
+  "heVersionNotes": "",
+  "heExtendedNotes": "",
+  "heExtendedNotesHebrew": "",
+  "heVersionNotesInHebrew": "",
+  "heDigitizedBySefaria": true,
+  "heLicense": "Public Domain",
+  "formatHeAsPoetry": false,
+  "alts": [],
+  "index_offsets_by_depth": {},
+  "next": "Beit Yosef, Even HaEzer 26:2",
+  "prev": "Beit Yosef, Even HaEzer 25:33",
+  "commentary": [],
+  "sheets": [],
+  "layer": []
+}
