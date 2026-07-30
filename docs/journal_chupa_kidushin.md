@@ -127,13 +127,33 @@ ici par la politique réseau de cette session — voir plus bas).
 cartes sont taguées par `exam_section` : une carte `tur` ou `ptei_teshuva` restait donc
 invérifiable. C'est ce qu'a relevé l'utilisateur après avoir lancé le script.
 
-**Version 2 (2026-07-30, après-midi) — toutes les couches** :
+**Version 2 (2026-07-30, après-midi) — toutes les couches liées par Sefaria** : récupérait, en
+plus du Choulhan Aroukh, tout commentaire que l'API `links` rattachait au siman et que
+`COMMENTARY_ALIASES` reconnaissait (חלקת מחוקק, בית שמואל, פתחי תשובה, mais aussi ט"ז, ש"ך,
+ביאור הגר"א).
 
-| exam_section | couches récupérées |
+**Confirmation en conditions réelles** : l'utilisateur a lancé
+`python3 scripts/fetch_sefaria_text.py --chelek ehy --siman 26 --discover` sur sa machine. Les 4
+titres codés dans `DIRECT_WORKS["ehy"]` se sont révélés **corrects du premier coup** ("Shulchan
+Arukh, Even HaEzer", "Tur, Even HaEzer", "Beit Yosef, Even HaEzer", "Darkhei Moshe, Even HaEzer" —
+tous OK, aucun 404). L'API `links` a renvoyé ~40 œuvres liées au siman 26, dont חלקת מחוקק (3
+liens), בית שמואל (5 liens) et פתחי תשובה (8+1 liens, sous deux `collectiveTitle` différents,
+tous deux bien reconnus par `COMMENTARY_ALIASES`) — la logique de découverte fonctionne comme
+prévu. Ce point du script (jusque-là seulement testé hors-ligne) est donc validé pour le chelek
+`ehy`.
+
+**Version 3 (2026-07-30, soir) — limité aux 3 textes principaux** : l'utilisateur a demandé de ne
+garder que חלקת מחוקק, בית שמואל et פתחי תשובה ("le reste des commentateurs ne sont pas
+necessaire") — retiré ט"ז, ש"ך et ביאור הגר"א de `COMMENTARY_ALIASES`/`WORK_SECTION`/
+`WORK_LABELS`. Ils ressortent désormais simplement en « non suivi » dans `--discover`, comme les
+dizaines d'autres œuvres liées (Be'er HaGolah, Ba'er Hetev, Rabbi Akiva Eiger, diverses
+responsa...) jamais suivies.
+
+| exam_section | couches récupérées (v3) |
 |---|---|
-| `shulchan_aruch` | Choulhan Aroukh, חלקת מחוקק, בית שמואל (+ ט"ז/ש"ך si présents) |
+| `shulchan_aruch` | Choulhan Aroukh, חלקת מחוקק, בית שמואל |
 | `tur` | טור, בית יוסף, דרכי משה |
-| `ptei_teshuva` | פתחי תשובה (+ ביאור הגר"א) |
+| `ptei_teshuva` | פתחי תשובה |
 
 ```bash
 # 1. D'abord : voir ce que Sefaria expose réellement (n'écrit rien)
@@ -146,20 +166,13 @@ Sortie par siman : un fichier `.txt` + `.json` par couche (`ehy_26_shulchan_aruc
 `ehy_26_beit_shmuel.txt`, `ehy_26_tur.txt`…) **plus un `ehy_26_ALL.txt`** groupé par section
 d'examen — c'est ce dernier qu'il faut donner à un agent de vérification (une seule lecture
 couvre toutes les sections). Notes de bas de page et balises HTML retirées. Générique à tout
-chelek (`ehy`, `chum`, `yd`, `ohc`).
+chelek (`ehy`, `chum`, `yd`, `ohc`) — seul le chelek `ehy` a été confirmé en conditions réelles
+pour l'instant.
 
 ⚠️ **Les fichiers `ehy_26.txt` / `ehy_27.txt` / `ehy_29.txt`** (sans suffixe de couche) commités
-le 2026-07-30 viennent de la version 1 : ils correspondent au seul Choulhan Aroukh et sont
-remplacés par `ehy_<siman>_shulchan_aruch.txt` en version 2. Ils peuvent être supprimés une fois
-la v2 relancée.
-
-⚠️ **Le script n'a jamais pu être exécuté contre l'API réelle depuis une session Claude Code**
-(Sefaria bloquée). Seule sa logique hors-ligne est testée (parsing, aplatissement des listes
-imbriquées, nettoyage HTML/notes, correspondance des titres de commentaires avec leurs variantes
-de translittération). Les titres Sefaria des œuvres autonomes (`DIRECT_WORKS` dans le script) sont
-des **hypothèses non vérifiées** — d'où le mode `--discover`, et des erreurs 404 explicites plutôt
-que des échecs silencieux. Les commentaires, eux, sont découverts via l'API `links` justement pour
-ne pas dépendre de titres devinés.
+le 2026-07-30 matin viennent de la version 1 : ils correspondent au seul Choulhan Aroukh et sont
+remplacés par `ehy_<siman>_shulchan_aruch.txt` depuis la v2. Ils peuvent être supprimés une fois
+la v3 relancée.
 
 ## ⚠️ Contrainte réseau — API Sefaria inaccessible depuis cette session
 
