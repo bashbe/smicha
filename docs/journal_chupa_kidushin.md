@@ -116,9 +116,14 @@ en production.**
 
 ## Vérification (agent Haiku — texte source seul, Sefaria indisponible)
 
-- [ ] Lot 1 — à lancer après génération
-- [ ] Lot 2 — à lancer après génération
-- [ ] Lot 3 — à lancer après génération
+- [~] Lot 1 (ehy 26) — agent Haiku lancé en arrière-plan, rapport attendu dans `docs/verification_ehy_26.md`
+- [~] Lot 2 (ehy 27) — agent Haiku lancé en arrière-plan, rapport attendu dans `docs/verification_ehy_27.md`
+- [~] Lot 3 (ehy 29) — agent Haiku lancé en arrière-plan, rapport attendu dans `docs/verification_ehy_29.md`
+
+Les 3 vérifications ont été lancées en parallèle (au lieu de strictement séquentielles) car
+les 3 lots étaient déjà tous générés d'un coup, conformément à la consigne utilisateur. Chaque
+agent vérifie uniquement à partir du texte source local et du schéma `question_types.py`
+(pas d'API Sefaria, indisponible — voir plus haut).
 
 ## Décisions de nommage / conventions prises pendant la génération
 
