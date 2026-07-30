@@ -120,14 +120,46 @@ par l'agent de génération (moi), pas par Haiku.
 ## Script de récupération Sefaria pour l'utilisateur
 
 `scripts/fetch_sefaria_text.py` (stdlib uniquement, pas de dépendance) permet de récupérer
-soi-même le texte d'un siman depuis l'API Sefaria, dans un environnement qui y a accès (bloquée
-ici par la politique réseau de cette session — voir plus haut). Usage :
+soi-même un siman depuis l'API Sefaria, dans un environnement qui y a accès (bloquée
+ici par la politique réseau de cette session — voir plus bas).
+
+**Version 1 (2026-07-30, matin) — insuffisante** : ne récupérait que le Choulhan Aroukh. Or les
+cartes sont taguées par `exam_section` : une carte `tur` ou `ptei_teshuva` restait donc
+invérifiable. C'est ce qu'a relevé l'utilisateur après avoir lancé le script.
+
+**Version 2 (2026-07-30, après-midi) — toutes les couches** :
+
+| exam_section | couches récupérées |
+|---|---|
+| `shulchan_aruch` | Choulhan Aroukh, חלקת מחוקק, בית שמואל (+ ט"ז/ש"ך si présents) |
+| `tur` | טור, בית יוסף, דרכי משה |
+| `ptei_teshuva` | פתחי תשובה (+ ביאור הגר"א) |
+
 ```bash
+# 1. D'abord : voir ce que Sefaria expose réellement (n'écrit rien)
+python3 scripts/fetch_sefaria_text.py --chelek ehy --siman 26 --discover
+# 2. Puis tout récupérer
 python3 scripts/fetch_sefaria_text.py --chelek ehy --siman 26 27 29
 ```
-Sauvegarde `docs/sefaria_sources/ehy_<siman>.json` (réponse API brute) et `.txt` (texte brut,
-une ligne par סעיף, notes de bas de page et balises HTML retirées) — même convention de nommage
-`ehy_`/`chum_` que le reste du parcours. Générique à tout chelek (`ehy`, `chum`, `yd`, `ohc`).
+
+Sortie par siman : un fichier `.txt` + `.json` par couche (`ehy_26_shulchan_aruch.txt`,
+`ehy_26_beit_shmuel.txt`, `ehy_26_tur.txt`…) **plus un `ehy_26_ALL.txt`** groupé par section
+d'examen — c'est ce dernier qu'il faut donner à un agent de vérification (une seule lecture
+couvre toutes les sections). Notes de bas de page et balises HTML retirées. Générique à tout
+chelek (`ehy`, `chum`, `yd`, `ohc`).
+
+⚠️ **Les fichiers `ehy_26.txt` / `ehy_27.txt` / `ehy_29.txt`** (sans suffixe de couche) commités
+le 2026-07-30 viennent de la version 1 : ils correspondent au seul Choulhan Aroukh et sont
+remplacés par `ehy_<siman>_shulchan_aruch.txt` en version 2. Ils peuvent être supprimés une fois
+la v2 relancée.
+
+⚠️ **Le script n'a jamais pu être exécuté contre l'API réelle depuis une session Claude Code**
+(Sefaria bloquée). Seule sa logique hors-ligne est testée (parsing, aplatissement des listes
+imbriquées, nettoyage HTML/notes, correspondance des titres de commentaires avec leurs variantes
+de translittération). Les titres Sefaria des œuvres autonomes (`DIRECT_WORKS` dans le script) sont
+des **hypothèses non vérifiées** — d'où le mode `--discover`, et des erreurs 404 explicites plutôt
+que des échecs silencieux. Les commentaires, eux, sont découverts via l'API `links` justement pour
+ne pas dépendre de titres devinés.
 
 ## ⚠️ Contrainte réseau — API Sefaria inaccessible depuis cette session
 
