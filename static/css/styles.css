@@ -2298,6 +2298,9 @@ body.has-player-exp .container { padding-bottom: calc(var(--player-exp-height, 4
 .admin-question-row { display:block; padding:.8rem; border-bottom:1px solid var(--admin-line); }
 .admin-question-row:last-child { border-bottom:0; }
 .admin-question-row:hover, .admin-question-row.active { background:#f7f8ff; }
+.admin-question-group + .admin-question-group { border-top:1px solid var(--admin-line); }
+.admin-question-group-title { position:sticky; top:0; z-index:1; display:flex; justify-content:space-between; gap:.5rem; padding:.55rem .8rem; background:#f3f4f7; color:var(--admin-muted); font-size:.68rem; font-weight:800; letter-spacing:.03em; }
+.admin-question-group-title span { min-width:1.25rem; text-align:center; }
 .admin-question-row p { margin:.35rem 0; color:var(--admin-ink); font-size:.8rem; line-height:1.45; }
 .admin-question-meta { display:flex; gap:.35rem; flex-wrap:wrap; color:var(--admin-muted); font-size:.67rem; }
 .admin-status { display:inline-flex; width:max-content; padding:.18rem .45rem; border-radius:999px; background:#eef0f3; color:#596273; font-size:.65rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }

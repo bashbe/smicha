@@ -6,7 +6,8 @@
     <nav class="admin-primary-nav" aria-label="Admin navigation">
       {% set content_endpoints = ['admin.questions','admin.import_questions','admin.topics','admin.reports','admin.suggestions','admin.analytics'] %}
       <a href="{{ url_for('admin.dashboard') }}" class="{{ 'active' if request.endpoint == 'admin.dashboard' }}"><span>Overview</span></a>
-      <a href="{{ url_for('admin.questions') }}" class="{{ 'active' if request.endpoint in content_endpoints }}"><span>Content</span>{% if open_reports_count or open_suggestions_count %}<span class="admin-nav-count">{{ open_reports_count + open_suggestions_count }}</span>{% endif %}</a>
+      <a href="{{ url_for('admin.questions') }}" class="{{ 'active' if request.endpoint in ['admin.questions','admin.import_questions','admin.topics','admin.reports','admin.suggestions'] }}"><span>Questions</span>{% if open_reports_count or open_suggestions_count %}<span class="admin-nav-count">{{ open_reports_count + open_suggestions_count }}</span>{% endif %}</a>
+      <a href="{{ url_for('admin.analytics') }}" class="{{ 'active' if request.endpoint == 'admin.analytics' }}"><span>Stats</span></a>
       <a href="{{ url_for('admin.users') }}" class="{{ 'active' if request.endpoint in ['admin.users','admin.user_detail'] }}"><span>Users</span></a>
     </nav>
     <div class="admin-sidebar-bottom">

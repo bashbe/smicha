@@ -742,6 +742,9 @@ def questions():
     siman_filter = request.args.get("siman", "").strip()
     seif_filter = request.args.get("seif", "").strip()
     tag_filter = request.args.get("tag", "").strip()
+    grouping = request.args.get("group", "subject")
+    if grouping not in {"subject", "id", "title"}:
+        grouping = "subject"
     selected_id = request.args.get("id", "")
 
     query = Question.query.options(joinedload(Question.subject))
@@ -780,6 +783,27 @@ def questions():
     if all_questions:
         selected = next((q for q in all_questions if q.id == selected_id), all_questions[0])
 
+    grouped: dict[str, list[Question]] = {}
+    group_order: list[str] = []
+    for question in all_questions:
+        if grouping == "subject":
+            subject_title = question.subject.title if question.subject else "Unassigned subject"
+            key = f"{question.parcours or '—'} · Siman {question.siman or '—'} · {subject_title}"
+        elif grouping == "id":
+            key = f"ID · {question.id[:1].upper()}"
+        else:
+            title = (question.text or "Untitled question").strip()
+            key = f"Title · {title[:1].upper() if title else '—'}"
+        if key not in grouped:
+            grouped[key] = []
+            group_order.append(key)
+        grouped[key].append(question)
+    if grouping in {"id", "title"}:
+        group_order.sort()
+        for key in group_order:
+            grouped[key].sort(key=lambda question: (question.id if grouping == "id" else (question.text or "").casefold()))
+    question_groups = [{"label": key, "questions": grouped[key]} for key in group_order]
+
     selected_stats = None
     if selected:
         stats_query = UserAnswer.query.filter_by(question_id=selected.id)
@@ -795,10 +819,12 @@ def questions():
     filters = {
         "status": status, "type": qtype, "parcours": parcours_filter,
         "q": search, "siman": siman_filter, "seif": seif_filter, "tag": tag_filter,
+        "group": grouping,
     }
     return render_template(
         "admin/questions.html",
         questions=all_questions,
+        question_groups=question_groups,
         selected=selected,
         filters=filters,
         question_types=QUESTION_TYPES,
@@ -850,6 +876,7 @@ def edit_question(qid):
         "siman": request.form.get("filter_siman", ""),
         "seif": request.form.get("filter_seif", ""),
         "tag": request.form.get("filter_tag", ""),
+        "group": request.form.get("filter_group", "subject"),
         "id": qid,
     }
 

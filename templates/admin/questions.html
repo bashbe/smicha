@@ -24,19 +24,27 @@
   <select name="parcours" aria-label="Learning path">
     <option value="">All paths</option>{% for code,label in parcours_labels.items() %}<option value="{{ code }}" {{ 'selected' if filters.parcours == code }}>{{ label }}</option>{% endfor %}
   </select>
+  <select name="group" aria-label="Group questions by">
+    <option value="subject" {{ 'selected' if filters.group == 'subject' }}>Group: intra-siman subject</option>
+    <option value="id" {{ 'selected' if filters.group == 'id' }}>Group: ID</option>
+    <option value="title" {{ 'selected' if filters.group == 'title' }}>Group: title</option>
+  </select>
   <input name="siman" type="number" min="1" value="{{ filters.siman }}" placeholder="Siman" style="width:5.5rem" />
   <button class="admin-btn">Filter</button>
-  {% if filters.status or filters.parcours or filters.q or filters.siman or filters.type or filters.seif or filters.tag %}<a class="admin-btn" href="{{ url_for('admin.questions') }}">Clear</a>{% endif %}
+  {% if filters.status or filters.parcours or filters.q or filters.siman or filters.type or filters.seif or filters.tag or filters.group != 'subject' %}<a class="admin-btn" href="{{ url_for('admin.questions') }}">Clear</a>{% endif %}
 </form>
 
 <div class="admin-content-layout">
   <aside class="admin-question-list" aria-label="Questions">
-    {% for q in questions %}
-    <a href="{{ url_for('admin.questions', id=q.id, status=filters.status, parcours=filters.parcours, q=filters.q, siman=filters.siman) }}" class="admin-question-row {{ 'active' if selected and selected.id == q.id }}">
-      <span class="admin-status {{ q.status }}">{{ {'pending':'Pending','approved':'Published','a_revoir':'Flagged','rejected':'Rejected'}.get(q.status,q.status) }}</span>
-      <p dir="rtl">{{ q.text or 'Untitled question' }}</p>
-      <div class="admin-question-meta"><span>{{ type_label.get(q.question_type, q.question_type) }}</span>{% if q.subject %}<span dir="rtl">{{ q.subject.title }}</span>{% endif %}{% if q.siman %}<span>Siman {{ q.siman }}</span>{% endif %}</div>
-    </a>
+    {% for section in question_groups %}
+      <div class="admin-question-group"><div class="admin-question-group-title">{{ section.label }} <span>{{ section.questions|length }}</span></div>
+      {% for q in section.questions %}
+      <a href="{{ url_for('admin.questions', id=q.id, status=filters.status, parcours=filters.parcours, q=filters.q, siman=filters.siman, group=filters.group) }}" class="admin-question-row {{ 'active' if selected and selected.id == q.id }}">
+        <span class="admin-status {{ q.status }}">{{ {'pending':'Pending','approved':'Published','a_revoir':'Flagged','rejected':'Rejected'}.get(q.status,q.status) }}</span>
+        <p dir="rtl">{{ q.text or 'Untitled question' }}</p>
+        <div class="admin-question-meta"><span>{{ type_label.get(q.question_type, q.question_type) }}</span>{% if q.subject %}<span dir="rtl">{{ q.subject.title }}</span>{% endif %}{% if q.siman %}<span>Siman {{ q.siman }}</span>{% endif %}<span>ID {{ q.id[:8] }}</span></div>
+      </a>
+      {% endfor %}</div>
     {% else %}<p class="admin-empty" style="padding:1rem">No questions match these filters.</p>{% endfor %}
   </aside>
 
@@ -56,7 +64,7 @@
 
     <form method="post" action="{{ url_for('admin.edit_question', qid=selected.id) }}" id="qform">
       <input type="hidden" name="action" value="save" />
-      {% for key in ['status','type','parcours','q','siman','seif','tag'] %}<input type="hidden" name="filter_{{ key }}" value="{{ filters[key] }}" />{% endfor %}
+      {% for key in ['status','type','parcours','q','siman','seif','tag','group'] %}<input type="hidden" name="filter_{{ key }}" value="{{ filters[key] }}" />{% endfor %}
       <fieldset style="border:0;padding:0;margin:0" {{ 'disabled' if not can_edit }}>
       <div class="admin-form-section" style="border-top:0;padding-top:0">
         <h3>Classification</h3>
