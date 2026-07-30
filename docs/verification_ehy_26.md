@@ -1,3 +1,10 @@
+> ⚠️ **Rapport historique, partiellement inexact dès l'origine** — voir
+> `docs/audit_questions_chupa_kidushin_2026-07-30.md` pour l'état de référence actuel.
+> Ce rapport contient une incohérence interne de comptage (« true_false (3) » alors que 4
+> questions sont listées juste après — le compte réel est 5 dropdown / 4 true_false, pas
+> 6/3). Le contenu question-par-question ci-dessous reste utile comme trace de la vérification
+> mais ne pas se fier à ses totaux récapitulatifs.
+
 # Vérification du lot ehy_26 — 21 cartes de révision
 
 **Date:** 30 juillet 2026  

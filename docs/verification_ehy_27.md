@@ -1,3 +1,12 @@
+> ⚠️ **Rapport historique, périmé et partiellement inexact dès l'origine** — voir
+> `docs/audit_questions_chupa_kidushin_2026-07-30.md` pour l'état de référence actuel.
+> Deux problèmes : (1) sa répartition par `exam_section` annoncée (28 shulchan_aruch / 5 tur /
+> 4 ptei_teshuva) était déjà fausse au moment de sa rédaction — le fichier a toujours contenu
+> 21/6/10, sans qu'aucune modification n'explique l'écart ; (2) `generated_questions_ehy_27.json`
+> a depuis été corrigé (seif de Q1/Q4/Q5 → 2, Q31 → 8, nuance ב"ש ajoutée à Q4 — voir l'audit du
+> 2026-07-30 soir) donc les numéros de questions ci-dessous peuvent ne plus correspondre
+> exactement au fichier courant. Contenu question-par-question conservé comme trace historique.
+
 # Vérification du lot generated_questions_ehy_27.json
 
 **Date:** 2026-07-30  

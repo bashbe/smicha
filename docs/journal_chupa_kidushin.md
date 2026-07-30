@@ -221,3 +221,34 @@ agent vérifie uniquement à partir du texte source local et du schéma `questio
 
 _(à compléter au fil de la génération — sujets réutilisés, choix de type de carte pour cas
 ambigus, etc.)_
+
+## Audit externe (autre IA) du 2026-07-30 soir — corrections appliquées
+
+L'utilisateur a fait auditer les 84 cartes par une autre IA une fois les vrais textes Sefaria
+(`docs/sefaria_sources/ehy_*_ALL.txt`, récupérés après la trim des commentaires — voir plus haut)
+disponibles. Rapport complet : `docs/audit_questions_chupa_kidushin_2026-07-30.md`.
+
+**Vérifié indépendamment avant d'appliquer quoi que ce soit** — chaque affirmation concrète de
+l'audit a été recroisée directement avec `docs/sefaria_sources/ehy_27_shulchan_aruch.txt` et le
+texte source d'origine, pas acceptée telle quelle :
+
+1. **4 erreurs de `seif` dans `generated_questions_ehy_27.json`** — confirmées exactes contre le
+   vrai texte du שו"ע : "הרי את קנויה לי" et la הגה sur la נאמנות de l'homme sont dans le **seif 2**
+   (pas 1) ; "נתן הוא ואמרה היא" est textuellement le **seif 8** (pas 7). **Corrigé** : Q1, Q4, Q5
+   → seif 2 ; Q31 → seif 8 (dans `seif` et dans `source.seif`). Revalidé : 37/37, 0 erreur.
+2. **Nuance ב"ש manquante dans Q4** — confirmée : le texte source (ligne 100 du fichier
+   `docs/source_texts/...txt`) dit explicitement *"אמנם הב"ש הוסיף, שאם אמר 'הרי את מקודשת',
+   וידוע שמבינה לשון הקודש – מקודשת ודאי"*, une exception que l'explication de la carte omettait.
+   **Corrigé** : la nuance a été ajoutée dans `explanation` (dropdown_choices/decisors inchangés,
+   la machloket structurelle reste valide, seule l'explication texte a été enrichie).
+3. **Rapports `verification_ehy_*.md` obsolètes/incohérents** — confirmé, et même pire que ce que
+   l'audit signalait : `verification_ehy_26.md` a une incohérence interne (annonce "true_false (3)"
+   puis liste 4 questions) ; `verification_ehy_27.md` annonçait 28/5/4 par `exam_section` alors
+   que le fichier a toujours contenu 21/6/10 (erreur de comptage de l'agent Haiku d'origine, pas
+   une conséquence d'une modification ultérieure). Une note d'avertissement a été ajoutée en tête
+   de chacun des 3 rapports, pointant vers l'audit comme référence actuelle.
+
+**Non appliqué** : les remarques de l'audit sur la densité de cartes (EH27 seif 4, 5 cartes sur le
+même noyau) et la répartition des niveaux de difficulté (EH29 très orienté niveau 3) sont des
+jugements pédagogiques raisonnables mais pas des erreurs factuelles — laissées telles quelles,
+à l'appréciation de l'utilisateur/validateur lors de l'import.
