@@ -6,10 +6,13 @@ fetching the Shulchan Aruch alone is not enough to verify a batch: a card tagged
 `shulchan_aruch` against the Chelkat Mechokek and the Beit Shmuel (les deux nossei
 kelim principaux d'Even haEzer, équivalents du Ch"akh/Taz en Yoré Dé'a).
 
-Layers fetched, grouped by the app's `exam_section` :
-  - shulchan_aruch : Choulhan Aroukh + Chelkat Mechokek + Beit Shmuel (+ Taz/Ch"akh si présents)
+Layers fetched, grouped by the app's `exam_section` — volontairement limité aux
+textes principaux (demande explicite de l'utilisateur, 2026-07-30 : "le reste des
+commentateurs ne sont pas necessaire") plutôt qu'à tout ce que l'API `links`
+retourne (Sefaria lie des dizaines de responsa/commentaires annexes à chaque siman) :
+  - shulchan_aruch : Choulhan Aroukh + Chelkat Mechokek + Beit Shmuel
   - tur            : Tour + Beit Yossef + Darkei Moshe
-  - ptei_teshuva   : Pitchei Teshuva (+ autres a'haronim liés)
+  - ptei_teshuva   : Pitchei Teshuva
 
 Les œuvres autonomes (Choulhan Aroukh, Tour, Beit Yossef, Darkei Moshe) sont
 récupérées directement par leur titre. Les commentaires (Chelkat Mechokek, Beit
@@ -89,13 +92,15 @@ DIRECT_WORKS = {
 # minuscules et sans ponctuation au `collectiveTitle.en` renvoyé par Sefaria, donc
 # les variantes de translittération ("Chelkat Mechokek" / "Helkat Mehokek") passent
 # toutes par le même slug tant qu'un des alias correspond.
+#
+# Volontairement limité à ces 3 (demande explicite utilisateur) : Sefaria lie des
+# dizaines d'autres œuvres à chaque siman (Beur HaGra, Be'er HaGolah, Ba'er Hetev,
+# Turei Zahav, Rabbi Akiva Eiger, responsa diverses...) — tout ce qui n'est pas ici
+# ressort simplement en "non suivi" dans `--discover` et n'est jamais téléchargé.
 COMMENTARY_ALIASES = {
     "chelkat_mechokek": ["chelkat mechokek", "helkat mehokek", "chelkat mchokek"],
     "beit_shmuel": ["beit shmuel", "bet shmuel", "beis shmuel"],
     "pitchei_teshuva": ["pitchei teshuva", "pitchei teshuvah", "pticha teshuva"],
-    "taz": ["turei zahav", "taz"],
-    "shach": ["siftei kohen", "shakh", "shach"],
-    "beur_hagra": ["beur hagra", "biur hagra", "beur ha-gra"],
 }
 
 # Rattachement de chaque couche à une section d'examen de l'app (VALID_SECTIONS).
@@ -103,13 +108,10 @@ WORK_SECTION = {
     "shulchan_aruch": "shulchan_aruch",
     "chelkat_mechokek": "shulchan_aruch",
     "beit_shmuel": "shulchan_aruch",
-    "taz": "shulchan_aruch",
-    "shach": "shulchan_aruch",
     "tur": "tur",
     "beit_yosef": "tur",
     "darkei_moshe": "tur",
     "pitchei_teshuva": "ptei_teshuva",
-    "beur_hagra": "ptei_teshuva",
 }
 
 # Libellés lisibles pour l'en-tête du fichier ALL.
@@ -117,13 +119,10 @@ WORK_LABELS = {
     "shulchan_aruch": "שולחן ערוך",
     "chelkat_mechokek": "חלקת מחוקק",
     "beit_shmuel": "בית שמואל",
-    "taz": "ט\"ז",
-    "shach": "ש\"ך",
     "tur": "טור",
     "beit_yosef": "בית יוסף",
     "darkei_moshe": "דרכי משה",
     "pitchei_teshuva": "פתחי תשובה",
-    "beur_hagra": "ביאור הגר\"א",
 }
 
 TEXTS_API = "https://www.sefaria.org/api/texts/"

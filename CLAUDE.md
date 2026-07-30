@@ -68,9 +68,14 @@ une carte taguée `tur` ou `ptei_teshuva` reste invérifiable :
 
 | exam_section | couches récupérées |
 |---|---|
-| `shulchan_aruch` | Choulhan Aroukh, חלקת מחוקק, בית שמואל (+ ט"ז/ש"ך si présents) |
+| `shulchan_aruch` | Choulhan Aroukh, חלקת מחוקק, בית שמואל |
 | `tur` | טור, בית יוסף, דרכי משה |
-| `ptei_teshuva` | פתחי תשובה (+ ביאור הגר"א) |
+| `ptei_teshuva` | פתחי תשובה |
+
+Volontairement limité à ces textes principaux (demande explicite de l'utilisateur,
+2026-07-30) : Sefaria lie des dizaines d'autres œuvres à chaque siman (ביאור הגר"א,
+Be'er HaGolah, Ba'er Hetev, ט"ז, ועוד) — non téléchargées, elles ressortent en
+« non suivi » dans `--discover`.
 
 Les œuvres autonomes (SA, Tour, Beit Yossef, Darkei Moshe) sont récupérées par titre
 (`DIRECT_WORKS` dans le script) ; les commentaires sont **découverts via l'API `links`** de
