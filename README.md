@@ -932,8 +932,9 @@ Un étudiant peut préparer **plusieurs parcours en parallèle**, chacun avec sa
   `siman` (Integer) ne porte aucune notion de chelek, donc les numéros de siman peuvent se
   chevaucher entre les deux parties. **Solution provisoire** (à adapter structurellement plus
   tard — voir CLAUDE.md, section « Parcours multi-chelek ») : chaque question précise son chelek
-  via un préfixe dans `source_ref` — `ehy` pour אבן העזר, `chum` pour חושן משפט (ex.
-  `"ehy סי' כו סע' א"`). Les fichiers de lot générés suivent la même convention :
+  via le champ optionnel `source` du JSON d'import, ex. `"source": {"chelek": "ehy", "siman": 26,
+  "seif": 1, "posek": "..."}` (`ehy` = אבן העזר, `chum` = חושן משפט) — stocké tel quel dans
+  `Question.source_ref`. Les fichiers de lot générés suivent la même convention de nommage :
   `generated_questions_ehy_<siman>.json` / `generated_questions_chum_<siman>.json`.
 - **Base existante** : `python -m scripts.migrate_multi_parcours` crée la table et rattache chaque
   profil onboardé à `bassar_bechalav` en copiant les champs dépréciés (le fallback de

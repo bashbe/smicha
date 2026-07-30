@@ -43,9 +43,14 @@ présentation.
 
 **Solution provisoire actuellement en place** (le temps de générer du contenu
 sans bloquer) : chaque question du parcours `chupa_kidushin` porte un préfixe
-de chelek dans le champ `source_ref` :
-- `ehy` = אבן העזר (ex. `"ehy סי' כו סע' א"`)
-- `chum` = חושן משפט (ex. `"chum סי' ק סע' א"`)
+de chelek dans le champ optionnel `source` du JSON d'import (voir
+`prompt_generation_questions.md` — champ libre sérialisé tel quel dans
+`Question.source_ref` par `_source_to_ref()`) :
+```json
+"source": { "chelek": "ehy", "siman": 26, "seif": 1, "posek": "מחבר" }
+```
+- `chelek: "ehy"` = אבן העזר
+- `chelek: "chum"` = חושן משפט
 
 Les fichiers de lot générés suivent la même convention de nommage :
 `generated_questions_ehy_<siman>.json` / `generated_questions_chum_<siman>.json`,

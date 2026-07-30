@@ -48,10 +48,21 @@ faudra que l'utilisateur revérifie le PDF original à cet endroit s'il veut ce 
 
 ### Lot 1 — ehy siman 26 (הלכות קידושין - avant הלכות קידושין standard, chelek Even haEzer)
 
-- Statut : en cours
+- Statut : **généré et validé** (21 questions, 0 erreur via `question_types.normalize_imported_question`)
 - Fichier : `generated_questions_ehy_26.json`
 - Contenu source : seifim א (פילגש/פנויה, נישואין אזרחיים), ב (חופה בלבד), ג (נחשבת אשת איש),
   ד (קידושי ביאה, תוקף, מלקות, קידושין בלילה)
+- Sujets utilisés : פילגש ופנויה ; מעמד אשה שנבעלה שלא לשם קידושין ; נישואין אזרחיים - חזקת אין
+  אדם עושה בעילתו בעילת זנות ; נישואין אזרחיים ; נישואין אזרחיים - פסיקת האחרונים ; חופה בלבד
+  לעניין קידושין ; מעמד אשת איש לאחר קידושין ; קידושי ביאה ; עונש המקדש בביאה, בשוק או בלא
+  שידוכין ; קידושין בלילה.
+- Répartition : 12 multiple_choice, 5 multiple_opinions_dropdown, 4 true_false.
+- Décision de convention (à réutiliser pour les lots suivants) : ב״ש (Beit Shmuel) et ח״מ
+  (Chelkat Mechokek) traités comme section `shulchan_aruch` (commentaires principaux d'Even
+  haEzer, équivalent au rôle de Cha״ch/Taz pour Yoré Dé'a) ; פת״ש, באר היטב et responsa
+  d'acharonim tardifs → `ptei_teshuva` ; discussions de Guemara/Rishonim (Rambam, Rosh, Ran,
+  Rashba, Tosfot, Ramban...) → `tur`.
+- Reste en attente : vérification haiku + Sefaria (voir section dédiée).
 
 ### Lot 2 — ehy siman 27 (לשונות קידושין)
 
