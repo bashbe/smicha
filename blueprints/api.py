@@ -101,6 +101,11 @@ def answer():
     q = Question.query.get(question_id)
     if q is None:
         return jsonify({"error": "question not found"}), 404
+    if q.status != "approved" and not (
+        q.status == "pending"
+        and (user.has_role("validator") or user.has_role("super_admin"))
+    ):
+        return jsonify({"error": "question not available"}), 404
 
     sp = StudentProfile.query.get(user.id)
     # Ligne du parcours activé par l'étudiant pour cette question — porte la

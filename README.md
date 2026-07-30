@@ -102,7 +102,8 @@ Toutes les variables se trouvent dans `config.py` et sont surchargeables par var
 |---|---|---|
 | `SECRET_KEY` | `"dev-change-me-in-production"` | Clé de signature des sessions Flask — **changer impérativement en prod** |
 | `DATABASE_URL` | `sqlite:///smiha.db` | URL de connexion SQLAlchemy. Passer `postgresql+psycopg://...` pour Postgres |
-| `SUPER_ADMIN_EMAIL` | `bcbeneghmos@gmail.com` | Email automatiquement promu `super_admin` à l'inscription |
+| `PROTECTED_SUPER_ADMIN_EMAIL` | `bcbeneghmos@gmail.com` | Compte propriétaire protégé, fixé dans le code et non surchargeable : rôle `super_admin` réparé au démarrage, retrait/suppression bloqués |
+| `SUPER_ADMIN_EMAIL` | `bcbeneghmos@gmail.com` | Email additionnel automatiquement promu `super_admin` à l'inscription ; ne remplace jamais le compte propriétaire protégé |
 | `ALLOWED_SIGNUP_EMAILS` | *(vide → `SUPER_ADMIN_EMAIL` seul)* | Liste blanche d'emails autorisés à s'inscrire via `/auth` (séparés par des virgules). Restriction temporaire — voir [Rôles et authentification](#rôles-et-authentification). Ne s'applique pas aux comptes créés par `seed.py` |
 | `FLASK_PORT` | `5000` | Port d'écoute (lu dans `app.py`) |
 | `GITHUB_WEBHOOK_SECRET` | `None` | Secret HMAC-SHA256 partagé avec le webhook GitHub — voir [Déploiement continu](#déploiement-continu-pythonanywhere). `None` désactive l'endpoint |
@@ -192,6 +193,12 @@ Compte de base. Méthodes utiles : `set_password()`, `check_password()`, `has_ro
 | `created_at` | DateTime | |
 
 Relations : `roles` (→ UserRole), `student_profile` (→ StudentProfile, 1:1)
+
+Le compte `bcbeneghmos@gmail.com` est l'identité propriétaire protégée. Tant qu'il existe,
+son rôle `super_admin` est vérifié et réparé à chaque démarrage. Sur SQLite, des triggers
+interdisent également la suppression directe de sa ligne, la modification de son email et
+le retrait ou changement de son rôle `super_admin`. Un reset applicatif conserve son ID,
+son mot de passe et son rôle.
 
 ---
 
@@ -599,7 +606,7 @@ avant livraison.
 | POST | `/admin/reports/<report_id>/confirm` | Signalement jugé justifié — retire la question pour tout le monde (`Question.status="pending"`, rejoint `/admin/questions`) et classe tous les signalements "open" de la question en `"confirmed"` |
 | POST | `/admin/reports/<report_id>/dismiss` | Signalement jugé injustifié — classe ce signalement en `"dismissed"`, la question redevient visible pour ce seul étudiant |
 | POST | `/admin/subjects/rename` | Renomme le titre d'un [`Subject`](#subjects) par ID (une seule ligne modifiée), depuis `/admin/dashboard` (bloc « שאלות לפי נושא ») — si le nouveau titre entre en collision avec un autre sujet du même siman, fusionne les deux (questions + `Progression` réassignées, ancien sujet supprimé) |
-| POST | `/admin/reset-db` | **super_admin uniquement** — efface et recrée toutes les tables (confirmation texte `"RESET"` requise) |
+| POST | `/admin/reset-db` | **super_admin uniquement** — réinitialise les données tout en restaurant le compte propriétaire protégé avec le même ID/mot de passe/rôle (confirmation texte `"RESET"` requise) |
 
 ---
 
@@ -1032,14 +1039,16 @@ de compte. Cette restriction ne s'applique pas aux comptes créés par `seed.py`
 |---|---|---|
 | `student` | `/app/*` — signaler une question (🚩) ne la retire que pour lui-même (`QuestionReport`) | Par défaut à l'inscription |
 | `importer` | `/admin/*` + import JSON | Manuel (super_admin) |
-| `validator` | `/admin/*` + validation + `/admin/reports` (confirmer/rejeter les signalements) — signaler une question (🚩) la retire immédiatement pour **tout le monde** | Manuel (super_admin) |
-| `super_admin` | Tout + reset DB — mêmes privilèges de signalement que `validator` | Auto si email = `SUPER_ADMIN_EMAIL`, sinon manuel |
+| `validator` | `/admin/*` + validation + `/admin/reports` (confirmer/rejeter les signalements) — voit aussi les questions `pending` dans `/app/parcours` et peut les ouvrir dans le lecteur ; signaler une question (🚩) la retire immédiatement pour **tout le monde** | Manuel (super_admin) |
+| `super_admin` | Tout + reset DB — voit aussi les questions `pending` dans `/app/parcours` et dispose des mêmes privilèges de signalement que `validator` | Permanent pour `bcbeneghmos@gmail.com`; auto aussi si email = `SUPER_ADMIN_EMAIL`, sinon manuel |
 
 Décorateurs disponibles dans `auth_helpers.py` :
 - `@login_required` — redirige vers `/auth` si non connecté
 - `@staff_required` — redirige vers `/admin/denied` si pas de rôle staff
 
 Un utilisateur peut avoir plusieurs rôles simultanément (table `user_roles`).
+Le rôle `super_admin` du compte propriétaire protégé ne peut être retiré ni par lui-même,
+ni par un autre super-admin, ni par une écriture SQL directe sur la base SQLite.
 
 ---
 
@@ -1067,6 +1076,8 @@ python tests/test_fsrs.py
 python tests/test_calibration.py
 python tests/test_points.py
 python tests/test_multi_parcours.py
+python tests/test_protected_admin.py
+python tests/test_pending_parcours_visibility.py
 
 # Vérifier l'état de la base en SQLite
 sqlite3 smiha.db ".tables"
@@ -1244,8 +1255,12 @@ sans avoir besoin d'une console PythonAnywhere.
   déjà passée par l'ancien défaut `"approved"`, lancer `python -m scripts.migrate_requeue_approved`
   pour rebasculer les questions `approved` en `pending` (⚠️ les retire temporairement de la vue
   étudiant jusqu'à revalidation).
+- **Prévisualisation du parcours par les validateurs** : `/app/parcours` et `/app/chapitre/*`
+  incluent `pending` pour les rôles `validator` et `super_admin`, mais continuent d'exiger
+  `approved` pour les étudiants ordinaires. `POST /api/answer` applique la même autorisation
+  afin qu'un étudiant ne puisse pas répondre à une question `pending` en connaissant son ID.
 - **`FsrsCard.target_stability`** est copié depuis `StudentProfile` à la création de la carte. Modifier le profil étudiant ne met pas à jour les cartes existantes — prévu par design.
 - **`/app/reset-progress`** efface `UserAnswer`, `FsrsCard`, `Progression` sans confirmation supplémentaire. Protéger en prod si nécessaire.
-- **`/admin/reset-db`** efface **toutes** les tables et déconnecte l'utilisateur. Réservé au `super_admin`, requiert la saisie du mot `"RESET"` en confirmation.
+- **`/admin/reset-db`** réinitialise les données et déconnecte l'utilisateur, mais restaure immédiatement le compte propriétaire `bcbeneghmos@gmail.com` avec le même ID, mot de passe et rôle `super_admin`. Réservé au `super_admin`, requiert la saisie du mot `"RESET"` en confirmation.
 - **`seed.py`** insère les comptes de démo avec des mots de passe en clair dans le code. Ne pas utiliser en prod.
 - **`chapitre.js`** gère l'état du combo côté client et l'envoie avec chaque réponse. Le serveur fait confiance à cette valeur — un client malveillant pourrait l'altérer.

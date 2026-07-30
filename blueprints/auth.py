@@ -6,6 +6,7 @@ from flask import Blueprint, current_app, flash, redirect, render_template, requ
 
 from auth_helpers import current_user, login_user, logout_user
 from models import StudentProfile, User, UserRole, db
+from protected_admin import is_protected_admin
 
 bp = Blueprint("auth", __name__)
 
@@ -17,7 +18,11 @@ def create_account(email: str, password: str, full_name: str | None) -> User:
     db.session.add(user)
     db.session.flush()  # assign user.id
 
-    role = "super_admin" if user.email == current_app.config["SUPER_ADMIN_EMAIL"].lower() else "student"
+    role = (
+        "super_admin"
+        if is_protected_admin(user) or user.email == current_app.config["SUPER_ADMIN_EMAIL"].lower()
+        else "student"
+    )
     db.session.add(UserRole(user_id=user.id, role=role))
     db.session.add(StudentProfile(id=user.id, full_name=full_name or ""))
     db.session.commit()

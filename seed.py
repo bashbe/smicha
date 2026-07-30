@@ -22,10 +22,15 @@ def run():
     with app.app_context():
         db.create_all()
 
+        protected_email = app.config["PROTECTED_SUPER_ADMIN_EMAIL"]
+        if not User.query.filter_by(email=protected_email.lower()).first():
+            create_account(protected_email, "password123", "מנהל ראשי")
+            print(f"created protected super_admin: {protected_email} / password123")
+
         admin_email = app.config["SUPER_ADMIN_EMAIL"]
-        if not User.query.filter_by(email=admin_email.lower()).first():
+        if admin_email.lower() != protected_email.lower() and not User.query.filter_by(email=admin_email.lower()).first():
             create_account(admin_email, "password123", "מנהל ראשי")
-            print(f"created super_admin: {admin_email} / password123")
+            print(f"created additional super_admin: {admin_email} / password123")
 
         if not User.query.filter_by(email="student@example.com").first():
             create_account("student@example.com", "password123", "תלמיד לדוגמה")

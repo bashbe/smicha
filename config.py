@@ -2,6 +2,9 @@ import os
 from datetime import timedelta
 
 
+PROTECTED_SUPER_ADMIN_EMAIL = "bcbeneghmos@gmail.com"
+
+
 class Config:
     """Application configuration. Override via environment variables."""
 
@@ -18,8 +21,12 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # Email auto-promoted to super_admin on first signup (mirrors the original
-    # handle_new_user trigger).
+    # Compte propriétaire immuable. Contrairement à SUPER_ADMIN_EMAIL, cette
+    # valeur n'est volontairement pas surchargeable par l'environnement.
+    PROTECTED_SUPER_ADMIN_EMAIL = PROTECTED_SUPER_ADMIN_EMAIL
+
+    # Email additionnel auto-promu à l'inscription. La valeur historique reste
+    # configurable, mais ne remplace jamais le compte propriétaire protégé.
     SUPER_ADMIN_EMAIL = os.environ.get("SUPER_ADMIN_EMAIL", "bcbeneghmos@gmail.com")
 
     # Restriction temporaire de l'inscription (/auth, mode=signup) : liste blanche
@@ -28,7 +35,7 @@ class Config:
     ALLOWED_SIGNUP_EMAILS = (
         {e.strip().lower() for e in os.environ.get("ALLOWED_SIGNUP_EMAILS", "").split(",") if e.strip()}
         or {SUPER_ADMIN_EMAIL.lower()}
-    )
+    ) | {PROTECTED_SUPER_ADMIN_EMAIL}
 
     # Secret partagé avec le webhook GitHub (POST /webhook/deploy) pour vérifier
     # la signature HMAC-SHA256 de chaque requête. None = endpoint désactivé (401/500).

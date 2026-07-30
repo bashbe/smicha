@@ -96,6 +96,19 @@ def question_in_sections(q, allowed: set[str]) -> bool:
     return set(_to_section_list(q.section)) <= allowed
 
 
+def parcours_visible_statuses() -> tuple[str, ...]:
+    """Statuses exposed in the study parcours for the current user.
+
+    Validators and super-admins can preview pending questions in the same
+    parcours/reader used by students. Ordinary students still see approved
+    content only.
+    """
+    user = current_user()
+    if user and (user.has_role("validator") or user.has_role("super_admin")):
+        return ("approved", "pending")
+    return ("approved",)
+
+
 def get_profile() -> StudentProfile:
     """Get or create the StudentProfile for the current user."""
     user = current_user()
@@ -377,7 +390,7 @@ def parcours():
     hidden_ids = _hidden_question_ids(sp.id)
     codes = active_parcours_codes(sp.id)
     qs = [q for q in Question.query.filter(
-        Question.status == "approved",
+        Question.status.in_(parcours_visible_statuses()),
         Question.parcours.in_(codes),
     ).all() if question_in_sections(q, allowed) and q.id not in hidden_ids]
 
@@ -471,7 +484,7 @@ def _load_chapitre(sp, subject_id: str, extra_filters: list, allowed: set[str] |
     rows = (
         Question.query.filter(
             Question.parcours.in_(codes), Question.subject_id == subject_id,
-            Question.status == "approved", *extra_filters,
+            Question.status.in_(parcours_visible_statuses()), *extra_filters,
         )
         .order_by(Question.seif.asc())
         .all()

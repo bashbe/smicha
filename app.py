@@ -154,6 +154,8 @@ def create_app(config_object: type = Config) -> Flask:
     with app.app_context():
         db.create_all()
         _ensure_additive_columns()
+        from protected_admin import ensure_protected_admin_invariants
+        ensure_protected_admin_invariants()
 
     return app
 

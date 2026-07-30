@@ -46,7 +46,7 @@
               {% for role in user_roles %}
               <span class="badge" style="display:inline-flex;align-items:center;gap:0.3rem;">
                 {{ role }}
-                {% if is_super_admin %}
+                {% if is_super_admin and not (user.email|lower == protected_admin_email|lower and role == 'super_admin') %}
                 <form method="post" action="{{ url_for('admin.update_user_role', user_id=user.id) }}" style="display:inline;">
                   <input type="hidden" name="role" value="{{ role }}" />
                   <input type="hidden" name="action" value="remove" />

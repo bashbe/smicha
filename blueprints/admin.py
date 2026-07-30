@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from datetime import datetime
 
-from flask import Blueprint, Response, flash, redirect, render_template, request, url_for
+from flask import Blueprint, Response, current_app, flash, redirect, render_template, request, url_for
 from sqlalchemy.orm import joinedload
 
 import calibration
@@ -227,6 +227,7 @@ def users():
         roles_by_user=roles_by_user,
         app_roles=APP_ROLES,
         is_super_admin=current_user().has_role("super_admin"),
+        protected_admin_email=current_app.config["PROTECTED_SUPER_ADMIN_EMAIL"],
     )
 
 
@@ -235,8 +236,8 @@ def users():
 def update_user_role(user_id):
     """Grant or revoke an app role for a user — reserved to super_admin.
 
-    Self-demotion out of super_admin is blocked so a lone admin can never
-    accidentally lock themselves out of role management.
+    The protected owner's super_admin role can never be removed, including by
+    another super-admin.
     """
     actor = current_user()
     if not actor.has_role("super_admin"):
@@ -256,6 +257,10 @@ def update_user_role(user_id):
             db.session.commit()
         flash(f'התפקיד "{role}" הוענק ל-{target.email}', "success")
     elif action == "remove":
+        from protected_admin import is_protected_admin
+        if role == "super_admin" and is_protected_admin(target):
+            flash("אי אפשר להסיר את תפקיד super_admin מחשבון הבעלים המוגן", "error")
+            return redirect(url_for("admin.users"))
         if target.id == actor.id and role == "super_admin":
             flash("אי אפשר להסיר את תפקיד super_admin מעצמך", "error")
             return redirect(url_for("admin.users"))
@@ -785,8 +790,12 @@ def reset_db():
     if confirm != "RESET":
         flash("הקלד RESET כדי לאשר את האיפוס", "error")
         return redirect(url_for("admin.dashboard"))
+    from protected_admin import restore_protected_admin, snapshot_protected_admin
+    owner_snapshot = snapshot_protected_admin()
+    db.session.remove()
     db.drop_all()
     db.create_all()
+    restore_protected_admin(owner_snapshot)
     logout_user()
-    flash("בסיס הנתונים אופס לחלוטין. יש להתחבר מחדש.", "success")
+    flash("בסיס הנתונים אופס. חשבון הבעלים המוגן נשמר; יש להתחבר מחדש.", "success")
     return redirect(url_for("admin.login"))
