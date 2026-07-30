@@ -4,6 +4,13 @@ But de ce fichier : tracer chaque action de la génération/validation des carte
 parcours `chupa_kidushin`, pour qu'une session interrompue puisse reprendre exactement
 où elle s'est arrêtée. Mis à jour au fil de l'eau, pas seulement à la fin.
 
+> ⚠️ **Rangement du 2026-07-30 (soir)** : les fichiers `generated_questions_ehy_26/27/29.json`
+> mentionnés dans tout ce journal (et dans `docs/audit_*.md`/`docs/verification_*.md`) ont été
+> déplacés de la racine du repo vers `docs/generated_questions/` pour désencombrer la racine —
+> voir CLAUDE.md, section « Organisation des fichiers non liés à l'app ». Les mentions
+> ci-dessous gardent le nom de fichier tel qu'il était au moment de chaque action (valeur
+> historique), mais le chemin réel actuel est `docs/generated_questions/<nom>`.
+
 ## Contexte
 
 - Source : document utilisateur `Livre_27_juil_2026.pdf` (converti en .docx), un extrait

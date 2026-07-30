@@ -194,7 +194,7 @@ EOF
    critère de tri des cartes dans l'app) — pas tout le texte d'un coup. Après chaque lot,
    **attends le jugement de l'utilisateur** (validation, corrections, suppression) avant de
    passer au groupe suivant. Reste concis : les cartes parlent d'elles-mêmes.
-2. Écris chaque lot validé dans `generated_questions_<siman>.json` à la racine du repo
+2. Écris chaque lot validé dans `docs/generated_questions/generated_questions_<siman>.json`
    (fichier de travail : ne le commite pas, sauf demande explicite) et envoie-le à
    l'utilisateur avec un résumé bref : nombre de cartes, répartition type/difficulté/section,
    sujets utilisés, et tout choix notable ou passage non classé nécessitant son arbitrage.

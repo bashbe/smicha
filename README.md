@@ -993,8 +993,9 @@ Un étudiant peut préparer **plusieurs parcours en parallèle**, chacun avec sa
   tard — voir CLAUDE.md, section « Parcours multi-chelek ») : chaque question précise son chelek
   via le champ optionnel `source` du JSON d'import, ex. `"source": {"chelek": "ehy", "siman": 26,
   "seif": 1, "posek": "..."}` (`ehy` = אבן העזר, `chum` = חושן משפט) — stocké tel quel dans
-  `Question.source_ref`. Les fichiers de lot générés suivent la même convention de nommage :
-  `generated_questions_ehy_<siman>.json` / `generated_questions_chum_<siman>.json`.
+  `Question.source_ref`. Les fichiers de lot générés suivent la même convention de nommage, sous
+  `docs/generated_questions/` (voir CLAUDE.md, section « Organisation des fichiers non liés à
+  l'app ») : `generated_questions_ehy_<siman>.json` / `generated_questions_chum_<siman>.json`.
 - **Base existante** : `python -m scripts.migrate_multi_parcours` crée la table et rattache chaque
   profil onboardé à `bassar_bechalav` en copiant les champs dépréciés (le fallback de
   `get_active_parcours()` fait de même à la volée si besoin).
