@@ -49,9 +49,9 @@ from backup_service import backup_directory, create_backup, delete_backup
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 
 TYPE_LABEL = {
-    "multiple_choice": "רב-ברירה",
-    "multiple_opinions_dropdown": "התאמת פוסקים",
-    "true_false": "נכון/לא נכון",
+    "multiple_choice": "Multiple choice",
+    "multiple_opinions_dropdown": "Opinion matching",
+    "true_false": "True / false",
 }
 
 
@@ -92,14 +92,14 @@ def login():
         try:
             if mode == "signup":
                 if User.query.filter_by(email=email).first():
-                    raise ValueError("כתובת הדוא\"ל כבר רשומה")
+                    raise ValueError("This email address is already registered.")
                 if len(password) < 6:
-                    raise ValueError("הסיסמה חייבת להכיל לפחות 6 תווים")
+                    raise ValueError("The password must contain at least 6 characters.")
                 user = create_account(email, password, None)
             else:
                 user = User.query.filter_by(email=email).first()
                 if not user or not user.check_password(password):
-                    raise ValueError("דוא\"ל או סיסמה שגויים")
+                    raise ValueError("Incorrect email or password.")
             login_user(user)
             return redirect(url_for("admin.dashboard"))
         except ValueError as e:
@@ -117,50 +117,38 @@ def denied():
 @bp.route("/dashboard")
 @staff_required
 def dashboard():
-    """Admin dashboard: overview of question status and subject distribution."""
-    qs = Question.query.with_entities(Question.status, Question.subject_id).all()
-    counts = {"pending": 0, "approved": 0, "a_revoir": 0, "rejected": 0}
-    by_subject_id: dict[str, int] = {}
-    for status, subject_id in qs:
-        if status in counts:
-            counts[status] += 1
-        by_subject_id[subject_id] = by_subject_id.get(subject_id, 0) + 1
-
-    none_count = by_subject_id.pop(None, 0)
-    titles = {s.id: s.title for s in Subject.query.filter(Subject.id.in_(by_subject_id.keys())).all()}
-    by_subject = [
-        {"id": sid, "title": titles.get(sid, "—"), "count": count}
-        for sid, count in by_subject_id.items()
-    ]
-    by_subject.sort(key=lambda r: -r["count"])
-    if none_count:
-        by_subject.append({"id": None, "title": "— ללא נושא —", "count": none_count})
-
-    reports_count = QuestionReport.query.filter_by(status="open").count()
-
-    # Retention calibration — computed live from the append-only UserAnswer log
-    # (predicted_r vs observed outcome). Cheap on a small cohort; the log is the
-    # source of truth, so no snapshot table is needed.
-    ret_rows = (
-        db.session.query(UserAnswer.predicted_r, UserAnswer.is_correct)
-        .filter(UserAnswer.predicted_r.isnot(None))
-        .all()
-    )
-    retention = calibration.retention_report([(p, c) for p, c in ret_rows])
-
-    total_answers = UserAnswer.query.count()
-    correct_answers = UserAnswer.query.filter_by(is_correct=True).count()
-    global_stats = {
-        "users": User.query.count(), "answers": total_answers,
-        "accuracy": round(100 * correct_answers / total_answers) if total_answers else None,
-        "due": FsrsCard.query.filter(FsrsCard.due_date <= datetime.utcnow().date()).count(),
+    """Focused admin overview: editorial work, learner activity and health."""
+    now = datetime.utcnow()
+    week_ago = now - timedelta(days=7)
+    month_ago = now - timedelta(days=30)
+    counts = {
+        status: Question.query.filter_by(status=status).count()
+        for status in ("pending", "approved", "a_revoir", "rejected")
+    }
+    answers_30d = UserAnswer.query.filter(UserAnswer.answered_at >= month_ago)
+    answer_count_30d = answers_30d.count()
+    correct_30d = answers_30d.filter_by(is_correct=True).count()
+    metrics = {
+        "active_students_7d": db.session.query(func.count(func.distinct(UserAnswer.user_id))).filter(UserAnswer.answered_at >= week_ago).scalar() or 0,
+        "answers_30d": answer_count_30d,
+        "accuracy_30d": round(correct_30d * 100 / answer_count_30d) if answer_count_30d else None,
+        "total_questions": Question.query.count(),
+    }
+    work = {
+        "pending": counts["pending"],
+        "flagged": counts["a_revoir"],
+        "reports": QuestionReport.query.filter_by(status="open").count(),
         "suggestions": QuestionSuggestion.query.filter_by(status="open").count(),
     }
-    return render_template(
-        "admin/dashboard.html", counts=counts, by_subject=by_subject,
-        reports_count=reports_count, retention=retention, global_stats=global_stats,
-        parcours_labels=PARCOURS_LABELS,
+    recent_edits = (
+        db.session.query(QuestionEdit, Question, User)
+        .join(Question, Question.id == QuestionEdit.question_id)
+        .outerjoin(User, User.id == QuestionEdit.editor_id)
+        .order_by(QuestionEdit.edited_at.desc()).limit(6).all()
     )
+    last_backup = BackupRecord.query.order_by(BackupRecord.created_at.desc()).first()
+    return render_template("admin/dashboard.html", counts=counts, metrics=metrics, work=work,
+                           recent_edits=recent_edits, last_backup=last_backup)
 
 
 @bp.route("/analytics")
@@ -170,18 +158,18 @@ def analytics():
     scope = request.args.get("scope", "global")
     ident = request.args.get("id", "")
     q = db.session.query(Question)
-    title = "סקירה כללית"
+    title = "Content analytics"
     if scope == "question" and ident:
         q = q.filter(Question.id == ident)
         question = Question.query.get_or_404(ident)
-        title = "ניתוח שאלה"
+        title = "Question analytics"
     elif scope == "subject" and ident:
         q = q.filter(Question.subject_id == ident)
         subject = Subject.query.get_or_404(ident)
-        title = f'ניתוח נושא: {subject.title}'
+        title = f'Subject analytics: {subject.title}'
     elif scope == "parcours" and ident:
         q = q.filter(Question.parcours == ident)
-        title = f'ניתוח מסלול: {PARCOURS_LABELS.get(ident, ident)}'
+        title = f'Learning path analytics: {PARCOURS_LABELS.get(ident, ident)}'
     else:
         scope, ident = "global", ""
     question_ids = [row[0] for row in q.with_entities(Question.id).all()]
@@ -225,7 +213,7 @@ def resolve_suggestion(suggestion_id, action):
         return redirect(url_for("admin.suggestions"))
     suggestion.status, suggestion.resolved_by, suggestion.resolved_at = action, actor.id, datetime.utcnow()
     db.session.commit()
-    flash("ההצעה עודכנה", "success")
+    flash("Suggestion updated.", "success")
     return redirect(url_for("admin.questions", id=suggestion.question_id)) if action == "applied" else redirect(url_for("admin.suggestions"))
 
 
@@ -262,26 +250,31 @@ def backups():
     if request.method == "POST":
         try:
             create_backup(actor.id)
-            flash("הגיבוי נוצר ונבדק", "success")
+            flash("Backup created successfully.", "success")
         except Exception as exc:
             current_app.logger.exception("Backup failed")
-            flash(f"יצירת הגיבוי נכשלה: {exc}", "error")
+            flash(f"Backup failed: {exc}", "error")
         return redirect(url_for("admin.backups"))
     return render_template("admin/backups.html", backups=BackupRecord.query.order_by(BackupRecord.created_at.desc()).all())
 
 
 @bp.route("/backups/<backup_id>/keep", methods=["POST"])
-@bp.route("/backups/<backup_id>/delete", methods=["POST"])
 @staff_required
-def manage_backup(backup_id):
+def toggle_backup_keep(backup_id):
     if not current_user().has_role("super_admin"):
         return redirect(url_for("admin.denied"))
     backup = BackupRecord.query.get_or_404(backup_id)
-    if request.path.endswith("/keep"):
-        backup.keep_forever = not backup.keep_forever
-        db.session.commit()
-    else:
-        delete_backup(backup)
+    backup.keep_forever = not backup.keep_forever
+    db.session.commit()
+    return redirect(url_for("admin.backups"))
+
+
+@bp.route("/backups/<backup_id>/delete", methods=["POST"])
+@staff_required
+def remove_backup(backup_id):
+    if not current_user().has_role("super_admin"):
+        return redirect(url_for("admin.denied"))
+    delete_backup(BackupRecord.query.get_or_404(backup_id))
     return redirect(url_for("admin.backups"))
 
 
@@ -305,7 +298,7 @@ def api_security():
         action = request.form.get("action")
         if action == "create":
             if request.form.get("confirm") != "EMERGENCY":
-                flash("יש להקליד EMERGENCY כדי ליצור אסימון SQL", "error")
+                flash("Type EMERGENCY to create a SQL token.", "error")
                 return redirect(url_for("admin.api_security"))
             ttl = min(max(int(request.form.get("ttl_minutes", 15)), 5), current_app.config["EMERGENCY_SQL_API_MAX_TTL_MINUTES"])
             plaintext_token = secrets.token_urlsafe(48)
@@ -335,21 +328,21 @@ def rename_subject():
 
     subj = Subject.query.get(subject_id)
     if subj is None:
-        flash("נושא לא נמצא", "error")
+        flash("Subject not found.", "error")
         return redirect(url_for("admin.dashboard"))
     if not new_title:
-        flash("יש להזין שם נושא חדש", "error")
+        flash("Enter a new subject name.", "error")
         return redirect(url_for("admin.dashboard"))
     if new_title == subj.title:
-        flash("השם החדש זהה לשם הקיים", "error")
+        flash("The new name is identical to the current name.", "error")
         return redirect(url_for("admin.dashboard"))
 
     result = rename_subject_by_id(subject_id, new_title)
     old_title = result["old_title"]
     target = result["subject"]
     note = (
-        f'מיזוג נושאים: "{old_title}" ← מוזג לתוך "{new_title}"'
-        if result["merged_into"] else f'שינוי שם נושא: "{old_title}" ← "{new_title}"'
+        f'Subject merge: "{old_title}" merged into "{new_title}"'
+        if result["merged_into"] else f'Subject renamed: "{old_title}" to "{new_title}"'
     )
     for q in result["questions"]:
         previous = result["previous"][q.id]
@@ -363,9 +356,9 @@ def rename_subject():
 
     db.session.commit()
     if result["merged_into"]:
-        flash(f'{len(result["questions"])} שאלות מוזגו: "{old_title}" ← "{new_title}"', "success")
+        flash(f'{len(result["questions"])} questions merged into "{new_title}".', "success")
     else:
-        flash(f'{len(result["questions"])} שאלות עודכנו: "{old_title}" ← "{new_title}"', "success")
+        flash(f'{len(result["questions"])} questions updated.', "success")
     return redirect(url_for("admin.dashboard"))
 
 
@@ -425,27 +418,27 @@ def update_user_role(user_id):
     action = request.form.get("action", "")
 
     if role not in APP_ROLES:
-        flash("תפקיד לא תקין", "error")
+        flash("Invalid role.", "error")
         return redirect(url_for("admin.users"))
 
     if action == "add":
         if not UserRole.query.filter_by(user_id=target.id, role=role).first():
             db.session.add(UserRole(user_id=target.id, role=role))
             db.session.commit()
-        flash(f'התפקיד "{role}" הוענק ל-{target.email}', "success")
+        flash(f'Role "{role}" added to {target.email}.', "success")
     elif action == "remove":
         from protected_admin import is_protected_admin
         if role == "super_admin" and is_protected_admin(target):
-            flash("אי אפשר להסיר את תפקיד super_admin מחשבון הבעלים המוגן", "error")
+            flash("The protected owner must remain a super-admin.", "error")
             return redirect(url_for("admin.users"))
         if target.id == actor.id and role == "super_admin":
-            flash("אי אפשר להסיר את תפקיד super_admin מעצמך", "error")
+            flash("You cannot remove your own super-admin role.", "error")
             return redirect(url_for("admin.users"))
         UserRole.query.filter_by(user_id=target.id, role=role).delete()
         db.session.commit()
-        flash(f'התפקיד "{role}" הוסר מ-{target.email}', "success")
+        flash(f'Role "{role}" removed from {target.email}.', "success")
     else:
-        flash("פעולה לא תקינה", "error")
+        flash("Invalid action.", "error")
 
     return redirect(url_for("admin.users"))
 
@@ -519,12 +512,12 @@ def import_questions():
         if action == "preview":
             file = request.files.get("file")
             if not file:
-                flash("לא נבחר קובץ", "error")
+                flash("Choose a JSON file.", "error")
                 return render_template("admin/import.html", rows=None)
             try:
                 parsed = json.loads(file.read().decode("utf-8"))
             except (ValueError, UnicodeDecodeError) as e:
-                flash("קובץ JSON שגוי: " + str(e), "error")
+                flash("Invalid JSON file: " + str(e), "error")
                 return render_template("admin/import.html", rows=None)
             arr = _extract_questions(parsed)
             rows = [normalize_imported_question(q) for q in arr]
@@ -575,7 +568,7 @@ def import_questions():
                     db.session.rollback()
                     failed += 1
             db.session.commit()
-            flash(f"יובאו {inserted} שאלות" + (f" ({failed} נכשלו)" if failed else ""), "success")
+            flash(f"Imported {inserted} questions" + (f" ({failed} failed)" if failed else ""), "success")
             return redirect(url_for("admin.import_questions"))
 
     return render_template("admin/import.html", rows=None)
@@ -637,6 +630,8 @@ def validate_redirect():
 @staff_required
 def approve_all_pending():
     user = current_user()
+    if not (user.has_role("validator") or user.has_role("super_admin")):
+        return redirect(url_for("admin.denied"))
     pending = Question.query.filter_by(status="pending").all()
     for q in pending:
         previous = q.as_dict()
@@ -646,12 +641,12 @@ def approve_all_pending():
             QuestionEdit(
                 question_id=q.id, editor_id=user.id, action="approved",
                 previous_content=previous, new_content=q.as_dict(),
-                note="אישור גורף של כל השאלות הממתינות",
+                note="Bulk approval of all pending questions",
             )
         )
         _resolve_open_reports(q.id, user.id, "dismissed")
     db.session.commit()
-    flash(f"{len(pending)} שאלות אושרו", "success")
+    flash(f"Approved {len(pending)} questions.", "success")
     return redirect(url_for("admin.questions", status="pending"))
 
 
@@ -681,6 +676,8 @@ def confirm_report(report_id):
     MONDE (status -> "a_revoir"), elle rejoint la file "à revoir" de
     /admin/questions pour correction/rejet."""
     user = current_user()
+    if not (user.has_role("validator") or user.has_role("super_admin")):
+        return redirect(url_for("admin.denied"))
     rep = QuestionReport.query.get_or_404(report_id)
     q = Question.query.get_or_404(rep.question_id)
 
@@ -695,7 +692,7 @@ def confirm_report(report_id):
         )
     _resolve_open_reports(q.id, user.id, "confirmed")
     db.session.commit()
-    flash("הדיווח אושר — השאלה הוסרה לכולם וממתינה לטיפול", "success")
+    flash("Report confirmed. The question is unpublished and flagged for review.", "success")
     return redirect(url_for("admin.reports"))
 
 
@@ -705,12 +702,14 @@ def dismiss_report(report_id):
     """Le signalement n'est pas justifié : la question redevient visible pour
     le seul étudiant qui l'avait signalée."""
     user = current_user()
+    if not (user.has_role("validator") or user.has_role("super_admin")):
+        return redirect(url_for("admin.denied"))
     rep = QuestionReport.query.get_or_404(report_id)
     rep.status = "dismissed"
     rep.resolved_by = user.id
     rep.resolved_at = datetime.utcnow()
     db.session.commit()
-    flash("הדיווח נדחה — השאלה גלויה שוב למי שדיווח", "success")
+    flash("Report dismissed. The question is visible to the student again.", "success")
     return redirect(url_for("admin.reports"))
 
 
@@ -756,13 +755,13 @@ def questions():
         try:
             query = query.filter_by(siman=int(siman_filter))
         except ValueError:
-            flash("סימן חייב להיות מספר", "error")
+            flash("Siman must be a number.", "error")
             siman_filter = ""
     if seif_filter:
         try:
             query = query.filter_by(seif=int(seif_filter))
         except ValueError:
-            flash("סעיף חייב להיות מספר", "error")
+            flash("Seif must be a number.", "error")
             seif_filter = ""
     if search:
         query = query.outerjoin(Subject, Subject.id == Question.subject_id).filter(
@@ -781,6 +780,18 @@ def questions():
     if all_questions:
         selected = next((q for q in all_questions if q.id == selected_id), all_questions[0])
 
+    selected_stats = None
+    if selected:
+        stats_query = UserAnswer.query.filter_by(question_id=selected.id)
+        total = stats_query.count()
+        correct = stats_query.filter_by(is_correct=True).count()
+        selected_stats = {
+            "answers": total,
+            "accuracy": round(correct * 100 / total) if total else None,
+            "avg_time": int(stats_query.with_entities(func.avg(UserAnswer.response_time_ms)).scalar() or 0),
+            "reports": QuestionReport.query.filter_by(question_id=selected.id, status="open").count(),
+        }
+
     filters = {
         "status": status, "type": qtype, "parcours": parcours_filter,
         "q": search, "siman": siman_filter, "seif": seif_filter, "tag": tag_filter,
@@ -793,6 +804,15 @@ def questions():
         question_types=QUESTION_TYPES,
         type_label=TYPE_LABEL,
         parcours_labels=PARCOURS_LABELS,
+        selected_stats=selected_stats,
+        work_counts={
+            "pending": Question.query.filter_by(status="pending").count(),
+            "flagged": Question.query.filter_by(status="a_revoir").count(),
+            "reports": QuestionReport.query.filter_by(status="open").count(),
+            "suggestions": QuestionSuggestion.query.filter_by(status="open").count(),
+        },
+        can_edit=current_user().has_role("super_admin"),
+        can_review=current_user().has_role("validator") or current_user().has_role("super_admin"),
     )
 
 
@@ -804,6 +824,23 @@ def edit_question(qid):
     action = request.form.get("action", "save")
     note = (request.form.get("note") or "").strip()
     previous = q.as_dict()
+
+    if not (user.has_role("validator") or user.has_role("super_admin")):
+        return redirect(url_for("admin.denied"))
+
+    if not user.has_role("super_admin") and action == "save":
+        flash("Validators can suggest changes from the student reader; only a super-admin can edit question content.", "error")
+        return redirect(url_for("admin.questions", id=qid))
+
+    if not user.has_role("super_admin") and action == "approve":
+        q.status = "approved"
+        q.validated_by = user.id
+        db.session.add(QuestionEdit(question_id=q.id, editor_id=user.id, action="approved",
+                                    previous_content=previous, new_content=q.as_dict()))
+        _resolve_open_reports(q.id, user.id, "dismissed")
+        db.session.commit()
+        flash("Question approved.", "success")
+        return redirect(url_for("admin.questions", id=qid))
 
     redirect_params = {
         "status": request.form.get("filter_status", ""),
@@ -818,7 +855,7 @@ def edit_question(qid):
 
     if action == "reject":
         if not note:
-            flash("הערה דרושה לדחייה", "error")
+            flash("A review note is required to reject a question.", "error")
             return redirect(url_for("admin.questions", **redirect_params))
         q.status = "rejected"
         q.validated_by = user.id
@@ -831,12 +868,12 @@ def edit_question(qid):
         )
         _resolve_open_reports(q.id, user.id, "confirmed")
         db.session.commit()
-        flash("נדחתה", "success")
+        flash("Question rejected.", "success")
         return redirect(url_for("admin.questions", **redirect_params))
 
     if action == "flag":
         if not note:
-            flash("הערה דרושה לסימון לבדיקה", "error")
+            flash("A review note is required to flag a question.", "error")
             return redirect(url_for("admin.questions", **redirect_params))
         q.status = "a_revoir"
         q.validated_by = user.id
@@ -848,7 +885,7 @@ def edit_question(qid):
             )
         )
         db.session.commit()
-        flash("השאלה סומנה לבדיקה", "success")
+        flash("Question flagged for review.", "success")
         return redirect(url_for("admin.questions", **redirect_params))
 
     question_type = request.form.get("question_type") or q.question_type
@@ -898,10 +935,10 @@ def edit_question(qid):
         q.status = "approved"
         q.validated_by = user.id
         audit_action = "approved"
-        flash("השאלה אושרה", "success")
+        flash("Question published.", "success")
     else:
         audit_action = "edited"
-        flash("נשמר", "success")
+        flash("Question saved.", "success")
 
     db.session.add(
         QuestionEdit(
@@ -924,7 +961,7 @@ def topics():
             request.form.getlist("siman_topic"),
         ))
         save_topics(siman_rows)
-        flash("הנושאים נשמרו", "success")
+        flash("Learning structure saved.", "success")
         return redirect(url_for("admin.topics"))
 
     rows = (
@@ -965,7 +1002,7 @@ def reset_db():
         return redirect(url_for("admin.denied"))
     confirm = (request.form.get("confirm") or "").strip()
     if confirm != "RESET":
-        flash("הקלד RESET כדי לאשר את האיפוס", "error")
+        flash("Type RESET to confirm the reset.", "error")
         return redirect(url_for("admin.dashboard"))
     from protected_admin import restore_protected_admin, snapshot_protected_admin
     owner_snapshot = snapshot_protected_admin()
@@ -974,5 +1011,5 @@ def reset_db():
     db.create_all()
     restore_protected_admin(owner_snapshot)
     logout_user()
-    flash("בסיס הנתונים אופס. חשבון הבעלים המוגן נשמר; יש להתחבר מחדש.", "success")
+    flash("Database reset. The protected owner account was preserved; sign in again.", "success")
     return redirect(url_for("admin.login"))

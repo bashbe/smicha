@@ -1,41 +1,7 @@
 {% extends "admin/_layout.html" %}
-{% block title %}נושאי סימנים — ניהול{% endblock %}
+{% block title %}Structure — Kinyan Admin{% endblock %}
 {% block content %}
-<div class="stack">
-  <div>
-    <h1 class="text-2xl bold">נושאי סימנים</h1>
-    <p class="text-sm muted">השלם או ערוך את שם הנושא המוצג בעמוד "מסלול" מתחת למספר כל סימן. הרשימה כוללת רק סימנים שכבר יש להם שאלות.</p>
-  </div>
-
-  {% if not groups %}
-    <div class="card"><p class="center-text text-sm muted">עוד אין שאלות במערכת.</p></div>
-  {% else %}
-  <form method="post" class="stack">
-    {% for g in groups %}
-    <div class="card">
-      <h2 class="text-lg semibold" style="margin-bottom:0.75rem;">{{ g.label }}</h2>
-      <div class="stack-sm">
-        {% for s in g.simanim %}
-        <div class="card" style="background:color-mix(in srgb, var(--surface), var(--border) 25%);">
-          <div class="row gap-2" style="align-items:center;flex-wrap:wrap;">
-            <span class="badge">סי' {{ s.siman }}</span>
-            <input type="hidden" name="siman_parcours" value="{{ g.parcours }}" />
-            <input type="hidden" name="siman_num" value="{{ s.siman }}" />
-            <input name="siman_topic" class="flex-1" style="min-width:16rem;" placeholder="נושא הסימן" value="{{ s.topic }}" />
-          </div>
-
-          {% if s.seifim %}
-          <div class="row gap-1 text-xs muted" style="flex-wrap:wrap;margin-top:0.5rem;">
-            {% for sf in s.seifim %}<span class="badge">סע' {{ sf }}</span>{% endfor %}
-          </div>
-          {% endif %}
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-    {% endfor %}
-    <div><button type="submit" class="btn btn-success">💾 שמור נושאים</button></div>
-  </form>
-  {% endif %}
-</div>
+<div class="admin-page-header"><div><p class="admin-eyebrow">CONTENT</p><h1>Learning structure</h1><p>Manage the chapter titles shown to students. Question subjects are edited in the question bank.</p></div></div>
+<nav class="admin-content-tabs"><a href="{{ url_for('admin.questions') }}">Questions</a><a href="{{ url_for('admin.reports') }}">Reports</a><a href="{{ url_for('admin.suggestions') }}">Suggestions</a><a class="active" href="{{ url_for('admin.topics') }}">Structure</a></nav>
+{% if groups %}<form method="post" class="stack">{% for g in groups %}<section class="admin-panel"><div class="admin-section-heading"><div><h2>{{ g.label }}</h2><p>{{ g.simanim|length }} chapters</p></div></div><div class="stack-sm">{% for s in g.simanim %}<div class="admin-form-grid" style="grid-template-columns:6rem 1fr;align-items:end"><div><label>Siman</label><input value="{{ s.siman }}" disabled /></div><div><label>Student-facing chapter title</label><input type="hidden" name="siman_parcours" value="{{ g.parcours }}"/><input type="hidden" name="siman_num" value="{{ s.siman }}"/><input dir="rtl" name="siman_topic" value="{{ s.topic }}" placeholder="Chapter title"/></div></div>{% endfor %}</div></section>{% endfor %}<div><button class="admin-btn admin-btn-primary">Save structure</button></div></form>{% else %}<div class="admin-panel admin-empty">No chapters are available yet.</div>{% endif %}
 {% endblock %}

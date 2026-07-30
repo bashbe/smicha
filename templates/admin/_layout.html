@@ -1,54 +1,45 @@
 {% extends "base.html" %}
 {% block body %}
-<div style="min-height:calc(var(--vh, 1vh) * 100);background:rgba(45,63,85,0.3);">
-  <header style="border-bottom:1px solid var(--border);background:var(--card);">
-    <div class="container-wide row between" style="padding-top:0.75rem;padding-bottom:0.75rem;">
-      <div class="row gap-4">
-        <a href="{{ url_for('admin.dashboard') }}" class="row gap-1 bold"><span class="primary">🛡️</span> ניהול קניין הלכה</a>
-        <nav class="row gap-1 admin-nav-items">
-        {% set items = [('admin.dashboard','לוח בקרה'),('admin.questions','בנק השאלות'),('admin.suggestions','הצעות' ~ (' (' ~ open_suggestions_count ~ ')' if open_suggestions_count else '')),('admin.reports','דיווחים' ~ (' (' ~ open_reports_count ~ ')' if open_reports_count else '')),('admin.analytics','נתונים'),('admin.import_questions','ייבוא'),('admin.topics','מבנה'),('admin.users','משתמשים')] %}
-          {% for ep, label in items %}
-          <a href="{{ url_for(ep) }}" class="btn {{ 'btn-primary' if request.endpoint == ep else '' }}" style="{{ '' if request.endpoint == ep else 'background:none;color:var(--muted-foreground);' }}">{{ label }}</a>
-          {% endfor %}
-        </nav>
-      </div>
-      <div class="row gap-2">
-        <button id="hamburger-btn" class="admin-hamburger" aria-label="תפריט">☰</button>
-        <span class="text-xs muted admin-email">{{ current_user.email if current_user }}</span>
-        <a href="{{ url_for('auth.logout') }}" class="btn" style="background:none;color:var(--muted-foreground);">🚪 התנתק</a>
-      </div>
-    </div>
-  </header>
-  <div id="nav-drawer">
-    <div class="drawer-panel">
-      <div style="padding:1rem;border-bottom:1px solid var(--border);font-weight:600;">תפריט ניהול</div>
-      <nav style="display:flex;flex-direction:column;padding:0.5rem 0;">
-        {% set items = [('admin.dashboard','🏠 לוח בקרה'),('admin.questions','📋 בנק השאלות'),('admin.suggestions','💡 הצעות' ~ (' (' ~ open_suggestions_count ~ ')' if open_suggestions_count else '')),('admin.reports','🚩 דיווחים' ~ (' (' ~ open_reports_count ~ ')' if open_reports_count else '')),('admin.analytics','📊 נתונים'),('admin.import_questions','⬆️ ייבוא'),('admin.topics','🏷️ מבנה'),('admin.users','👥 משתמשים')] %}
-        {% for ep, label in items %}
-        <a href="{{ url_for(ep) }}" style="padding:0.75rem 1rem;color:var(--foreground);text-decoration:none;{{ 'font-weight:600;background:var(--accent-dim);' if request.endpoint == ep else '' }}">{{ label }}</a>
-        {% endfor %}
-      </nav>
-    </div>
-  </div>
-  <script>
-    (function(){
-      var drawer = document.getElementById('nav-drawer');
-      var btn = document.getElementById('hamburger-btn');
-      if (!btn || !drawer) return;
-      btn.onclick = function(){ drawer.classList.toggle('open'); };
-      drawer.addEventListener('click', function(e){ if (e.target === drawer) drawer.classList.remove('open'); });
-      document.addEventListener('keydown', function(e){ if (e.key === 'Escape') drawer.classList.remove('open'); });
-      drawer.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', function(){ drawer.classList.remove('open'); }); });
-    })();
-  </script>
-  <main class="container-wide">
-    {% include "_flash.html" %}
-    {% block content %}{% endblock %}
-      </main>
+<div class="admin-shell" dir="ltr">
+  <aside class="admin-sidebar" id="admin-sidebar">
+    <a href="{{ url_for('admin.dashboard') }}" class="admin-brand"><span class="admin-brand-mark">K</span><span>Kinyan Admin</span></a>
+    <nav class="admin-primary-nav" aria-label="Admin navigation">
+      {% set content_endpoints = ['admin.questions','admin.import_questions','admin.topics','admin.reports','admin.suggestions','admin.analytics'] %}
+      <a href="{{ url_for('admin.dashboard') }}" class="{{ 'active' if request.endpoint == 'admin.dashboard' }}"><span>Overview</span></a>
+      <a href="{{ url_for('admin.questions') }}" class="{{ 'active' if request.endpoint in content_endpoints }}"><span>Content</span>{% if open_reports_count or open_suggestions_count %}<span class="admin-nav-count">{{ open_reports_count + open_suggestions_count }}</span>{% endif %}</a>
+      <a href="{{ url_for('admin.users') }}" class="{{ 'active' if request.endpoint in ['admin.users','admin.user_detail'] }}"><span>Users</span></a>
+    </nav>
+    <div class="admin-sidebar-bottom">
+      <a href="{{ url_for('student.home') }}">Open student app</a>
       {% if current_user and current_user.has_role('super_admin') %}
-      <footer class="admin-shortcuts card text-sm muted" style="margin-top:1rem;">
-        קיצורי דרך: <a href="{{ url_for('admin.backups') }}">גיבויים</a> · <a href="{{ url_for('admin.data_explorer') }}">סייר נתונים</a> · <a href="{{ url_for('admin.api_security') }}">API חירום</a>
-      </footer>
+      <details class="admin-system-menu" {{ 'open' if request.endpoint in ['admin.backups','admin.data_explorer','admin.api_security'] }}>
+        <summary>System</summary>
+        <a href="{{ url_for('admin.backups') }}">Backups</a>
+        <a href="{{ url_for('admin.data_explorer') }}">Database explorer</a>
+        <a href="{{ url_for('admin.api_security') }}">Emergency API</a>
+      </details>
       {% endif %}
+      <div class="admin-account"><span>{{ current_user.email if current_user }}</span><a href="{{ url_for('auth.logout') }}">Sign out</a></div>
+    </div>
+  </aside>
+  <div class="admin-page">
+    <header class="admin-mobile-header"><a href="{{ url_for('admin.dashboard') }}" class="admin-brand"><span class="admin-brand-mark">K</span><span>Kinyan Admin</span></a><button id="admin-menu-button" type="button" aria-label="Open menu">Menu</button></header>
+    <main class="admin-main">
+      {% include "_flash.html" %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  <button class="admin-sidebar-scrim" id="admin-sidebar-scrim" aria-label="Close menu"></button>
 </div>
+<script>
+  (function () {
+    var shell = document.querySelector('.admin-shell');
+    var button = document.getElementById('admin-menu-button');
+    var scrim = document.getElementById('admin-sidebar-scrim');
+    function closeMenu(){ shell.classList.remove('menu-open'); }
+    if (button) button.addEventListener('click', function(){ shell.classList.toggle('menu-open'); });
+    if (scrim) scrim.addEventListener('click', closeMenu);
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeMenu(); });
+  })();
+</script>
 {% endblock %}

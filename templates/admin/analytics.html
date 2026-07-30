@@ -1,11 +1,7 @@
 {% extends "admin/_layout.html" %}
-{% block title %}{{ title }} — ניהול{% endblock %}
+{% block title %}Analytics — Kinyan Admin{% endblock %}
 {% block content %}
-<div class="stack">
- <div><h1 class="text-2xl bold">{{ title }}</h1><p class="text-sm muted">מדדים מבוססי תשובות אמיתיות; כל כרטיס מוביל לבנק השאלות.</p></div>
- <div class="grid grid-3">
- {% for label,value in [('שאלות',stats.questions),('תשובות',stats.answers),('דיוק', (stats.accuracy ~ '%') if stats.accuracy is not none else '—'),('זמן ממוצע',stats.avg_time ~ ' ms'),('דיווחים פתוחים',stats.reports),('הצעות פתוחות',stats.suggestions)] %}<div class="card"><span class="muted text-sm">{{ label }}</span><strong class="text-2xl">{{ value }}</strong></div>{% endfor %}
- </div>
- <div class="card" style="overflow-x:auto"><table><thead><tr><th>שאלה</th><th>תשובות</th><th>דיוק</th><th></th></tr></thead><tbody>{% for q,count,accuracy in rows %}<tr><td>{{ q.text|truncate(80) }}</td><td>{{ count }}</td><td>{{ ((accuracy or 0)*100)|round|int }}%</td><td><a href="{{ url_for('admin.analytics', scope='question', id=q.id) }}">ניתוח</a> · <a href="{{ url_for('admin.questions', id=q.id) }}">עריכה</a></td></tr>{% else %}<tr><td colspan="4" class="muted">אין עדיין נתונים בטווח זה.</td></tr>{% endfor %}</tbody></table></div>
-</div>
+<div class="admin-page-header"><div><p class="admin-eyebrow">CONTENT</p><h1>{{ title }}</h1><p>Performance signals used to identify unclear or difficult content.</p></div><a class="admin-btn" href="{{ url_for('admin.questions') }}">Back to content</a></div>
+<div class="admin-metric-grid"><div class="admin-metric"><span>Questions</span><strong>{{ stats.questions }}</strong></div><div class="admin-metric"><span>Answers</span><strong>{{ stats.answers }}</strong></div><div class="admin-metric"><span>Accuracy</span><strong>{{ stats.accuracy ~ '%' if stats.accuracy is not none else '—' }}</strong></div><div class="admin-metric"><span>Average response time</span><strong>{{ stats.avg_time ~ ' ms' if stats.avg_time else '—' }}</strong></div></div>
+<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Question</th><th>Answers</th><th>Accuracy</th><th></th></tr></thead><tbody>{% for q,count,accuracy in rows %}<tr><td dir="rtl">{{ q.text|truncate(100) }}</td><td>{{ count }}</td><td>{{ ((accuracy or 0)*100)|round|int }}%</td><td><a class="admin-text-link" href="{{ url_for('admin.questions',id=q.id) }}">Open →</a></td></tr>{% else %}<tr><td colspan="4">No answer data for this selection.</td></tr>{% endfor %}</tbody></table></div>
 {% endblock %}

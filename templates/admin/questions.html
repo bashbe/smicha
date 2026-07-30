@@ -1,199 +1,93 @@
 {% extends "admin/_layout.html" %}
-{% block title %}שאלות — ניהול{% endblock %}
+{% block title %}Content — Kinyan Admin{% endblock %}
 {% block content %}
-
-{# ── Filter bar ── #}
-<div class="admin-filter-header">
-  <div>
-    <h1 class="text-2xl bold">שאלות</h1>
-    <p class="text-sm muted">{{ questions|length }} שאלות תואמות</p>
-  </div>
-  <div class="admin-filter-actions">
-    <form method="get" class="admin-filter-form">
-      <select name="status" onchange="this.form.submit()" class="admin-filter-status">
-        <option value="" {{ 'selected' if not filters.status }}>כל הסטטוסים</option>
-        {% for v,l in [('pending','ממתינות'),('a_revoir','לתיקון'),('approved','מאושרות'),('rejected','נדחו')] %}
-        <option value="{{ v }}" {{ 'selected' if filters.status == v }}>{{ l }}</option>
-        {% endfor %}
-      </select>
-      <select name="type" onchange="this.form.submit()" class="admin-filter-type">
-        <option value="" {{ 'selected' if not filters.type }}>כל הסוגים</option>
-        {% for t in question_types %}
-        <option value="{{ t }}" {{ 'selected' if filters.type == t }}>{{ type_label.get(t, t) }}</option>
-        {% endfor %}
-      </select>
-      <select name="parcours" onchange="this.form.submit()" class="admin-filter-parcours">
-        <option value="" {{ 'selected' if not filters.parcours }}>כל הפרוסים</option>
-        {% for code, label in parcours_labels.items() %}
-        <option value="{{ code }}" {{ 'selected' if filters.parcours == code }}>{{ label }}</option>
-        {% endfor %}
-      </select>
-      <input name="siman" type="number" min="1" value="{{ filters.siman }}" placeholder="סימן…" class="admin-filter-num" />
-      <input name="seif" type="number" min="1" value="{{ filters.seif }}" placeholder="סעיף…" class="admin-filter-num" />
-      <input name="tag" value="{{ filters.tag }}" placeholder="תגית…" class="admin-filter-tag" />
-      <input name="q" value="{{ filters.q }}" placeholder="חיפוש נושא / טקסט…" class="admin-filter-search" />
-      <button type="submit" class="btn btn-outline">חפש</button>
-      {% if filters.status or filters.type or filters.parcours or filters.q or filters.siman or filters.seif or filters.tag %}
-      <a href="{{ url_for('admin.questions') }}" class="btn admin-filter-clear">× נקה</a>
-      {% endif %}
-    </form>
-    {% if filters.status == 'pending' and questions %}
-    <form method="post" action="{{ url_for('admin.approve_all_pending') }}" class="admin-approve-all-form"
-          onsubmit="return confirm('לאשר את כל {{ questions|length }} השאלות הממתינות?');">
-      <button type="submit" class="btn btn-success">✓ אשר הכל ({{ questions|length }})</button>
-    </form>
-    {% endif %}
-  </div>
+<div class="admin-page-header">
+  <div><p class="admin-eyebrow">CONTENT</p><h1>Question bank</h1><p>Review, find and edit the learning content in one place.</p></div>
+  <a href="{{ url_for('admin.import_questions') }}" class="admin-btn admin-btn-primary">Import questions</a>
 </div>
 
-<div class="admin-tab-bar" data-has-selection="{{ 'true' if selected else 'false' }}">
-  <button class="tab-btn active" data-target="list">📋 רשימה</button>
-  <button class="tab-btn {{ 'active' if selected else '' }}" data-target="editor">✏️ עריכה</button>
-</div>
+<nav class="admin-content-tabs" aria-label="Content tools">
+  <a class="active" href="{{ url_for('admin.questions') }}">Questions</a>
+  <a href="{{ url_for('admin.questions', status='pending') }}">Pending <span class="admin-nav-count">{{ work_counts.pending }}</span></a>
+  <a href="{{ url_for('admin.questions', status='a_revoir') }}">Flagged <span class="admin-nav-count">{{ work_counts.flagged }}</span></a>
+  <a href="{{ url_for('admin.reports') }}">Reports <span class="admin-nav-count">{{ work_counts.reports }}</span></a>
+  <a href="{{ url_for('admin.suggestions') }}">Suggestions <span class="admin-nav-count">{{ work_counts.suggestions }}</span></a>
+  <a href="{{ url_for('admin.topics') }}">Structure</a>
+</nav>
 
-<div class="grid admin-two-col" style="align-items:start;gap:1rem;">
+<form method="get" class="admin-toolbar">
+  <input class="search" name="q" value="{{ filters.q }}" placeholder="Search question text or subject…" />
+  <select name="status" aria-label="Status">
+    <option value="">All statuses</option>
+    {% for value,label in [('pending','Pending'),('a_revoir','Flagged'),('approved','Published'),('rejected','Rejected')] %}<option value="{{ value }}" {{ 'selected' if filters.status == value }}>{{ label }}</option>{% endfor %}
+  </select>
+  <select name="parcours" aria-label="Learning path">
+    <option value="">All paths</option>{% for code,label in parcours_labels.items() %}<option value="{{ code }}" {{ 'selected' if filters.parcours == code }}>{{ label }}</option>{% endfor %}
+  </select>
+  <input name="siman" type="number" min="1" value="{{ filters.siman }}" placeholder="Siman" style="width:5.5rem" />
+  <button class="admin-btn">Filter</button>
+  {% if filters.status or filters.parcours or filters.q or filters.siman or filters.type or filters.seif or filters.tag %}<a class="admin-btn" href="{{ url_for('admin.questions') }}">Clear</a>{% endif %}
+</form>
 
-  {# ── Sidebar: question list ── #}
-  <aside class="card" data-panel="list" style="padding:0;max-height:80vh;overflow-y:auto;">
-    {% if not questions %}
-      <p class="center-text text-sm muted" style="padding:1.5rem;">אין שאלות תואמות</p>
-    {% else %}
-      {% for q in questions %}
-      {% set is_sel = selected and selected.id == q.id %}
-      <a href="{{ url_for('admin.questions', id=q.id, status=filters.status, type=filters.type, parcours=filters.parcours, q=filters.q, siman=filters.siman, seif=filters.seif, tag=filters.tag) }}"
-         style="display:block;border-bottom:1px solid var(--border);padding:0.625rem 0.75rem;text-align:right;{{ 'background:rgba(99,102,241,0.12);' if is_sel }}">
-        <div class="row between" style="margin-bottom:0.25rem;gap:0.5rem;">
-          {% if q.status == 'approved' %}
-          <span class="badge" style="background:rgba(34,197,94,0.15);color:#22c55e;font-size:0.65rem;">מאושרת</span>
-          {% elif q.status == 'rejected' %}
-          <span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;font-size:0.65rem;">נדחתה</span>
-          {% elif q.status == 'a_revoir' %}
-          <span class="badge" style="background:rgba(249,115,22,0.15);color:#f97316;font-size:0.65rem;">לתיקון</span>
-          {% else %}
-          <span class="badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;font-size:0.65rem;">ממתינה</span>
-          {% endif %}
-          <span class="badge text-xs">{{ type_label.get(q.question_type, '—') }}</span>
-        </div>
-        <div class="semibold text-sm" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;">{{ q.text or '— ללא טקסט —' }}</div>
-        <div class="row gap-1" style="margin-top:0.3rem;flex-wrap:wrap;">
-          {% if q.subject %}<span class="badge">{{ q.subject.title }}</span>{% endif %}
-          {% if q.siman is not none %}<span class="badge">סי' {{ q.siman }}</span>{% endif %}
-          {% if q.seif is not none %}<span class="badge">סע' {{ q.seif }}</span>{% endif %}
-          <span class="badge">קו' {{ q.difficulty }}</span>
-          {% for t in (q.tags or []) %}<span class="badge">#{{ t }}</span>{% endfor %}
-        </div>
-      </a>
-      {% endfor %}
-    {% endif %}
+<div class="admin-content-layout">
+  <aside class="admin-question-list" aria-label="Questions">
+    {% for q in questions %}
+    <a href="{{ url_for('admin.questions', id=q.id, status=filters.status, parcours=filters.parcours, q=filters.q, siman=filters.siman) }}" class="admin-question-row {{ 'active' if selected and selected.id == q.id }}">
+      <span class="admin-status {{ q.status }}">{{ {'pending':'Pending','approved':'Published','a_revoir':'Flagged','rejected':'Rejected'}.get(q.status,q.status) }}</span>
+      <p dir="rtl">{{ q.text or 'Untitled question' }}</p>
+      <div class="admin-question-meta"><span>{{ type_label.get(q.question_type, q.question_type) }}</span>{% if q.subject %}<span dir="rtl">{{ q.subject.title }}</span>{% endif %}{% if q.siman %}<span>Siman {{ q.siman }}</span>{% endif %}</div>
+    </a>
+    {% else %}<p class="admin-empty" style="padding:1rem">No questions match these filters.</p>{% endfor %}
   </aside>
 
-  {# ── Editor panel ── #}
-  <section class="card" data-panel="editor">
-    {% if not selected %}
-      <p class="center-text muted" style="padding:3rem 0;">בחר שאלה מהרשימה</p>
-    {% else %}
-      {% set payload = selected.payload or {} %}
-      {% set qtype = payload.get('type') or selected.question_type or 'multiple_choice' %}
-      {% set options_list = payload.get('options') or [{}, {}, {}, {}] %}
-      {% set cur_sections = (payload.exam_section if payload.exam_section is iterable and payload.exam_section is not string else [payload.exam_section]) if payload.exam_section else selected.section_list() %}
+  <section class="admin-editor">
+    {% if not selected %}<p class="admin-empty">Select a question to edit it.</p>{% else %}
+    {% set payload = selected.payload or {} %}
+    {% set qtype = payload.get('type') or selected.question_type or 'multiple_choice' %}
+    {% set options_list = payload.get('options') or [{}, {}, {}, {}] %}
+    {% set cur_sections = (payload.exam_section if payload.exam_section is iterable and payload.exam_section is not string else [payload.exam_section]) if payload.exam_section else selected.section_list() %}
+    <div class="admin-editor-header"><div><span class="admin-status {{ selected.status }}">{{ {'pending':'Pending review','approved':'Published','a_revoir':'Flagged','rejected':'Rejected'}.get(selected.status,selected.status) }}</span></div><a class="admin-text-link" href="{{ url_for('admin.analytics', scope='question', id=selected.id) }}">Full analytics →</a></div>
+    <div class="admin-editor-stats">
+      <div class="admin-editor-stat"><span>Answers</span><strong>{{ selected_stats.answers }}</strong></div>
+      <div class="admin-editor-stat"><span>Accuracy</span><strong>{{ selected_stats.accuracy ~ '%' if selected_stats.accuracy is not none else '—' }}</strong></div>
+      <div class="admin-editor-stat"><span>Average time</span><strong>{{ selected_stats.avg_time ~ ' ms' if selected_stats.avg_time else '—' }}</strong></div>
+      <div class="admin-editor-stat"><span>Open reports</span><strong>{{ selected_stats.reports }}</strong></div>
+    </div>
 
-      <form method="post" action="{{ url_for('admin.edit_question', qid=selected.id) }}" id="qform" class="stack-sm">
-        {# preserve filters for redirect #}
-        <input type="hidden" name="action" value="save" />
-        <input type="hidden" name="filter_status" value="{{ filters.status }}" />
-        <input type="hidden" name="filter_type" value="{{ filters.type }}" />
-        <input type="hidden" name="filter_parcours" value="{{ filters.parcours }}" />
-        <input type="hidden" name="filter_q" value="{{ filters.q }}" />
-        <input type="hidden" name="filter_siman" value="{{ filters.siman }}" />
-        <input type="hidden" name="filter_seif" value="{{ filters.seif }}" />
-        <input type="hidden" name="filter_tag" value="{{ filters.tag }}" />
-
-        {# ── Status + type row ── #}
-        <div class="row gap-2 text-xs" style="flex-wrap:wrap;">
-          {% if selected.status == 'approved' %}
-          <span class="pill" style="background:rgba(34,197,94,0.2);color:#22c55e;">מאושרת</span>
-          {% elif selected.status == 'rejected' %}
-          <span class="pill" style="background:rgba(239,68,68,0.2);color:#ef4444;">נדחתה</span>
-          {% elif selected.status == 'a_revoir' %}
-          <span class="pill" style="background:rgba(249,115,22,0.2);color:#f97316;">לתיקון</span>
-          {% else %}
-          <span class="pill" style="background:rgba(245,158,11,0.2);color:#f59e0b;">ממתינה לאימות</span>
-          {% endif %}
-          {% if selected.source_ref %}<span class="muted">מזהה מקור: {{ selected.source_ref }}</span>{% endif %}
-          <a class="muted" href="{{ url_for('admin.analytics', scope='question', id=selected.id) }}">📊 נתוני השאלה</a>
+    <form method="post" action="{{ url_for('admin.edit_question', qid=selected.id) }}" id="qform">
+      <input type="hidden" name="action" value="save" />
+      {% for key in ['status','type','parcours','q','siman','seif','tag'] %}<input type="hidden" name="filter_{{ key }}" value="{{ filters[key] }}" />{% endfor %}
+      <fieldset style="border:0;padding:0;margin:0" {{ 'disabled' if not can_edit }}>
+      <div class="admin-form-section" style="border-top:0;padding-top:0">
+        <h3>Classification</h3>
+        <div class="admin-form-grid">
+          <div><label>Question type</label><select name="question_type" id="qtype">{% for t in question_types %}<option value="{{ t }}" {{ 'selected' if t == qtype }}>{{ type_label.get(t,t) }}</option>{% endfor %}</select></div>
+          <div><label>Learning path</label><select name="parcours">{% for code,label in parcours_labels.items() %}<option value="{{ code }}" {{ 'selected' if selected.parcours == code }}>{{ label }}</option>{% endfor %}</select></div>
+          <div><label>Difficulty</label><select name="difficulty">{% for n in [1,2,3] %}<option value="{{ n }}" {{ 'selected' if (payload.get('difficulty_level') or selected.difficulty or 2) == n }}>{{ ['Easy','Medium','Hard'][n-1] }}</option>{% endfor %}</select></div>
+          <div><label>Subject</label><input dir="rtl" name="subject" value="{{ selected.subject.title if selected.subject else '' }}" required /></div>
+          <div><label>Exam sections</label><select name="section" multiple size="3">{% for value,label in [('shulchan_aruch','Shulchan Aruch'),('tur','Tur'),('psikei_admur','Piskei Admur'),('ptei_teshuva','Pithei Teshuva')] %}<option value="{{ value }}" {{ 'selected' if value in cur_sections }}>{{ label }}</option>{% endfor %}</select></div>
+          <div><label>Source reference</label><input name="source_ref" value="{{ selected.source_ref or '' }}" /></div>
         </div>
+      </div>
 
-        {# ── Metadata card ── #}
-        <div class="card" style="background:color-mix(in srgb, var(--surface), var(--border) 25%);">
-          <div class="grid grid-3">
-            <div>
-              <label>סוג שאלה</label>
-              <select name="question_type" id="qtype">
-                {% for t in question_types %}<option value="{{ t }}" {{ 'selected' if t == qtype }}>{{ type_label.get(t, t) }}</option>{% endfor %}
-              </select>
-            </div>
-            <div>
-              <label>פרוס <span class="destructive">*</span></label>
-              <select name="parcours">
-                {% for code, label in parcours_labels.items() %}
-                <option value="{{ code }}" {{ 'selected' if (selected.parcours or '') == code }}>{{ label }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div>
-              <label>רמת קושי</label>
-              <select name="difficulty">
-                {% for n in [1,2,3] %}<option value="{{ n }}" {{ 'selected' if (payload.get('difficulty_level') or selected.difficulty or 2) == n }}>{{ n }}</option>{% endfor %}
-              </select>
-            </div>
-          </div>
+      <div class="admin-form-section"><h3>Question content{% if not can_edit %} <span class="muted">· read only for validators</span>{% endif %}</h3>{% include "admin/_question_card.html" %}</div>
+      </fieldset>
 
-          <div class="grid grid-3" style="margin-top:0.75rem;">
-            <div>
-              <label>נושא (בתוך הסימן) <span class="destructive">*</span></label>
-              <input name="subject" value="{{ selected.subject.title if selected.subject else '' }}" placeholder="לדוגמה: משך ההמתנה בין בשר לחלב" />
-            </div>
-            <div>
-              <label>חלק הבחינה</label>
-              <select name="section" multiple size="4" style="height:auto;">
-                {% for val, lbl in [('shulchan_aruch','שו"ע'),('tur','טור'),('psikei_admur','פסקי אדה"ז'),('ptei_teshuva','פתחי תשובה')] %}
-                <option value="{{ val }}" {{ 'selected' if val in cur_sections }}>{{ lbl }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div>
-              <label>מקור</label>
-              <input name="source_ref" value="{{ selected.source_ref or '' }}" placeholder="מזהה מקור" />
-            </div>
-          </div>
-          <p class="text-xs muted" style="margin-top:0.5rem;">סימן, סעיף ותגיות נערכים ישירות בכרטיס השאלה למטה.</p>
-
-          <div style="margin-top:0.75rem;">
-            <label>רמז (אופציונלי)</label>
-            <textarea name="hint" rows="2">{{ selected.hint or '' }}</textarea>
-          </div>
-        </div>
-
-        {% include "admin/_question_card.html" %}
-
-        {# ── Note ── #}
-        <div>
-          <label>הערת מאמת <span class="text-xs muted">(חובה לדחייה ולסימון לבדיקה)</span></label>
-          <textarea name="note" rows="2" placeholder="לא חובה לשמירה או לאישור">{{ selected.validator_note or '' }}</textarea>
-        </div>
-
-        {# ── Action buttons ── #}
-        <div class="row gap-2" style="padding-top:0.5rem;flex-wrap:wrap;">
-          <button type="submit" class="btn btn-outline">💾 שמור</button>
-          <button type="submit" class="btn btn-success" onclick="document.querySelector('#qform [name=action]').value='approve'">✓ שמור ואשר</button>
-          <button type="submit" class="btn" style="background:rgba(249,115,22,0.15);color:#f97316;" formnovalidate onclick="document.querySelector('#qform [name=action]').value='flag'">🚩 סמן לבדיקה</button>
-          <button type="submit" class="btn btn-destructive" formnovalidate onclick="document.querySelector('#qform [name=action]').value='reject'">✗ דחה</button>
-        </div>
-      </form>
-
-      <script src="{{ url_for('static', filename='js/admin-question-editor.js') }}"></script>
+      <div class="admin-form-section">
+        <h3>Review note</h3>
+        <textarea name="note" rows="2" placeholder="Required when flagging or rejecting a question">{{ selected.validator_note or '' }}</textarea>
+      </div>
+      <div class="admin-action-bar">
+        {% if can_edit %}<button type="submit" class="admin-btn">Save draft</button>{% endif %}
+        {% if can_review %}
+        <button type="submit" class="admin-btn admin-btn-primary" onclick="document.querySelector('#qform [name=action]').value='approve'">{{ 'Save & publish' if can_edit else 'Approve' }}</button>
+        <button type="submit" class="admin-btn" formnovalidate onclick="document.querySelector('#qform [name=action]').value='flag'">Flag for review</button>
+        <button type="submit" class="admin-btn admin-btn-danger" formnovalidate onclick="document.querySelector('#qform [name=action]').value='reject'">Reject</button>
+        {% endif %}
+      </div>
+    </form>
+    <script src="{{ url_for('static', filename='js/admin-question-editor.js') }}"></script>
     {% endif %}
   </section>
 </div>
-<script src="{{ url_for('static', filename='js/admin-tab-bar.js') }}"></script>
 {% endblock %}

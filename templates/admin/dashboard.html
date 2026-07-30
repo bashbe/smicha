@@ -1,142 +1,45 @@
 {% extends "admin/_layout.html" %}
-{% block title %}לוח בקרה — ניהול{% endblock %}
+{% block title %}Overview — Kinyan Admin{% endblock %}
 {% block content %}
-<div class="admin-filter-header">
-  <div><h1 class="text-2xl bold">לוח בקרה</h1><p class="text-sm muted">מרכז הפעולות והמעקב של המערכת</p></div>
-  <div class="row gap-2" style="flex-wrap:wrap;"><a class="btn btn-primary" href="{{ url_for('admin.questions', status='pending') }}">בדיקת שאלות</a><a class="btn btn-outline" href="{{ url_for('admin.import_questions') }}">ייבוא שאלות</a></div>
+<div class="admin-page-header">
+  <div><p class="admin-eyebrow">ADMINISTRATION</p><h1>Overview</h1><p>What needs attention, and how the learning platform is performing.</p></div>
+  <a href="{{ url_for('admin.questions', status='pending') }}" class="admin-btn admin-btn-primary">Review questions</a>
 </div>
-<div class="grid grid-3" style="margin-bottom:1rem;">
-  <a class="card" href="{{ url_for('admin.analytics') }}"><span class="muted text-sm">משתמשים</span><strong class="text-2xl">{{ global_stats.users }}</strong></a>
-  <a class="card" href="{{ url_for('admin.analytics') }}"><span class="muted text-sm">תשובות · הצלחה</span><strong class="text-2xl">{{ global_stats.answers }}{% if global_stats.accuracy is not none %} · {{ global_stats.accuracy }}%{% endif %}</strong></a>
-  <a class="card" href="{{ url_for('admin.analytics') }}"><span class="muted text-sm">לסקירה היום</span><strong class="text-2xl">{{ global_stats.due }}</strong></a>
-</div>
-<div class="stack">
 
-  <div class="grid grid-4 grid-2-mobile-1">
-    {% set cards = [('ממתינות לאימות', counts.pending, '⏳', 'var(--warning)'),('לתיקון', counts.a_revoir, '🚩', '#f97316'),('מאושרות', counts.approved, '✅', 'var(--success)'),('נדחו', counts.rejected, '❌', 'var(--destructive)')] %}
-    {% for label, value, icon, color in cards %}
-    <div class="card">
-      <div style="height:2.5rem;width:2.5rem;border-radius:0.5rem;display:flex;align-items:center;justify-content:center;background:{{ color }}26;">{{ icon }}</div>
-      <div class="text-3xl bold" style="margin-top:0.75rem;">{{ value }}</div>
-      <div class="text-sm muted">{{ label }}</div>
+<section class="admin-work-section">
+  <div class="admin-section-heading"><div><h2>Needs attention</h2><p>Your editorial work queue.</p></div><a href="{{ url_for('admin.questions') }}">Open content →</a></div>
+  <div class="admin-work-grid">
+    <a href="{{ url_for('admin.questions', status='pending') }}" class="admin-work-card {{ 'urgent' if work.pending }}"><strong>{{ work.pending }}</strong><span>Pending review</span><small>New questions waiting for approval</small></a>
+    <a href="{{ url_for('admin.questions', status='a_revoir') }}" class="admin-work-card {{ 'urgent' if work.flagged }}"><strong>{{ work.flagged }}</strong><span>Flagged questions</span><small>Published content requiring a fix</small></a>
+    <a href="{{ url_for('admin.reports') }}" class="admin-work-card {{ 'urgent' if work.reports }}"><strong>{{ work.reports }}</strong><span>Student reports</span><small>Reports awaiting a decision</small></a>
+    <a href="{{ url_for('admin.suggestions') }}" class="admin-work-card"><strong>{{ work.suggestions }}</strong><span>Validator suggestions</span><small>Non-destructive editing proposals</small></a>
+  </div>
+</section>
+
+<section>
+  <div class="admin-section-heading"><div><h2>Learning activity</h2><p>Only the signals useful for operating the platform.</p></div><a href="{{ url_for('admin.analytics') }}">View details →</a></div>
+  <div class="admin-metric-grid">
+    <div class="admin-metric"><span>Active students</span><strong>{{ metrics.active_students_7d }}</strong><small>last 7 days</small></div>
+    <div class="admin-metric"><span>Answers submitted</span><strong>{{ metrics.answers_30d }}</strong><small>last 30 days</small></div>
+    <div class="admin-metric"><span>Answer accuracy</span><strong>{{ metrics.accuracy_30d ~ '%' if metrics.accuracy_30d is not none else '—' }}</strong><small>last 30 days</small></div>
+    <div class="admin-metric"><span>Question bank</span><strong>{{ metrics.total_questions }}</strong><small>{{ counts.approved }} published</small></div>
+  </div>
+</section>
+
+<div class="admin-dashboard-lower">
+  <section class="admin-panel">
+    <div class="admin-section-heading"><div><h2>Recent content activity</h2><p>Latest editorial decisions.</p></div></div>
+    <div class="admin-activity-list">
+      {% for edit, question, editor in recent_edits %}
+      <a href="{{ url_for('admin.questions', id=question.id) }}"><span class="admin-activity-dot"></span><div><strong>{{ edit.action|replace('_',' ')|title }}</strong><p dir="rtl">{{ question.text|truncate(80) }}</p><small>{{ editor.email if editor else 'System' }} · {{ edit.edited_at.strftime('%d %b, %H:%M') }}</small></div></a>
+      {% else %}<p class="admin-empty">No editorial activity yet.</p>{% endfor %}
     </div>
-    {% endfor %}
-  </div>
-
-  <div class="grid grid-2 grid-2-mobile-1">
-    <div class="card">
-      <h2 class="text-lg semibold" style="margin-bottom:0.75rem;">📄 שאלות לפי נושא</h2>
-      <p class="text-xs muted" style="margin-bottom:0.5rem;">לחיצה על ✏️ מאפשרת לשנות את שם הנושא — השינוי יחול על כל הכרטיסים שחולקים אותו שם (חיפוש והחלפה).</p>
-      {% if not by_subject %}
-        <p class="text-sm muted">עוד אין שאלות במערכת.</p>
-      {% else %}
-        <ul style="list-style:none;padding:0;margin:0;" class="stack-sm">
-          {% for row in by_subject %}
-          <li class="text-sm" data-subject-row>
-            <div class="row between" style="gap:0.5rem;align-items:center;">
-              {% if row.id %}<a href="{{ url_for('admin.analytics', scope='subject', id=row.id) }}">{{ row.title }}</a>{% else %}<span>{{ row.title }}</span>{% endif %}
-              <span class="row gap-1" style="align-items:center;">
-                <span class="muted">{{ row.count }}</span>
-                {% if row.id %}
-                <button type="button" class="btn btn-outline" style="padding:0.2rem 0.5rem;min-height:auto;font-size:0.75rem;" onclick="toggleSubjectRename(this)">✏️</button>
-                {% endif %}
-              </span>
-            </div>
-            {% if row.id %}
-            <form method="post" action="{{ url_for('admin.rename_subject') }}" class="row gap-1" style="display:none;margin-top:0.4rem;" data-rename-form
-                  onsubmit="return confirm('לשנות את שם הנושא בכל {{ row.count }} הכרטיסים? הפעולה תעדכן גם התקדמות תלמידים קיימת.');">
-              <input type="hidden" name="subject_id" value="{{ row.id }}" />
-              <input type="text" name="new_title" value="{{ row.title }}" placeholder="שם נושא חדש…" style="flex:1;" required />
-              <button type="submit" class="btn btn-primary" style="padding:0.3rem 0.75rem;min-height:auto;font-size:0.8rem;">שנה</button>
-            </form>
-            {% endif %}
-          </li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    </div>
-    <div class="card">
-      <h2 class="text-lg semibold" style="margin-bottom:0.75rem;">פעולות מהירות</h2>
-      <div class="stack-sm">
-        <a href="{{ url_for('admin.questions') }}" class="btn btn-outline">📋 כל השאלות</a>
-        <a href="{{ url_for('admin.import_questions') }}" class="btn btn-primary">⬆️ ייבוא שאלות חדשות</a>
-        <a href="{{ url_for('admin.questions', status='pending') }}" class="btn btn-outline">✅ אימות שאלות ממתינות ({{ counts.pending }})</a>
-        <a href="{{ url_for('admin.questions', status='a_revoir') }}" class="btn btn-outline">🚩 שאלות לתיקון ({{ counts.a_revoir }})</a>
-        <a href="{{ url_for('admin.reports') }}" class="btn btn-outline">🚩 דיווחים אישיים ({{ reports_count }})</a>
-        <a href="{{ url_for('admin.export_rejected') }}" class="btn btn-outline">⬇️ ייצוא שאלות שנדחו ({{ counts.rejected }}) JSON</a>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2 class="text-lg semibold" style="margin-bottom:0.25rem;">📊 כיול ושימור (FSRS)</h2>
-    <p class="text-xs muted" style="margin-bottom:0.75rem;">השוואת השימור שה־FSRS צופה מול השימור שנצפה בפועל, על חזרות של כרטיסים שכבר נכנסו למחזור. פער גדול (מעל ~5 נקודות אחוז) מרמז שכדאי לכוונן את המשקלים או ההגדרות (CAP_FIRST / WARMUP / W7_FLOOR).</p>
-    {% if not retention or not retention.n %}
-      <p class="text-sm muted">אין עדיין מספיק נתונים — נדרשות חזרות על כרטיסים שכבר נכנסו למחזור FSRS.</p>
-    {% else %}
-      {% set gap = (retention.true_retention - retention.predicted_retention) * 100 %}
-      <div class="grid grid-3">
-        <div>
-          <div class="text-3xl bold">{{ (retention.true_retention * 100) | round(1) }}%</div>
-          <div class="text-sm muted">שימור בפועל</div>
-        </div>
-        <div>
-          <div class="text-3xl bold">{{ (retention.predicted_retention * 100) | round(1) }}%</div>
-          <div class="text-sm muted">שימור חזוי</div>
-        </div>
-        <div>
-          <div class="text-3xl bold" style="color:{% if gap|abs > 5 %}var(--warning){% else %}var(--success){% endif %};">{{ '%+.1f' % gap }}</div>
-          <div class="text-sm muted">פער (נק' אחוז)</div>
-        </div>
-      </div>
-      <div class="row gap-2 text-sm muted" style="margin-top:0.75rem;flex-wrap:wrap;">
-        <span>log loss: <strong>{{ '%.4f' % retention.log_loss }}</strong></span>
-        <span>RMSE: <strong>{{ '%.4f' % retention.rmse_bins }}</strong></span>
-        <span>מדגם: <strong>{{ retention.n }}</strong> חזרות</span>
-      </div>
-    {% endif %}
-  </div>
-
-  <div class="card">
-    <h2 class="text-lg semibold" style="margin-bottom:0.75rem;">📊 ניתוח לפי מסלול</h2>
-    <div class="row gap-2" style="flex-wrap:wrap;">
-      {% for code, label in parcours_labels.items() %}
-      <a class="btn btn-outline" href="{{ url_for('admin.analytics', scope='parcours', id=code) }}">{{ label }}</a>
-      {% endfor %}
-    </div>
-  </div>
-
-  <script>
-    function toggleSubjectRename(btn) {
-      const row = btn.closest('[data-subject-row]');
-      const form = row.querySelector('[data-rename-form]');
-      const showing = form.style.display !== 'none';
-      form.style.display = showing ? 'none' : 'flex';
-      if (!showing) form.querySelector('input[name=new_title]').focus();
-    }
-  </script>
-
-  {% if current_user and current_user.has_role('super_admin') %}
-  <div class="card" style="border:1px solid var(--destructive);background:rgba(239,68,68,0.05);">
-    <h2 class="text-lg semibold" style="color:var(--destructive);margin-bottom:0.5rem;">⚠️ אזור מסוכן — Super Admin בלבד</h2>
-    <p class="text-sm muted" style="margin-bottom:1rem;">איפוס מוחלט של בסיס הנתונים: מחיקת כל השאלות, המשתמשים, וההיסטוריה. פעולה זו בלתי הפיכה.</p>
-    <form method="post" action="{{ url_for('admin.reset_db') }}" id="reset-form" onsubmit="return confirmReset(event)">
-      <div class="row gap-2" style="flex-wrap:wrap;align-items:flex-end;">
-        <div>
-          <label class="text-sm">הקלד <strong>RESET</strong> לאישור</label>
-          <input type="text" name="confirm" placeholder="RESET" style="width:10rem;" autocomplete="off" />
-        </div>
-        <button type="submit" class="btn btn-destructive">🗑️ אפס את כל מסד הנתונים</button>
-      </div>
-    </form>
-  </div>
-  <script>
-    function confirmReset(e) {
-      const val = document.querySelector('#reset-form [name=confirm]').value;
-      if (val !== 'RESET') { e.preventDefault(); alert('הקלד RESET בדיוק כדי לאשר'); return false; }
-      return confirm('פעולה זו תמחק את כל הנתונים ללא אפשרות שחזור. להמשיך?');
-    }
-  </script>
-  {% endif %}
+  </section>
+  <aside class="admin-panel admin-health-card">
+    <div class="admin-section-heading"><div><h2>System</h2><p>Operational status.</p></div></div>
+    <div class="admin-health-row"><span>Database</span><strong class="ok">Connected</strong></div>
+    <div class="admin-health-row"><span>Last backup</span><strong>{{ last_backup.created_at.strftime('%d %b, %H:%M') if last_backup else 'Not created' }}</strong></div>
+    {% if current_user.has_role('super_admin') %}<a href="{{ url_for('admin.backups') }}" class="admin-text-link">Manage backups →</a>{% endif %}
+  </aside>
 </div>
 {% endblock %}

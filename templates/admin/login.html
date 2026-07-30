@@ -1,31 +1,3 @@
 {% extends "base.html" %}
-{% block title %}כניסת ניהול — קניין הלכה{% endblock %}
-{% block body %}
-<div class="row center" style="min-height:calc(var(--vh, 1vh) * 100);background:var(--muted);padding:1rem;">
-  <div class="card" style="width:100%;max-width:28rem;padding:2rem;box-shadow:0 20px 50px rgba(0,0,0,0.4);">
-    <a href="{{ url_for('auth.index') }}" class="muted text-sm">← דף הבית</a>
-    <div class="row gap-1" style="margin-top:0.75rem;"><span class="primary">🛡️</span><h1 class="text-xl semibold">ממשק ניהול</h1></div>
-    <p class="muted text-sm" style="margin-top:0.25rem;">כניסה לצוות ניהול ותיקוף השאלות</p>
-
-    {% include "_flash.html" %}
-
-    <form method="post" class="stack-sm" style="margin-top:1.5rem;">
-      <input type="hidden" name="mode" id="mode" value="login" />
-      <div><label for="email">דוא"ל</label><input id="email" name="email" type="email" required dir="ltr" /></div>
-      <div><label for="password">סיסמה</label><input id="password" name="password" type="password" required dir="ltr" minlength="6" /></div>
-      <button type="submit" class="btn btn-primary btn-block" id="submit-btn">כניסה</button>
-    </form>
-    <button type="button" class="btn btn-block" style="margin-top:1rem;background:none;color:var(--primary);" id="toggle">הרשמת מנהל ראשונה</button>
-  </div>
-</div>
-<script>
-  let mode = "login";
-  const t = document.getElementById("toggle");
-  t.addEventListener("click", () => {
-    mode = mode === "login" ? "signup" : "login";
-    document.getElementById("mode").value = mode;
-    document.getElementById("submit-btn").textContent = mode === "signup" ? "הרשמה" : "כניסה";
-    t.textContent = mode === "signup" ? "כבר רשום, כניסה" : "הרשמת מנהל ראשונה";
-  });
-</script>
-{% endblock %}
+{% block title %}Admin sign in — Kinyan Halakha{% endblock %}
+{% block body %}<div dir="ltr" style="min-height:calc(var(--vh,1vh)*100);display:grid;place-items:center;background:#f7f8fb;padding:1rem"><div class="card" style="width:100%;max-width:26rem;padding:2rem;text-align:left"><a href="{{ url_for('auth.index') }}" class="muted text-sm">← Back to site</a><h1 style="margin-top:1.25rem">Kinyan Admin</h1><p class="muted text-sm">Sign in with a staff account.</p>{% include "_flash.html" %}<form method="post" class="stack-sm" style="margin-top:1.5rem"><input type="hidden" name="mode" id="mode" value="login"/><div><label>Email</label><input name="email" type="email" required dir="ltr"/></div><div><label>Password</label><input name="password" type="password" required dir="ltr" minlength="6"/></div><button class="btn btn-primary btn-block" id="submit-btn">Sign in</button></form><button type="button" class="btn btn-block" style="margin-top:1rem;background:none;color:var(--primary)" id="toggle">Create the first admin account</button></div></div><script>let mode='login';document.getElementById('toggle').onclick=function(){mode=mode==='login'?'signup':'login';document.getElementById('mode').value=mode;document.getElementById('submit-btn').textContent=mode==='signup'?'Create account':'Sign in';this.textContent=mode==='signup'?'Back to sign in':'Create the first admin account';};</script>{% endblock %}

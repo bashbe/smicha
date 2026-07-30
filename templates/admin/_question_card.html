@@ -1,91 +1,28 @@
-{# Shared question-content editor card, styled like the student player card.
-   Included by admin/questions.html, which sets up `payload` and
-   `options_list` before including this. siman/seif/tags are edited directly
-   here (not in the metadata form above) — same "edit in place" idea as the
-   multiple_choice answers below. #}
-<div class="glass-card player-card">
+<div class="glass-card player-card" dir="rtl">
   <div class="card-meta card-meta-editable">
-    <span id="admin-card-parcours-subject"></span>
-    <span> · סימן </span>
-    <input type="number" name="siman" min="1" class="card-meta-input" value="{{ selected.siman if selected.siman is not none else '' }}" />
-    <span> · סעיף </span>
-    <input type="number" name="seif" min="1" class="card-meta-input" value="{{ selected.seif if selected.seif is not none else '' }}" />
+    <span id="admin-card-parcours-subject"></span><span> · Siman </span><input type="number" name="siman" min="1" class="card-meta-input" value="{{ selected.siman if selected.siman is not none else '' }}" /><span> · Seif </span><input type="number" name="seif" min="1" class="card-meta-input" value="{{ selected.seif if selected.seif is not none else '' }}" />
   </div>
-  <div class="card-tags" id="admin-card-tags">
-    {% for t in (selected.tags or []) %}
-    <span class="card-tag card-tag-editable" data-tag="{{ t }}">{{ t }}<button type="button" class="card-tag-remove" onclick="removeTag(this)">×</button></span>
-    {% endfor %}
-    <input type="text" id="admin-tag-input" class="card-tag-input" placeholder="+ תגית" />
-  </div>
+  <div class="card-tags" id="admin-card-tags">{% for t in (selected.tags or []) %}<span class="card-tag card-tag-editable" data-tag="{{ t }}">{{ t }}<button type="button" class="card-tag-remove" onclick="removeTag(this)">×</button></span>{% endfor %}<input type="text" id="admin-tag-input" class="card-tag-input" placeholder="+ tag" /></div>
   <input type="hidden" name="tags" id="admin-tags-hidden" value="{{ (selected.tags or []) | join(',') }}" />
 
-  {# ── Content: multiple_choice ── #}
   <div class="type-block stack-sm" data-type="multiple_choice">
-    <textarea name="question_text" class="question-prompt-input" rows="3" placeholder="טקסט השאלה">{{ payload.get('question_text') or '' }}</textarea>
-    <div class="row between" style="margin-top:var(--space-2);">
-      <label class="text-xs muted" style="margin:0;">תשובות — ניתן לסמן תשובה אחת או יותר כנכונות</label>
-      <button type="button" class="btn btn-outline" onclick="addOption()">+ הוסף תשובה</button>
-    </div>
-    <div id="options" class="stack-sm" style="margin-top:var(--space-1);">
-      {% for o in options_list %}
-      <div class="choice option-row{{ ' is-correct' if o.get('is_correct') }}">
-        <input type="checkbox" class="option-correct-checkbox" style="width:1.1rem;height:1.1rem;flex-shrink:0;" {{ 'checked' if o.get('is_correct') }} />
-        <textarea name="option_text" rows="1" class="flex-1 choice-text-input auto-grow" placeholder="תשובה {{ loop.index }}">{{ o.get('text', '') }}</textarea>
-        <span class="key">{{ loop.index }}</span>
-        <button type="button" class="btn btn-outline" onclick="this.closest('.option-row').remove()">🗑</button>
-      </div>
-      {% endfor %}
-    </div>
+    <textarea name="question_text" class="question-prompt-input" rows="3" placeholder="Question text">{{ payload.get('question_text') or '' }}</textarea>
+    <div class="row between" style="margin-top:var(--space-2)"><label class="text-xs muted">Answers — select every correct answer</label><button type="button" class="admin-btn" onclick="addOption()">Add answer</button></div>
+    <div id="options" class="stack-sm">{% for o in options_list %}<div class="choice option-row{{ ' is-correct' if o.get('is_correct') }}"><input type="checkbox" class="option-correct-checkbox" style="width:1.1rem;height:1.1rem" {{ 'checked' if o.get('is_correct') }} /><textarea name="option_text" rows="1" class="flex-1 choice-text-input auto-grow" placeholder="Answer {{ loop.index }}">{{ o.get('text','') }}</textarea><span class="key">{{ loop.index }}</span><button type="button" class="admin-btn" onclick="this.closest('.option-row').remove()">Remove</button></div>{% endfor %}</div>
     <input type="hidden" name="correct_options" id="correct_options_hidden" value="" />
   </div>
 
-  {# ── Content: multiple_opinions_dropdown ── #}
-  <div class="type-block stack-sm" data-type="multiple_opinions_dropdown" style="display:none;">
-    <textarea name="question_text_op" class="question-prompt-input" rows="3" placeholder="טקסט השאלה">{{ payload.get('question_text') or '' }}</textarea>
-    <div class="row between" style="margin-top:var(--space-2);"><label class="text-xs muted" style="margin:0;">אפשרויות בדרופדאון</label><button type="button" class="btn btn-outline" onclick="addChoice()">+ הוסף</button></div>
-    <div id="choices">
-      {% for c in payload.get('dropdown_choices') or ['',''] %}
-      <div class="row gap-2 opinions-field-row" style="margin-bottom:0.5rem;">
-        <textarea name="dropdown_choice" rows="1" class="flex-1 auto-grow" placeholder="לדוגמה: מותר">{{ c }}</textarea>
-        <button type="button" class="btn btn-outline" onclick="this.parentNode.remove()">🗑</button>
-      </div>
-      {% endfor %}
-    </div>
-    <div class="row between"><label class="text-xs muted" style="margin:0;">פוסקים ותשובה נכונה</label><button type="button" class="btn btn-outline" onclick="addDecisor()">+ הוסף</button></div>
-    <div id="decisors">
-      {% for d in payload.get('decisors') or [] %}
-      <div class="decisor-row">
-        <div class="row between decisor-row-head">
-          <input name="decisor_id" value="{{ d.id }}" placeholder="id" class="decisor-id-input" />
-          <button type="button" class="btn btn-outline" onclick="this.closest('.decisor-row').remove()">🗑</button>
-        </div>
-        <textarea name="decisor_name" rows="1" class="auto-grow" placeholder="שם הפוסק">{{ d.name }}</textarea>
-        <textarea name="decisor_correct" rows="1" class="auto-grow" placeholder="עמדה נכונה">{{ d.correct_choice }}</textarea>
-      </div>
-      {% endfor %}
-    </div>
+  <div class="type-block stack-sm" data-type="multiple_opinions_dropdown" style="display:none">
+    <textarea name="question_text_op" class="question-prompt-input" rows="3" placeholder="Question text">{{ payload.get('question_text') or '' }}</textarea>
+    <div class="row between"><label class="text-xs muted">Dropdown choices</label><button type="button" class="admin-btn" onclick="addChoice()">Add choice</button></div>
+    <div id="choices">{% for c in payload.get('dropdown_choices') or ['',''] %}<div class="row gap-2 opinions-field-row"><textarea name="dropdown_choice" rows="1" class="flex-1 auto-grow">{{ c }}</textarea><button type="button" class="admin-btn" onclick="this.parentNode.remove()">Remove</button></div>{% endfor %}</div>
+    <div class="row between"><label class="text-xs muted">Authorities and correct positions</label><button type="button" class="admin-btn" onclick="addDecisor()">Add authority</button></div>
+    <div id="decisors">{% for d in payload.get('decisors') or [] %}<div class="decisor-row"><div class="row between decisor-row-head"><input name="decisor_id" value="{{ d.id }}" placeholder="ID" class="decisor-id-input" /><button type="button" class="admin-btn" onclick="this.closest('.decisor-row').remove()">Remove</button></div><textarea name="decisor_name" rows="1" class="auto-grow" placeholder="Authority name">{{ d.name }}</textarea><textarea name="decisor_correct" rows="1" class="auto-grow" placeholder="Correct position">{{ d.correct_choice }}</textarea></div>{% endfor %}</div>
   </div>
 
-  {# ── Content: true_false ── #}
-  <div class="type-block stack-sm" data-type="true_false" style="display:none;">
-    <textarea name="statement_text" class="question-prompt-input" rows="3" placeholder="טקסט ההצהרה">{{ payload.get('statement_text') or '' }}</textarea>
-    <div class="choice-grid" style="margin-top:var(--space-2);">
-      <label class="choice choice-tf{{ ' is-correct' if payload.get('correct_answer') != false }}">
-        <input type="radio" name="correct_answer" value="true" style="width:1.1rem;height:1.1rem;" {{ 'checked' if payload.get('correct_answer') != false }} />
-        <span style="font-size:1.5rem;">✓</span>
-        <span class="text-lg bold">נכון</span>
-      </label>
-      <label class="choice choice-tf{{ ' is-correct' if payload.get('correct_answer') == false }}">
-        <input type="radio" name="correct_answer" value="false" style="width:1.1rem;height:1.1rem;" {{ 'checked' if payload.get('correct_answer') == false }} />
-        <span style="font-size:1.5rem;">✗</span>
-        <span class="text-lg bold">לא נכון</span>
-      </label>
-    </div>
+  <div class="type-block stack-sm" data-type="true_false" style="display:none">
+    <textarea name="statement_text" class="question-prompt-input" rows="3" placeholder="Statement">{{ payload.get('statement_text') or '' }}</textarea>
+    <div class="choice-grid"><label class="choice choice-tf{{ ' is-correct' if payload.get('correct_answer') != false }}"><input type="radio" name="correct_answer" value="true" {{ 'checked' if payload.get('correct_answer') != false }} /><strong>True</strong></label><label class="choice choice-tf{{ ' is-correct' if payload.get('correct_answer') == false }}"><input type="radio" name="correct_answer" value="false" {{ 'checked' if payload.get('correct_answer') == false }} /><strong>False</strong></label></div>
   </div>
-
-  {# ── Explanation — shown like the fixed explanation panel students see ── #}
-  <div style="margin-top:var(--space-3);border-top:1px solid var(--border);padding-top:var(--space-2);">
-    <label class="text-xs muted">הסבר <span class="destructive">*</span></label>
-    <textarea name="explanation" rows="3">{{ payload.get('explanation') or selected.explanation or '' }}</textarea>
-  </div>
+  <div style="margin-top:var(--space-3);border-top:1px solid var(--border);padding-top:var(--space-2)"><label>Explanation</label><textarea name="explanation" rows="3" required>{{ payload.get('explanation') or selected.explanation or '' }}</textarea></div>
 </div>
