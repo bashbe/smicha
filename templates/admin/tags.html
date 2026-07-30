@@ -1,0 +1,93 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Tags — Kinyan Admin{% endblock %}
+{% block content %}
+<div class="admin-page-header"><div><p class="admin-eyebrow">TAGS</p><h1>Hidden / visible tags</h1><p>Link the fine-grained hidden tags generated with each card to the few visible tags students see and filter by.</p></div></div>
+
+<form method="get" class="admin-form-grid" style="grid-template-columns:16rem;margin-bottom:var(--space-3)">
+  <div>
+    <label>Parcours</label>
+    <select name="parcours" onchange="this.form.submit()">
+      {% for code in parcours_options %}
+      <option value="{{ code }}" {{ 'selected' if code == selected_parcours }}>{{ parcours_labels.get(code, code) }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</form>
+
+<section class="admin-panel">
+  <div class="admin-section-heading"><div><h2>Visible tags</h2><p>Shown to students, keep this list short (2-3 per card in practice).</p></div></div>
+  <div class="stack-sm">
+    {% for tag in visible_tags %}
+    <div class="row gap-2 between">
+      <form method="post" action="{{ url_for('admin.tags_visible') }}" class="row gap-2 flex-1">
+        <input type="hidden" name="parcours" value="{{ selected_parcours }}" />
+        <input type="hidden" name="action" value="rename" />
+        <input type="hidden" name="visible_tag_id" value="{{ tag.id }}" />
+        <input name="name" value="{{ tag.name }}" dir="rtl" class="flex-1" />
+        <button class="admin-btn">Save</button>
+      </form>
+      <form method="post" action="{{ url_for('admin.tags_visible') }}">
+        <input type="hidden" name="parcours" value="{{ selected_parcours }}" />
+        <input type="hidden" name="action" value="delete" />
+        <input type="hidden" name="visible_tag_id" value="{{ tag.id }}" />
+        <button class="admin-btn">Delete</button>
+      </form>
+    </div>
+    {% else %}<p class="admin-empty">No visible tags yet for this parcours.</p>{% endfor %}
+  </div>
+  <form method="post" action="{{ url_for('admin.tags_visible') }}" class="row gap-2" style="margin-top:var(--space-2)">
+    <input type="hidden" name="parcours" value="{{ selected_parcours }}" />
+    <input type="hidden" name="action" value="create" />
+    <input name="name" placeholder="New visible tag" dir="rtl" class="flex-1" required />
+    <button class="admin-btn admin-btn-primary">Add</button>
+  </form>
+</section>
+
+<section class="admin-panel">
+  <div class="admin-section-heading"><div><h2>Link hidden tags → a visible tag</h2><p>Pick one visible tag, one or more hidden tags, and whether ANY (or) or ALL (and) of them must be present on a card.</p></div></div>
+  <form method="post" action="{{ url_for('admin.tags_rules_create') }}" class="admin-form-grid" style="grid-template-columns:1fr 1fr 8rem">
+    <input type="hidden" name="parcours" value="{{ selected_parcours }}" />
+    <div>
+      <label>Visible tag</label>
+      <select name="visible_tag_id" required>
+        {% for tag in visible_tags %}<option value="{{ tag.id }}">{{ tag.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label>Hidden tags</label>
+      <select name="hidden_tag_ids" multiple size="6">
+        {% for tag in hidden_tags %}<option value="{{ tag.id }}">{{ tag.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label>Logic</label>
+      <select name="logic"><option value="or">any (OR)</option><option value="and">all (AND)</option></select>
+      <button class="admin-btn admin-btn-primary" style="margin-top:var(--space-2)">Link</button>
+    </div>
+  </form>
+
+  <div class="stack-sm" style="margin-top:var(--space-3)">
+    {% for rule in active_rules %}
+    <div class="row between admin-subject-row">
+      <span>{{ rule.hidden_tags | map(attribute='name') | join(' ' + (rule.logic|upper) + ' ') }} → <strong>{{ rule.visible_tag.name }}</strong></span>
+      <form method="post" action="{{ url_for('admin.tags_rules_action', rule_id=rule.id, action='delete') }}"><button class="admin-btn">Remove</button></form>
+    </div>
+    {% else %}<p class="admin-empty">No active association yet for this parcours.</p>{% endfor %}
+  </div>
+</section>
+
+<section class="admin-panel">
+  <div class="admin-section-heading"><div><h2>Suggestions from /tag-clustering</h2><p>Proposed groupings awaiting review — approving makes them active immediately for students.</p></div></div>
+  <div class="stack-sm">
+    {% for rule in suggested_rules %}
+    <div class="row between admin-subject-row">
+      <span>{{ rule.hidden_tags | map(attribute='name') | join(' ' + (rule.logic|upper) + ' ') }} → <strong>{{ rule.visible_tag.name }}</strong></span>
+      <div class="row gap-2">
+        <form method="post" action="{{ url_for('admin.tags_rules_action', rule_id=rule.id, action='approve') }}"><button class="admin-btn admin-btn-primary">Approve</button></form>
+        <form method="post" action="{{ url_for('admin.tags_rules_action', rule_id=rule.id, action='reject') }}"><button class="admin-btn">Reject</button></form>
+      </div>
+    </div>
+    {% else %}<p class="admin-empty">No pending suggestion for this parcours.</p>{% endfor %}
+  </div>
+</section>
+{% endblock %}

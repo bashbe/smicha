@@ -2,8 +2,9 @@
   <div class="card-meta card-meta-editable">
     <span id="admin-card-parcours-subject"></span><span> · Siman </span><input type="number" name="siman" min="1" class="card-meta-input" value="{{ selected.siman if selected.siman is not none else '' }}" /><span> · Seif </span><input type="number" name="seif" min="1" class="card-meta-input" value="{{ selected.seif if selected.seif is not none else '' }}" />
   </div>
-  <div class="card-tags" id="admin-card-tags">{% for t in (selected.tags or []) %}<span class="card-tag card-tag-editable" data-tag="{{ t }}">{{ t }}<button type="button" class="card-tag-remove" onclick="removeTag(this)">×</button></span>{% endfor %}<input type="text" id="admin-tag-input" class="card-tag-input" placeholder="+ tag" /></div>
-  <input type="hidden" name="tags" id="admin-tags-hidden" value="{{ (selected.tags or []) | join(',') }}" />
+  <div class="card-tags" id="admin-card-tags">{% for t in selected.tag_names %}<span class="card-tag card-tag-editable" data-tag="{{ t }}">{{ t }}<button type="button" class="card-tag-remove" onclick="removeTag(this)">×</button></span>{% endfor %}<input type="text" id="admin-tag-input" class="card-tag-input" placeholder="+ hidden tag" list="admin-hidden-tag-options" /></div>
+  <input type="hidden" name="tags" id="admin-tags-hidden" value="{{ selected.tag_names | join(',') }}" />
+  <datalist id="admin-hidden-tag-options">{% for t in hidden_tag_options %}<option value="{{ t }}"></option>{% endfor %}</datalist>
 
   <div class="type-block stack-sm" data-type="multiple_choice">
     <textarea name="question_text" class="question-prompt-input" rows="3" placeholder="Question text">{{ payload.get('question_text') or '' }}</textarea>
