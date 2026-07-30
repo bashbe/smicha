@@ -1,3 +1,9 @@
+> ⚠️ **Rapport historique** — la Q7 signalée ci-dessous comme problématique a été corrigée le
+> jour même (réécrite en `multiple_choice`, voir `docs/journal_chupa_kidushin.md`). La Q7
+> actuellement présente dans `generated_questions_ehy_29.json` n'a plus ce défaut. Voir
+> `docs/audit_questions_chupa_kidushin_2026-07-30.md` pour l'état de référence actuel (confirme
+> qu'aucun autre problème n'a été trouvé dans ce lot).
+
 # Rapport de vérification — Lot de cartes Siman 29 (Even HaEzer)
 
 ## Résumé exécutif
