@@ -35,14 +35,25 @@ où elle s'est arrêtée. Mis à jour au fil de l'eau, pas seulement à la fin.
   (section « Parcours multi-chelek — chupa_kidushin »).
 - [x] Créé ce journal + dossiers `docs/source_texts/` et `docs/sefaria_sources/`.
 
-## Anomalie relevée dans le texte source — à signaler à l'utilisateur
+## Anomalie relevée dans le texte source — confirmée par l'utilisateur
 
-Dans le siman כז, page 13 du document (lignes ~140–153 du fichier texte extrait), le texte est
-**incohérent/corrompu** : il parle de מחיצה של פשתן, מקוואות, מים שאובין, חזון איש — un sujet de
-מקוואות/עירוב sans rapport avec הלכות קידושין, manifestement un artefact de conversion PDF→docx
-(OCR mélangé). Conformément à la règle du prompt (« tout passage impossible à classer avec
-certitude → ne jamais deviner »), **ce passage a été exclu de la génération de cartes**. Il
-faudra que l'utilisateur revérifie le PDF original à cet endroit s'il veut ce contenu.
+Dans le siman כז, **pages 13 ET 14** du document (lignes ~140–163 du fichier texte extrait) sont
+des **pages mal scannées** (confirmé par l'utilisateur) :
+- Page 13 (lignes 140-153) : texte clairement incohérent, parle de מחיצה של פשתן, מקוואות, מים
+  שאובין, חזון איש (סי' מ"ב) — un sujet de מקוואות/עירוב sans aucun rapport avec הלכות קידושין.
+- Page 14 (lignes 154-163) : à première vue plus proche du sujet (mentionne "הרי את אשתי", "הרי
+  את ארוסתי", "הרי את קנויה לי"…), mais le texte s'y contredit lui-même (ex. ligne 156 affirme
+  "אינה מקודשת" pour des לשונות que la guémara claire, page 8 ligne 84, affirme être ודאי
+  "מקודשת") et contient des "[...]" (lacunes OCR) — donc également non fiable telle quelle.
+
+Conformément à la règle du prompt (« tout passage impossible à classer avec certitude → ne
+jamais deviner »), **aucune carte n'a été générée à partir de ces deux pages**. Vérification
+faite (`grep` sur les 3 fichiers JSON pour les termes propres à la page 13, et sur les
+formulations propres à la page 14) : **aucune carte des 3 lots ne dépend de ces pages** — les
+mêmes dinim (chorafti, nesuati, bishvil ahava vechiba, lo diberu ve'natan bishtika...) apparaissent
+de façon cohérente ailleurs dans le document (pages 15-20), et c'est cette version propre qui a
+servi de source aux cartes. Il faudra que l'utilisateur revérifie le PDF original aux pages 13-14
+s'il pense qu'elles contiennent un contenu distinct à couvrir séparément.
 
 ## Lots
 
@@ -98,6 +109,25 @@ les lots). Vérification par agent Haiku terminée pour les 3 lots (voir section
 correction nécessaire (carte n°7 du lot ehy 29), déjà appliquée et revalidée. **Les 3 lots sont
 prêts pour import via `/admin/import`**, sous réserve d'une dernière revue humaine (et d'une
 vérification croisée Sefaria dans un environnement qui y a accès, non disponible ici).
+
+**Important — ce que Haiku a et n'a PAS fait** : les 3 agents de vérification n'ont fait QUE
+lire et rapporter (consigne explicite dans leur prompt : « Ne modifie PAS le fichier JSON toi-même
+— ton rôle est de vérifier et rapporter, pas de corriger »). Ils n'ont invalidé ni modifié aucune
+question directement. Le seul problème réel qu'ils ont détecté (carte n°7, lot ehy 29 — deux
+libellés de cas utilisés comme si c'étaient des poskim en désaccord) a été corrigé manuellement
+par l'agent de génération (moi), pas par Haiku.
+
+## Script de récupération Sefaria pour l'utilisateur
+
+`scripts/fetch_sefaria_text.py` (stdlib uniquement, pas de dépendance) permet de récupérer
+soi-même le texte d'un siman depuis l'API Sefaria, dans un environnement qui y a accès (bloquée
+ici par la politique réseau de cette session — voir plus haut). Usage :
+```bash
+python3 scripts/fetch_sefaria_text.py --chelek ehy --siman 26 27 29
+```
+Sauvegarde `docs/sefaria_sources/ehy_<siman>.json` (réponse API brute) et `.txt` (texte brut,
+une ligne par סעיף, notes de bas de page et balises HTML retirées) — même convention de nommage
+`ehy_`/`chum_` que le reste du parcours. Générique à tout chelek (`ehy`, `chum`, `yd`, `ohc`).
 
 ## ⚠️ Contrainte réseau — API Sefaria inaccessible depuis cette session
 

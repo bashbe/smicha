@@ -58,6 +58,11 @@ de même que tout dossier de textes sources Sefaria sauvegardés pour validation
 (`ehy_<siman>.*` / `chum_<siman>.*`). Ce préfixe est un **pense-bête textuel**,
 il n'empêche aucune collision réelle côté base de données.
 
+`scripts/fetch_sefaria_text.py` (stdlib uniquement) récupère le texte d'un siman depuis l'API
+Sefaria et l'enregistre dans `docs/sefaria_sources/` avec cette même convention — à lancer depuis
+un environnement ayant un accès réseau non restreint (l'API Sefaria est bloquée dans les sessions
+Claude Code de ce projet, voir `docs/journal_chupa_kidushin.md`).
+
 ### 🔧 Prompt pour un futur agent — à faire dès que possible
 
 > Le parcours `chupa_kidushin` mélange aujourd'hui des simanim d'Even haEzer
