@@ -26,6 +26,8 @@
     home: root.dataset.homeUrl,
     answer: root.dataset.answerUrl,
     report: root.dataset.reportUrl,
+    adminEditUrl: root.dataset.adminEditUrl,
+    canSuggest: root.dataset.canSuggest === "true",
     todayStats: root.dataset.todayStatsUrl,
     subject: root.dataset.subject,
     siman: root.dataset.siman,
@@ -293,8 +295,8 @@
       const backdrop = el("div", "report-modal-backdrop");
       const modal = el("div", "report-modal animate-pop-in");
       modal.appendChild(el("div", "report-modal-icon", icon("flag", 20)));
-      modal.appendChild(el("h3", "report-modal-title", "דיווח על שאלה"));
-      modal.appendChild(el("p", "report-modal-subtitle", "מה הבעיה בשאלה הזו? הדיווח יסתיר אותה עבורך מיד."));
+      modal.appendChild(el("h3", "report-modal-title", cfg.canSuggest ? "הצעה לשיפור שאלה" : "דיווח על שאלה"));
+      modal.appendChild(el("p", "report-modal-subtitle", cfg.canSuggest ? "ההצעה תישלח לאישור ולא תשנה את השאלה." : "מה הבעיה בשאלה הזו? הדיווח יסתיר אותה עבורך מיד."));
 
       const textarea = document.createElement("textarea");
       textarea.className = "report-modal-textarea";
@@ -305,7 +307,7 @@
       const actions = el("div", "report-modal-actions");
       const cancelBtn = el("button", "btn btn-outline", "ביטול");
       cancelBtn.type = "button";
-      const submitBtn = el("button", "btn btn-primary", "שלח דיווח");
+      const submitBtn = el("button", "btn btn-primary", cfg.canSuggest ? "שלח הצעה" : "שלח דיווח");
       submitBtn.type = "button";
       actions.appendChild(submitBtn);
       actions.appendChild(cancelBtn);
@@ -572,6 +574,12 @@
       reportBtn.addEventListener("click", () => reportQuestion(q.id, reportBtn));
     }
     headerRight.appendChild(reportBtn);
+    if (cfg.adminEditUrl) {
+      const editLink = el("a", "btn btn-outline", "✏️ ערוך");
+      editLink.href = cfg.adminEditUrl + "?id=" + encodeURIComponent(q.id);
+      editLink.title = "עריכת השאלה בניהול";
+      headerRight.appendChild(editLink);
+    }
 
     if (isRevision) {
       const revLabel = el("span", "");

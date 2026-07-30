@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
-from datetime import datetime
+import secrets
+from datetime import datetime, timedelta
+from pathlib import Path
 
-from flask import Blueprint, Response, current_app, flash, redirect, render_template, request, url_for
+from flask import Blueprint, Response, current_app, flash, redirect, render_template, request, send_from_directory, url_for
+from sqlalchemy import func, inspect, text
 from sqlalchemy.orm import joinedload
 
 import calibration
@@ -20,6 +24,10 @@ from models import (
     Question,
     QuestionEdit,
     QuestionReport,
+    QuestionSuggestion,
+    BackupRecord,
+    EmergencyApiToken,
+    EmergencyApiAudit,
     StudentParcours,
     StudentProfile,
     Subject,
@@ -36,6 +44,7 @@ from question_types import (
 )
 from subjects import get_or_create_subject
 from subjects import rename_subject as rename_subject_by_id
+from backup_service import backup_directory, create_backup, delete_backup
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -52,7 +61,10 @@ def inject_reports_count():
     user = current_user()
     if user is None or not user.is_staff():
         return {}
-    return {"open_reports_count": QuestionReport.query.filter_by(status="open").count()}
+    return {
+        "open_reports_count": QuestionReport.query.filter_by(status="open").count(),
+        "open_suggestions_count": QuestionSuggestion.query.filter_by(status="open").count(),
+    }
 
 
 def _resolve_open_reports(question_id: str, resolver_id: str, resolution: str) -> None:
@@ -136,10 +148,175 @@ def dashboard():
     )
     retention = calibration.retention_report([(p, c) for p, c in ret_rows])
 
+    total_answers = UserAnswer.query.count()
+    correct_answers = UserAnswer.query.filter_by(is_correct=True).count()
+    global_stats = {
+        "users": User.query.count(), "answers": total_answers,
+        "accuracy": round(100 * correct_answers / total_answers) if total_answers else None,
+        "due": FsrsCard.query.filter(FsrsCard.due_date <= datetime.utcnow().date()).count(),
+        "suggestions": QuestionSuggestion.query.filter_by(status="open").count(),
+    }
     return render_template(
         "admin/dashboard.html", counts=counts, by_subject=by_subject,
-        reports_count=reports_count, retention=retention,
+        reports_count=reports_count, retention=retention, global_stats=global_stats,
+        parcours_labels=PARCOURS_LABELS,
     )
+
+
+@bp.route("/analytics")
+@staff_required
+def analytics():
+    """One analysis screen, scoped by question, subject or parcours."""
+    scope = request.args.get("scope", "global")
+    ident = request.args.get("id", "")
+    q = db.session.query(Question)
+    title = "סקירה כללית"
+    if scope == "question" and ident:
+        q = q.filter(Question.id == ident)
+        question = Question.query.get_or_404(ident)
+        title = "ניתוח שאלה"
+    elif scope == "subject" and ident:
+        q = q.filter(Question.subject_id == ident)
+        subject = Subject.query.get_or_404(ident)
+        title = f'ניתוח נושא: {subject.title}'
+    elif scope == "parcours" and ident:
+        q = q.filter(Question.parcours == ident)
+        title = f'ניתוח מסלול: {PARCOURS_LABELS.get(ident, ident)}'
+    else:
+        scope, ident = "global", ""
+    question_ids = [row[0] for row in q.with_entities(Question.id).all()]
+    answers = UserAnswer.query.filter(UserAnswer.question_id.in_(question_ids)) if question_ids else UserAnswer.query.filter(False)
+    total = answers.count()
+    correct = answers.filter_by(is_correct=True).count()
+    stats = {
+        "questions": len(question_ids), "answers": total,
+        "accuracy": round(100 * correct / total) if total else None,
+        "avg_time": int(answers.with_entities(func.avg(UserAnswer.response_time_ms)).scalar() or 0),
+        "reports": QuestionReport.query.filter(QuestionReport.question_id.in_(question_ids), QuestionReport.status == "open").count() if question_ids else 0,
+        "suggestions": QuestionSuggestion.query.filter(QuestionSuggestion.question_id.in_(question_ids), QuestionSuggestion.status == "open").count() if question_ids else 0,
+    }
+    rows = (
+        db.session.query(Question, func.count(UserAnswer.id), func.avg(UserAnswer.is_correct))
+        .outerjoin(UserAnswer, UserAnswer.question_id == Question.id)
+        .filter(Question.id.in_(question_ids) if question_ids else False)
+        .group_by(Question.id).order_by(func.count(UserAnswer.id).desc()).limit(50).all()
+    )
+    return render_template("admin/analytics.html", title=title, stats=stats, rows=rows, scope=scope, ident=ident)
+
+
+@bp.route("/suggestions")
+@staff_required
+def suggestions():
+    entries = (db.session.query(QuestionSuggestion, Question, User)
+        .join(Question, Question.id == QuestionSuggestion.question_id)
+        .join(User, User.id == QuestionSuggestion.author_id)
+        .filter(QuestionSuggestion.status == "open").order_by(QuestionSuggestion.created_at.desc()).all())
+    return render_template("admin/suggestions.html", suggestions=entries)
+
+
+@bp.route("/suggestions/<suggestion_id>/<action>", methods=["POST"])
+@staff_required
+def resolve_suggestion(suggestion_id, action):
+    actor = current_user()
+    if not actor.has_role("super_admin"):
+        return redirect(url_for("admin.denied"))
+    suggestion = QuestionSuggestion.query.get_or_404(suggestion_id)
+    if action not in {"applied", "dismissed"}:
+        return redirect(url_for("admin.suggestions"))
+    suggestion.status, suggestion.resolved_by, suggestion.resolved_at = action, actor.id, datetime.utcnow()
+    db.session.commit()
+    flash("ההצעה עודכנה", "success")
+    return redirect(url_for("admin.questions", id=suggestion.question_id)) if action == "applied" else redirect(url_for("admin.suggestions"))
+
+
+@bp.route("/data")
+@staff_required
+def data_explorer():
+    if not current_user().has_role("super_admin"):
+        return redirect(url_for("admin.denied"))
+    inspector = inspect(db.engine)
+    tables = sorted(inspector.get_table_names())
+    selected = request.args.get("table", tables[0] if tables else "")
+    if selected not in tables:
+        selected = tables[0] if tables else ""
+    columns, rows = [], []
+    if selected:
+        columns = [col["name"] for col in inspector.get_columns(selected)]
+        page = max(int(request.args.get("page", 1)), 1)
+        search = (request.args.get("q") or "").strip()
+        statement = text(f'SELECT * FROM "{selected}"')
+        raw_rows = db.session.execute(statement).mappings().all()
+        if search:
+            raw_rows = [r for r in raw_rows if search.lower() in " ".join(str(v) for v in r.values()).lower()]
+        start = (page - 1) * 50
+        rows = raw_rows[start:start + 50]
+    return render_template("admin/data.html", tables=tables, selected=selected, columns=columns, rows=rows)
+
+
+@bp.route("/backups", methods=["GET", "POST"])
+@staff_required
+def backups():
+    actor = current_user()
+    if not actor.has_role("super_admin"):
+        return redirect(url_for("admin.denied"))
+    if request.method == "POST":
+        try:
+            create_backup(actor.id)
+            flash("הגיבוי נוצר ונבדק", "success")
+        except Exception as exc:
+            current_app.logger.exception("Backup failed")
+            flash(f"יצירת הגיבוי נכשלה: {exc}", "error")
+        return redirect(url_for("admin.backups"))
+    return render_template("admin/backups.html", backups=BackupRecord.query.order_by(BackupRecord.created_at.desc()).all())
+
+
+@bp.route("/backups/<backup_id>/keep", methods=["POST"])
+@bp.route("/backups/<backup_id>/delete", methods=["POST"])
+@staff_required
+def manage_backup(backup_id):
+    if not current_user().has_role("super_admin"):
+        return redirect(url_for("admin.denied"))
+    backup = BackupRecord.query.get_or_404(backup_id)
+    if request.path.endswith("/keep"):
+        backup.keep_forever = not backup.keep_forever
+        db.session.commit()
+    else:
+        delete_backup(backup)
+    return redirect(url_for("admin.backups"))
+
+
+@bp.route("/backups/<backup_id>/download")
+@staff_required
+def download_backup(backup_id):
+    if not current_user().has_role("super_admin"):
+        return redirect(url_for("admin.denied"))
+    backup = BackupRecord.query.get_or_404(backup_id)
+    return send_from_directory(backup_directory(), backup.filename, as_attachment=True)
+
+
+@bp.route("/api-security", methods=["GET", "POST"])
+@staff_required
+def api_security():
+    actor = current_user()
+    if not actor.has_role("super_admin"):
+        return redirect(url_for("admin.denied"))
+    plaintext_token = None
+    if request.method == "POST":
+        action = request.form.get("action")
+        if action == "create":
+            if request.form.get("confirm") != "EMERGENCY":
+                flash("יש להקליד EMERGENCY כדי ליצור אסימון SQL", "error")
+                return redirect(url_for("admin.api_security"))
+            ttl = min(max(int(request.form.get("ttl_minutes", 15)), 5), current_app.config["EMERGENCY_SQL_API_MAX_TTL_MINUTES"])
+            plaintext_token = secrets.token_urlsafe(48)
+            db.session.add(EmergencyApiToken(label=(request.form.get("label") or "Accès d'urgence")[:100], token_hash=hashlib.sha256(plaintext_token.encode()).hexdigest(), expires_at=datetime.utcnow() + timedelta(minutes=ttl), created_by=actor.id))
+            db.session.commit()
+        elif action == "revoke":
+            token = EmergencyApiToken.query.get_or_404(request.form.get("token_id"))
+            token.revoked_at = datetime.utcnow(); db.session.commit()
+    tokens = EmergencyApiToken.query.order_by(EmergencyApiToken.created_at.desc()).all()
+    audits = EmergencyApiAudit.query.order_by(EmergencyApiAudit.created_at.desc()).limit(30).all()
+    return render_template("admin/api_security.html", tokens=tokens, audits=audits, plaintext_token=plaintext_token, enabled=current_app.config["EMERGENCY_SQL_API_ENABLED"], max_ttl=current_app.config["EMERGENCY_SQL_API_MAX_TTL_MINUTES"])
 
 
 @bp.route("/subjects/rename", methods=["POST"])

@@ -238,6 +238,64 @@ class QuestionEdit(db.Model):
     edited_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
 
+class QuestionSuggestion(db.Model):
+    """Suggestion issue du lecteur par un membre de l'équipe.
+
+    Une suggestion ne modifie jamais la question : seul un super-admin peut
+    ensuite la transformer en modification dans la banque de questions.
+    """
+
+    __tablename__ = "question_suggestions"
+
+    id = db.Column(db.String(36), primary_key=True, default=_uuid)
+    question_id = db.Column(db.String(36), db.ForeignKey("questions.id", ondelete="CASCADE"), nullable=False, index=True)
+    author_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"), nullable=False, index=True)
+    message = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(16), default="open", nullable=False, index=True)  # open | applied | dismissed
+    resolved_by = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"))
+    resolved_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+
+class BackupRecord(db.Model):
+    __tablename__ = "backup_records"
+
+    id = db.Column(db.String(36), primary_key=True, default=_uuid)
+    filename = db.Column(db.String(255), nullable=False, unique=True)
+    size_bytes = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+    keep_forever = db.Column(db.Boolean, default=False, nullable=False)
+    created_by = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"))
+
+
+class EmergencyApiToken(db.Model):
+    """Jeton d'urgence : seul son condensat est conservé en base."""
+
+    __tablename__ = "emergency_api_tokens"
+
+    id = db.Column(db.String(36), primary_key=True, default=_uuid)
+    label = db.Column(db.String(100), nullable=False)
+    token_hash = db.Column(db.String(64), nullable=False, unique=True, index=True)
+    expires_at = db.Column(db.DateTime, nullable=False, index=True)
+    revoked_at = db.Column(db.DateTime)
+    created_by = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    last_used_at = db.Column(db.DateTime)
+
+
+class EmergencyApiAudit(db.Model):
+    __tablename__ = "emergency_api_audit"
+
+    id = db.Column(db.String(36), primary_key=True, default=_uuid)
+    token_id = db.Column(db.String(36), db.ForeignKey("emergency_api_tokens.id", ondelete="SET NULL"))
+    remote_addr = db.Column(db.String(128))
+    sql_fingerprint = db.Column(db.String(64), nullable=False)
+    success = db.Column(db.Boolean, nullable=False)
+    row_count = db.Column(db.Integer)
+    error = db.Column(db.String(300))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+
 class Progression(db.Model):
     __tablename__ = "progression"
     __table_args__ = (

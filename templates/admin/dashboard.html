@@ -1,11 +1,16 @@
 {% extends "admin/_layout.html" %}
 {% block title %}לוח בקרה — ניהול{% endblock %}
 {% block content %}
+<div class="admin-filter-header">
+  <div><h1 class="text-2xl bold">לוח בקרה</h1><p class="text-sm muted">מרכז הפעולות והמעקב של המערכת</p></div>
+  <div class="row gap-2" style="flex-wrap:wrap;"><a class="btn btn-primary" href="{{ url_for('admin.questions', status='pending') }}">בדיקת שאלות</a><a class="btn btn-outline" href="{{ url_for('admin.import_questions') }}">ייבוא שאלות</a></div>
+</div>
+<div class="grid grid-3" style="margin-bottom:1rem;">
+  <a class="card" href="{{ url_for('admin.analytics') }}"><span class="muted text-sm">משתמשים</span><strong class="text-2xl">{{ global_stats.users }}</strong></a>
+  <a class="card" href="{{ url_for('admin.analytics') }}"><span class="muted text-sm">תשובות · הצלחה</span><strong class="text-2xl">{{ global_stats.answers }}{% if global_stats.accuracy is not none %} · {{ global_stats.accuracy }}%{% endif %}</strong></a>
+  <a class="card" href="{{ url_for('admin.analytics') }}"><span class="muted text-sm">לסקירה היום</span><strong class="text-2xl">{{ global_stats.due }}</strong></a>
+</div>
 <div class="stack">
-  <div>
-    <h1 class="text-2xl bold">לוח בקרה</h1>
-    <p class="text-sm muted">סקירת מצב מאגר השאלות</p>
-  </div>
 
   <div class="grid grid-4 grid-2-mobile-1">
     {% set cards = [('ממתינות לאימות', counts.pending, '⏳', 'var(--warning)'),('לתיקון', counts.a_revoir, '🚩', '#f97316'),('מאושרות', counts.approved, '✅', 'var(--success)'),('נדחו', counts.rejected, '❌', 'var(--destructive)')] %}
@@ -29,7 +34,7 @@
           {% for row in by_subject %}
           <li class="text-sm" data-subject-row>
             <div class="row between" style="gap:0.5rem;align-items:center;">
-              <span>{{ row.title }}</span>
+              {% if row.id %}<a href="{{ url_for('admin.analytics', scope='subject', id=row.id) }}">{{ row.title }}</a>{% else %}<span>{{ row.title }}</span>{% endif %}
               <span class="row gap-1" style="align-items:center;">
                 <span class="muted">{{ row.count }}</span>
                 {% if row.id %}
@@ -92,13 +97,22 @@
     {% endif %}
   </div>
 
+  <div class="card">
+    <h2 class="text-lg semibold" style="margin-bottom:0.75rem;">📊 ניתוח לפי מסלול</h2>
+    <div class="row gap-2" style="flex-wrap:wrap;">
+      {% for code, label in parcours_labels.items() %}
+      <a class="btn btn-outline" href="{{ url_for('admin.analytics', scope='parcours', id=code) }}">{{ label }}</a>
+      {% endfor %}
+    </div>
+  </div>
+
   <script>
     function toggleSubjectRename(btn) {
       const row = btn.closest('[data-subject-row]');
       const form = row.querySelector('[data-rename-form]');
       const showing = form.style.display !== 'none';
       form.style.display = showing ? 'none' : 'flex';
-      if (!showing) form.querySelector('input[name=new_subject]').focus();
+      if (!showing) form.querySelector('input[name=new_title]').focus();
     }
   </script>
 

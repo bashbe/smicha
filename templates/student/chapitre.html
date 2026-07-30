@@ -27,6 +27,8 @@
          data-revision="{{ 'true' if is_revision | default(false) else 'false' }}"
          data-mode="{{ mode | default('study') }}"
          data-mode-label="{{ mode_label | default('') }}"
+         data-admin-edit-url="{{ url_for('admin.questions') if current_user and current_user.has_role('super_admin') else '' }}"
+         data-can-suggest="{{ 'true' if current_user and current_user.has_role('validator') and not current_user.has_role('super_admin') else 'false' }}"
          data-back-url="{{ back_url if back_url is defined and back_url else url_for('student.parcours') }}"></div>
   </div>
   <script src="{{ url_for('static', filename='js/chapitre.js') }}"></script>

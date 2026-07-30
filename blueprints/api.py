@@ -436,18 +436,15 @@ def report():
     if q is None:
         return jsonify({"error": "question not found"}), 404
 
-    if user.has_role("validator") or user.has_role("super_admin"):
+    if user.has_role("validator") and not user.has_role("super_admin"):
+        # Le validateur contribue depuis le lecteur sans modifier le contenu
+        # publié : sa remontée est une suggestion à arbitrer par un super-admin.
+        from models import QuestionSuggestion
+        db.session.add(QuestionSuggestion(question_id=q.id, author_id=user.id, message=reason or "Suggestion depuis le lecteur"))
+    elif user.has_role("super_admin"):
         previous = q.as_dict()
         q.status = "a_revoir"
-        db.session.add(
-            QuestionEdit(
-                question_id=q.id,
-                editor_id=user.id,
-                action="reported",
-                note=reason or None,
-                previous_content=previous,
-            )
-        )
+        db.session.add(QuestionEdit(question_id=q.id, editor_id=user.id, action="reported", note=reason or None, previous_content=previous))
     else:
         existing = QuestionReport.query.filter_by(
             question_id=q.id, reporter_id=user.id, status="open"

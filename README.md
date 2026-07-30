@@ -107,6 +107,9 @@ Toutes les variables se trouvent dans `config.py` et sont surchargeables par var
 | `ALLOWED_SIGNUP_EMAILS` | *(vide → `SUPER_ADMIN_EMAIL` seul)* | Liste blanche d'emails autorisés à s'inscrire via `/auth` (séparés par des virgules). Restriction temporaire — voir [Rôles et authentification](#rôles-et-authentification). Ne s'applique pas aux comptes créés par `seed.py` |
 | `FLASK_PORT` | `5000` | Port d'écoute (lu dans `app.py`) |
 | `GITHUB_WEBHOOK_SECRET` | `None` | Secret HMAC-SHA256 partagé avec le webhook GitHub — voir [Déploiement continu](#déploiement-continu-pythonanywhere). `None` désactive l'endpoint |
+| `BACKUP_DIR` | `db_backups/` | Dossier privé des sauvegardes administrées |
+| `EMERGENCY_SQL_API_ENABLED` | `0` | Active explicitement l'API SQL d'urgence ; laisser désactivé hors incident |
+| `EMERGENCY_SQL_API_MAX_TTL_MINUTES` | `60` | Durée maximale d'un jeton SQL d'urgence (5 à 60 minutes) |
 | `PYTHONANYWHERE_USERNAME` | `None` | Nom d'utilisateur PythonAnywhere — seul requis pour le reload automatique via `touch` du fichier WSGI (fonctionne sur tous les plans, y compris gratuit) |
 | `PYTHONANYWHERE_DOMAIN` | `<USERNAME>.pythonanywhere.com` | Domaine du web app à recharger (à surcharger pour un domaine personnalisé) |
 | `PYTHONANYWHERE_API_TOKEN` | `None` | Token API PythonAnywhere (Account → API Token) — optionnel, fallback si le `touch` échoue ; **403 sur les comptes gratuits** (Beginner), réservé aux plans payants |
@@ -1041,6 +1044,13 @@ de compte. Cette restriction ne s'applique pas aux comptes créés par `seed.py`
 | `importer` | `/admin/*` + import JSON | Manuel (super_admin) |
 | `validator` | `/admin/*` + validation + `/admin/reports` (confirmer/rejeter les signalements) — voit aussi les questions `pending` dans `/app/parcours` et peut les ouvrir dans le lecteur ; signaler une question (🚩) la retire immédiatement pour **tout le monde** | Manuel (super_admin) |
 | `super_admin` | Tout + reset DB — voit aussi les questions `pending` dans `/app/parcours` et dispose des mêmes privilèges de signalement que `validator` | Permanent pour `bcbeneghmos@gmail.com`; auto aussi si email = `SUPER_ADMIN_EMAIL`, sinon manuel |
+
+### Administration, sauvegardes et accès d’urgence
+
+- `/admin/questions` est la source principale de modification, validation et analyse des questions. Les écrans de signalements et de suggestions y renvoient, sans dupliquer l’éditeur.
+- Depuis le lecteur, un `validator` envoie une **suggestion** : elle ne modifie jamais la question. Un `super_admin` peut ouvrir directement l’éditeur de cette question.
+- La tâche `python -m scripts.run_backup` crée une sauvegarde cohérente et conserve les sept dernières sauvegardes ordinaires. Une sauvegarde marquée à conserver dans `/admin/backups` reste présente jusqu’à sa suppression manuelle. Voir `docs/pythonanywhere_backups.md` pour la tâche PythonAnywhere de minuit.
+- L’API SQL d’urgence est désactivée sans `EMERGENCY_SQL_API_ENABLED=1`. Elle exige un jeton éphémère créé par un super-admin, une requête HMAC horodatée (60 secondes) et inscrit chaque tentative dans l’audit. Elle est réservée aux incidents : une requête SQL arbitraire confère par nature des droits complets sur les données.
 
 Décorateurs disponibles dans `auth_helpers.py` :
 - `@login_required` — redirige vers `/auth` si non connecté

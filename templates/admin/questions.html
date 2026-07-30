@@ -120,6 +120,7 @@
           <span class="pill" style="background:rgba(245,158,11,0.2);color:#f59e0b;">ממתינה לאימות</span>
           {% endif %}
           {% if selected.source_ref %}<span class="muted">מזהה מקור: {{ selected.source_ref }}</span>{% endif %}
+          <a class="muted" href="{{ url_for('admin.analytics', scope='question', id=selected.id) }}">📊 נתוני השאלה</a>
         </div>
 
         {# ── Metadata card ── #}

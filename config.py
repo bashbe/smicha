@@ -40,3 +40,9 @@ class Config:
     # Secret partagé avec le webhook GitHub (POST /webhook/deploy) pour vérifier
     # la signature HMAC-SHA256 de chaque requête. None = endpoint désactivé (401/500).
     GITHUB_WEBHOOK_SECRET = os.environ.get("GITHUB_WEBHOOK_SECRET")
+
+    # API SQL d'urgence : opt-in explicite en production. Aucun endpoint ne
+    # devient utilisable sans cette valeur, même si un jeton existe en base.
+    EMERGENCY_SQL_API_ENABLED = os.environ.get("EMERGENCY_SQL_API_ENABLED") == "1"
+    EMERGENCY_SQL_API_MAX_TTL_MINUTES = min(max(int(os.environ.get("EMERGENCY_SQL_API_MAX_TTL_MINUTES", "60")), 5), 60)
+    BACKUP_DIR = os.environ.get("BACKUP_DIR", os.path.join(os.path.dirname(__file__), "db_backups"))
