@@ -6,7 +6,7 @@ pg_dump, which is the only consistent physical export available to a web app.
 from __future__ import annotations
 
 import subprocess
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from flask import current_app
@@ -47,9 +47,14 @@ def create_backup(created_by: str | None = None) -> BackupRecord:
 
 
 def enforce_retention() -> None:
-    """Keep the newest seven automatic files; never remove marked backups."""
-    removable = BackupRecord.query.filter_by(keep_forever=False).order_by(BackupRecord.created_at.desc()).all()
-    for record in removable[7:]:
+    """Remove ordinary backups older than seven days; never remove pinned ones."""
+    cutoff = datetime.utcnow() - timedelta(days=7)
+    removable = (
+        BackupRecord.query
+        .filter(BackupRecord.keep_forever.is_(False), BackupRecord.created_at < cutoff)
+        .all()
+    )
+    for record in removable:
         path = backup_directory() / record.filename
         if path.is_file():
             path.unlink()

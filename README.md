@@ -1049,7 +1049,7 @@ de compte. Cette restriction ne s'applique pas aux comptes créés par `seed.py`
 
 - `/admin/questions` est la source principale de modification, validation et analyse des questions. Les écrans de signalements et de suggestions y renvoient, sans dupliquer l’éditeur.
 - Depuis le lecteur, un `validator` envoie une **suggestion** : elle ne modifie jamais la question. Un `super_admin` peut ouvrir directement l’éditeur de cette question.
-- La tâche `python -m scripts.run_backup` crée une sauvegarde cohérente et conserve les sept dernières sauvegardes ordinaires. Une sauvegarde marquée à conserver dans `/admin/backups` reste présente jusqu’à sa suppression manuelle. Voir `docs/pythonanywhere_backups.md` pour la tâche PythonAnywhere de minuit.
+- La tâche `python -m scripts.run_backup` crée une sauvegarde cohérente et conserve les sauvegardes ordinaires des sept derniers jours. Une sauvegarde marquée à conserver dans `/admin/backups` reste présente jusqu’à sa suppression manuelle. Voir `docs/pythonanywhere_backups.md` pour la tâche PythonAnywhere de minuit.
 - L’API SQL d’urgence est désactivée sans `EMERGENCY_SQL_API_ENABLED=1`. Elle exige un jeton éphémère créé par un super-admin, une requête HMAC horodatée (60 secondes) et inscrit chaque tentative dans l’audit. Elle est réservée aux incidents : une requête SQL arbitraire confère par nature des droits complets sur les données.
 
 Décorateurs disponibles dans `auth_helpers.py` :
