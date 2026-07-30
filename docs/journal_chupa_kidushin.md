@@ -78,10 +78,25 @@ faudra que l'utilisateur revérifie le PDF original à cet endroit s'il veut ce 
 
 ### Lot 3 — ehy siman 29 (נתינת הכסף, משכון, קנין סודר, מנה חסר, כוס, "הבה מיהבה")
 
-- Statut : en attente
+- Statut : **généré et validé** (26 questions, 0 erreur)
 - Fichier : `generated_questions_ehy_29.json`
 - Contenu source : seifim א (מתעמ"ל / קידושין ע"מ להחזיר), ב-ה (ערב, עבד כנעני), ו (משכון, קנין
   סודר), ז (מנה/דינר), ח (מחלוקת על הסכום), ט (כוס זה), י (הבה מיהבה).
+- Répartition : 17 multiple_choice, 6 multiple_opinions_dropdown, 3 true_false.
+
+## Récapitulatif final de la génération (3 lots)
+
+| Lot | Siman | Fichier | Cartes | Statut validation script |
+|---|---|---|---|---|
+| 1 | ehy 26 | `generated_questions_ehy_26.json` | 21 | 0 erreur |
+| 2 | ehy 27 | `generated_questions_ehy_27.json` | 37 | 0 erreur |
+| 3 | ehy 29 | `generated_questions_ehy_29.json` | 26 | 0 erreur |
+| **Total** | | | **84** | |
+
+Les 3 lots ont été générés d'un coup comme demandé (pas d'attente de jugement utilisateur entre
+les lots). Reste à faire : vérification par agent Haiku (voir section dédiée — Sefaria
+indisponible dans cette session, vérification limitée au texte source sauvegardé), puis import
+réel via `/admin/import` après revue humaine.
 
 ## ⚠️ Contrainte réseau — API Sefaria inaccessible depuis cette session
 
