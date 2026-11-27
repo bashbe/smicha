@@ -56,6 +56,23 @@
       <div class="admin-editor-stat"><span>Open reports</span><strong>{{ selected_stats.reports }}</strong></div>
     </div>
 
+    {% if selected_llm_reviews %}
+    <div class="admin-form-section">
+      <h3>LLM pipeline reviews <span class="muted">· {{ selected_llm_reviews|length }} vote(s)</span></h3>
+      <ul class="admin-llm-review-list">
+        {% for v in selected_llm_reviews %}
+        <li>
+          <strong>{{ v.agent_label }}</strong>
+          <span class="admin-llm-vote {{ v.vote }}">{{ v.vote }}</span>
+          {% if v.confidence is not none %}<small>{{ (v.confidence * 100)|round|int }}%</small>{% endif %}
+          <small>· iter {{ v.iteration }} · {% if v.run_id %}<a href="{{ url_for('admin.llm_run_detail', run_id=v.run_id) }}"><code>{{ v.run_id }}</code></a>{% endif %}</small>
+          {% if v.comment %}<br/><span dir="rtl">{{ v.comment }}</span>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
     <form method="post" action="{{ url_for('admin.edit_question', qid=selected.id) }}" id="qform">
       <input type="hidden" name="action" value="save" />
       {% for key in ['status','type','parcours','q','siman','seif','tag','group'] %}<input type="hidden" name="filter_{{ key }}" value="{{ filters[key] }}" />{% endfor %}

@@ -1,0 +1,36 @@
+{% extends "admin/_layout.html" %}
+{% block title %}LLM pipeline runs — Kinyan Admin{% endblock %}
+{% block content %}
+<div class="admin-page-header">
+  <div><p class="admin-eyebrow">LLM PIPELINE</p><h1>Pipeline runs</h1><p>Question-design runs executed by the <code>/llm-pipeline</code> skill (personas: architect, writer, 4 validators, coherence checker, corrector).</p></div>
+  <a href="{{ url_for('admin.import_questions') }}" class="admin-btn admin-btn-primary">Import questions</a>
+</div>
+
+{% if runs %}
+<section class="admin-panel">
+  <table class="admin-table">
+    <thead><tr><th>Run</th><th>Path</th><th>Siman</th><th>Status</th><th>Iterations</th><th>Questions</th><th>LLM approved</th><th>LLM flagged</th><th>Created</th></tr></thead>
+    <tbody>
+      {% for run in runs %}
+      <tr>
+        <td><a href="{{ url_for('admin.llm_run_detail', run_id=run.id) }}"><code>{{ run.id }}</code></a></td>
+        <td>{{ parcours_labels.get(run.parcours, run.parcours) }}</td>
+        <td>{{ run.chelek ~ ' · ' if run.chelek else '' }}siman {{ run.siman }}</td>
+        <td><span class="admin-status {{ 'approved' if run.status == 'done' else ('rejected' if run.status == 'failed' else 'pending') }}">{{ run.status }}</span></td>
+        <td>{{ run.iterations }} / {{ run.max_iterations }}</td>
+        <td>{{ run.total_questions }}</td>
+        <td>{{ run.llm_approved }}</td>
+        <td>{{ run.llm_flagged }}</td>
+        <td>{{ run.created_at.strftime('%Y-%m-%d %H:%M') if run.created_at else '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% else %}
+<div class="admin-panel admin-empty">
+  <p>No pipeline runs yet.</p>
+  <p>Run <code>/llm-pipeline --siman &lt;N&gt; --chelek &lt;code&gt; --parcours &lt;code&gt; --source &lt;file&gt;</code> in Claude Code, then import the result with <code>python -m scripts.import_llm_run --run-id &lt;run_id&gt;</code>.</p>
+</div>
+{% endif %}
+{% endblock %}
