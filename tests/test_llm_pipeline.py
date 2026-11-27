@@ -138,6 +138,8 @@ def test_import_run_creates_questions_and_reviews():
             coherence = {"iteration": 0, "overall": "needs_work", "duplicates": [],
                          "should_split": [], "coverage_gaps": [{"seif": 3, "missing": True}]}
             run_dir = _make_run_dir(tmp, "test_run_1", questions, reviews, coherence)
+            with open(os.path.join(run_dir, "02_reviews_v1.json"), "w", encoding="utf-8") as f:
+                json.dump({"iteration": 0, "reviews": reviews}, f)
             summary = import_run(run_dir, app=app)
             assert summary["questions_inserted"] == 2
             assert summary["questions_failed"] == 0

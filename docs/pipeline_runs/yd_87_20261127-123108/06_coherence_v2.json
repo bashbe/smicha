@@ -1,0 +1,11 @@
+{
+ "iteration": 1,
+ "duplicates": [],
+ "should_split": [],
+ "coverage_gaps": [],
+ "section_inconsistencies": [],
+ "difficulty_miscalibration": [],
+ "subject_issues": [],
+ "overall": "ok",
+ "wording_issues": []
+}

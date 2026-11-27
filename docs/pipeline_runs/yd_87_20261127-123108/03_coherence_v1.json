@@ -1,0 +1,21 @@
+{
+ "iteration": 0,
+ "duplicates": [],
+ "should_split": [
+  {
+   "question_index": 59,
+   "reason": "די לשאול על דין הנסיובי ולהשאיר את פירוש הברייתא להסבר.",
+   "suggested_parts": 1
+  }
+ ],
+ "coverage_gaps": [],
+ "section_inconsistencies": [],
+ "difficulty_miscalibration": [],
+ "subject_issues": [],
+ "overall": "needs_work",
+ "wording_issues": [
+  12,
+  13,
+  24
+ ]
+}

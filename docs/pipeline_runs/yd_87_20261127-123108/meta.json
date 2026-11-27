@@ -1,0 +1,15 @@
+{
+  "run_id": "yd_87_20261127-123108",
+  "siman": 87,
+  "chelek": "yd",
+  "parcours": "bassar_bechalav",
+  "source": "docs/source_texts/tur_veshulchan_aruch_bassar_bechalav_siman_87.md",
+  "max_iter": 3,
+  "status": "done",
+  "iterations": 2,
+  "total_questions": 93,
+  "llm_approved": 93,
+  "llm_flagged": 0,
+  "created_at": "2026-11-27T12:31:08+01:00",
+  "finished_at": "2026-11-27T14:54:01.492Z"
+}

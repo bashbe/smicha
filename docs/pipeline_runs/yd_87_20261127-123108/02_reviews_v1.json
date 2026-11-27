@@ -1,0 +1,2981 @@
+{
+ "iteration": 0,
+ "reviews": [
+  {
+   "question_index": 0,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "מחבר — שלוש החזרות על הפסוק מלמדות שבישול, אכילה והנאה הם איסורים נפרדים."
+  },
+  {
+   "question_index": 0,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« בישול »). Jeter le plat isole le geste de cuire."
+  },
+  {
+   "question_index": 0,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Jeter le plat isole le geste de cuire."
+  },
+  {
+   "question_index": 0,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. בישול"
+  },
+  {
+   "question_index": 1,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "ש״ך ס״ק א — כבישה ומליחה מעבירות טעם אך אינן דרך בישול לעניין איסור התורה."
+  },
+  {
+   "question_index": 1,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« מדרבנן »). Le liquide froid et la durée excluent une cuisson ultérieure."
+  },
+  {
+   "question_index": 1,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le liquide froid et la durée excluent une cuisson ultérieure."
+  },
+  {
+   "question_index": 1,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. מדרבנן"
+  },
+  {
+   "question_index": 2,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "רמ״א וט״ז ס״ק א — הרמ״א מתיר הנאה כשאיסור התערובת מדרבנן בלבד. הט״ז מביא את חומרת מהרש״ל וחולק עליה."
+  },
+  {
+   "question_index": 2,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le même cas est posé à chaque autorité. La vente est une forme précise de profit."
+  },
+  {
+   "question_index": 2,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "La vente est une forme précise de profit."
+  },
+  {
+   "question_index": 2,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Attribution des positions exigible à l'oral. רמ״א – מותר למוכרו / מהרש״ל המובא בט״ז – אסור למוכרו"
+  },
+  {
+   "question_index": 3,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "מחבר — גדי כולל גם בהמות טהורות אחרות, וחלב אמו כולל גם חלב בהמה טהורה אחרת."
+  },
+  {
+   "question_index": 3,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« שור בוגר בחלב עז שאינה אמו »). Les trois scénarios opposent espèce, parenté et âge."
+  },
+  {
+   "question_index": 3,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Les trois scénarios opposent espèce, parenté et âge."
+  },
+  {
+   "question_index": 3,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. שור בוגר בחלב עז שאינה אמו"
+  },
+  {
+   "question_index": 4,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "מחבר — המחבר כולל חיה ועוף באיסור האכילה מדרבנן ומתיר בבישול ובהנאה."
+  },
+  {
+   "question_index": 4,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« אסורה מדרבנן »). Le cerf distingue gibier et bétail."
+  },
+  {
+   "question_index": 4,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le cerf distingue gibier et bétail."
+  },
+  {
+   "question_index": 4,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. אסורה מדרבנן"
+  },
+  {
+   "question_index": 5,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "ש״ך ס״ק ד — הש״ך מייחס למהרש״ל ולב״ח חיוב מן התורה וחולק עליהם."
+  },
+  {
+   "question_index": 5,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le même cas est posé à chaque autorité. L'attribution au Chakh signale qu'il rapporte aussi l'avis adverse."
+  },
+  {
+   "question_index": 5,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "L'attribution au Chakh signale qu'il rapporte aussi l'avis adverse."
+  },
+  {
+   "question_index": 5,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Attribution des positions exigible à l'oral. המחבר – מדרבנן / מהרש״ל – מן התורה"
+  },
+  {
+   "question_index": 6,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "מחבר — המחבר מוציא דגים וחגבים גם מן האיסור מדרבנן. דיון נפרד עוסק במנהג לגבי דגים."
+  },
+  {
+   "question_index": 6,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« מותר אף באכילה »). Le cadre explicite du mélange exclut la question séparée des usages."
+  },
+  {
+   "question_index": 6,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le cadre explicite du mélange exclut la question séparée des usages."
+  },
+  {
+   "question_index": 6,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. מותר אף באכילה"
+  },
+  {
+   "question_index": 7,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "ש״ך ס״ק ג — הש״ך מצדד בבית יוסף ומביא את קריאת הב״ח בטור."
+  },
+  {
+   "question_index": 7,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le même cas est posé à chaque autorité. Le mot supplémentaire empêche de conclure que le lait impur est permis."
+  },
+  {
+   "question_index": 7,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le mot supplémentaire empêche de conclure que le lait impur est permis."
+  },
+  {
+   "question_index": 7,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Attribution des positions exigible à l'oral. בית יוסף – אין איסור נוסף / ב״ח – יש איסור נוסף מדרבנן"
+  },
+  {
+   "question_index": 8,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "רמ״א — השקדים מזהים לעיני הרואה את מקור המשקה."
+  },
+  {
+   "question_index": 8,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« להניח שקדים ליד התבשיל »). Les amandes servent de signe aux convives."
+  },
+  {
+   "question_index": 8,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Les amandes servent de signe aux convives."
+  },
+  {
+   "question_index": 8,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. להניח שקדים ליד התבשיל"
+  },
+  {
+   "question_index": 9,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "רמ״א וש״ך ס״ק ו — הרמ״א מבחין בין עוף לבהמה והש״ך חושש למראית העין גם באיסור דרבנן."
+  },
+  {
+   "question_index": 9,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le même cas est posé à chaque autorité. La présence d'invités écarte l'exception de la maison."
+  },
+  {
+   "question_index": 9,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "La présence d'invités écarte l'exception de la maison."
+  },
+  {
+   "question_index": 9,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Attribution des positions exigible à l'oral. רמ״א – אין צורך בהיכר / ש״ך – צריך היכר"
+  },
+  {
+   "question_index": 10,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "ט״ז ס״ק ד — הט״ז מעדיף היכר כשאפשר אך אינו מעכב אכילה בהעדר שקדים."
+  },
+  {
+   "question_index": 10,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« מותר לאכול »). L'absence d'amandes situe le cas après la préparation."
+  },
+  {
+   "question_index": 10,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "L'absence d'amandes situe le cas après la préparation."
+  },
+  {
+   "question_index": 10,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. מותר לאכול"
+  },
+  {
+   "question_index": 11,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "מחבר — האיסור לכתחילה הוא מפני מראית העין ולכן בנפילה לתבשיל אין צורך בשיעור."
+  },
+  {
+   "question_index": 11,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« אין צורך בשיעור קבוע »). La chute accidentelle écarte une addition volontaire."
+  },
+  {
+   "question_index": 11,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La chute accidentelle écarte une addition volontaire."
+  },
+  {
+   "question_index": 11,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. אין צורך בשיעור קבוע"
+  },
+  {
+   "question_index": 12,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.93,
+   "comment": "רמ״א — היתר הבישול מעיקר הדין אינו פותר את החשש למראית העין."
+  },
+  {
+   "question_index": 12,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "reject",
+   "confidence": 0.93,
+   "comment": "Le motif est déjà suggéré par « באופן הנראה »."
+  },
+  {
+   "question_index": 12,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "reject",
+   "confidence": 0.93,
+   "comment": "Le motif est déjà suggéré par « באופן הנראה »."
+  },
+  {
+   "question_index": 12,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "reject",
+   "confidence": 0.93,
+   "comment": "Reformuler avant l'évaluation. Le motif est déjà suggéré par « באופן הנראה »."
+  },
+  {
+   "question_index": 13,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.93,
+   "comment": "ש״ך ס״ק ז — הש״ך מביא צורך רפואי כדוגמה למקרה שבו החשש למראית העין מסתלק."
+  },
+  {
+   "question_index": 13,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "reject",
+   "confidence": 0.93,
+   "comment": "L'énoncé livre la disparition du seul motif d'interdiction."
+  },
+  {
+   "question_index": 13,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "reject",
+   "confidence": 0.93,
+   "comment": "L'énoncé livre la disparition du seul motif d'interdiction."
+  },
+  {
+   "question_index": 13,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "reject",
+   "confidence": 0.93,
+   "comment": "Reformuler avant l'évaluation. L'énoncé livre la disparition du seul motif d'interdiction."
+  },
+  {
+   "question_index": 14,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "מחבר — לפי המחבר השלמת החלבון והחלמון קובעת אף כשהביצה מעורה."
+  },
+  {
+   "question_index": 14,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« מותרת »). Le blanc, le jaune et l'attache sont tous précisés."
+  },
+  {
+   "question_index": 14,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le blanc, le jaune et l'attache sont tous précisés."
+  },
+  {
+   "question_index": 14,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. מותרת"
+  },
+  {
+   "question_index": 15,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "מחבר וש״ך ס״ק יב — האיסור לאכול את החלמון עם חלב אינו מחייב המתנה אחרי אכילתו לבדו."
+  },
+  {
+   "question_index": 15,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« מיד »). Le jaune a été mangé seul, condition de la réponse."
+  },
+  {
+   "question_index": 15,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le jaune a été mangé seul, condition de la réponse."
+  },
+  {
+   "question_index": 15,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. מיד"
+  },
+  {
+   "question_index": 16,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "ש״ך ס״ק י — כשאינה מעורה הש״ך מתיר בדיעבד ובמעורה הוא אוסר בנסיבות הרגילות."
+  },
+  {
+   "question_index": 16,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« האם הייתה מעורה בגידים »). La coquille souple rend le rattachement déterminant."
+  },
+  {
+   "question_index": 16,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La coquille souple rend le rattachement déterminant."
+  },
+  {
+   "question_index": 16,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. האם הייתה מעורה בגידים"
+  },
+  {
+   "question_index": 17,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "ש״ך ס״ק יא — הש״ך משווה לעוף עצמו שבישולו מותר ומבאר את הלשון ביחס לאכילה."
+  },
+  {
+   "question_index": 17,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« האיסור הוא באכילתה עם החלב »). La question demande le sens du verbe, pas un interdit général de cuisson."
+  },
+  {
+   "question_index": 17,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La question demande le sens du verbe, pas un interdit général de cuisson."
+  },
+  {
+   "question_index": 17,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. האיסור הוא באכילתה עם החלב"
+  },
+  {
+   "question_index": 18,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "מחבר וש״ך ס״ק יג — המחבר מונה את שתי הדרכים בין המקרים שאין לוקים עליהם. הש״ך מדגיש שנותר איסור."
+  },
+  {
+   "question_index": 18,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« אין לוקים בשני המקרים »). Le libellé porte sur les coups et non sur la permission."
+  },
+  {
+   "question_index": 18,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le libellé porte sur les coups et non sur la permission."
+  },
+  {
+   "question_index": 18,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. אין לוקים בשני המקרים"
+  },
+  {
+   "question_index": 19,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "ש״ך ס״ק יד — שעת יציאת החלב מכריעה גם כאשר הבהמה נשחטה ולא מתה מעצמה."
+  },
+  {
+   "question_index": 19,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« חלב מתה »). La sortie après abattage fixe le statut."
+  },
+  {
+   "question_index": 19,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La sortie après abattage fixe le statut."
+  },
+  {
+   "question_index": 19,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. חלב מתה"
+  },
+  {
+   "question_index": 20,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "ש״ך ס״ק טז — הש״ך מיישב את הרמ״א עם המחבר על ידי הבחנה בין אדם לבהמה."
+  },
+  {
+   "question_index": 20,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« של אדם »). L'attribution au Chakh évite de généraliser le glossateur."
+  },
+  {
+   "question_index": 20,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "L'attribution au Chakh évite de généraliser le glossateur."
+  },
+  {
+   "question_index": 20,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. של אדם"
+  },
+  {
+   "question_index": 21,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "רמ״א — מי חלב וחלב מתה אוסרים את המאכל אף שהמבשל בהם פטור. גם בישולם אסור לכתחילה."
+  },
+  {
+   "question_index": 21,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« התבשיל אסור »). La présence de goût rend inutile une hypothèse sur le volume."
+  },
+  {
+   "question_index": 21,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La présence de goût rend inutile une hypothèse sur le volume."
+  },
+  {
+   "question_index": 21,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. התבשיל אסור"
+  },
+  {
+   "question_index": 22,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "ש״ך ס״ק יט — הש״ך תולה את איסור ההנאה ביצירת התערובת בדרך בישול."
+  },
+  {
+   "question_index": 22,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« כשהדיחו ברותחים וערבו בעודם רותחים »). Les deux moments de température figurent dans les choix."
+  },
+  {
+   "question_index": 22,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Les deux moments de température figurent dans les choix."
+  },
+  {
+   "question_index": 22,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. כשהדיחו ברותחים וערבו בעודם רותחים"
+  },
+  {
+   "question_index": 23,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "רמ״א וש״ך ס״ק יח — החיתוי מוסיף חום. הרמ״א מונה זאת בין החומרות והש״ך דן בהיקף המנהג."
+  },
+  {
+   "question_index": 23,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« בישול של בשר וחלב הבלועים בקדרה »). Le geste porte sur le feu sous la marmite."
+  },
+  {
+   "question_index": 23,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le geste porte sur le feu sous la marmite."
+  },
+  {
+   "question_index": 23,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. בישול של בשר וחלב הבלועים בקדרה"
+  },
+  {
+   "question_index": 24,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.93,
+   "comment": "ש״ך ס״ק כא — האש חוזרת ומלבנת את המתכת לאחר ההתזה."
+  },
+  {
+   "question_index": 24,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "reject",
+   "confidence": 0.93,
+   "comment": "Le mot « מלבנת » dans la question aide à deviner le métal."
+  },
+  {
+   "question_index": 24,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "reject",
+   "confidence": 0.93,
+   "comment": "Le mot « מלבנת » dans la question aide à deviner le métal."
+  },
+  {
+   "question_index": 24,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "reject",
+   "confidence": 0.93,
+   "comment": "Reformuler avant l'évaluation. Le mot « מלבנת » dans la question aide à deviner le métal."
+  },
+  {
+   "question_index": 25,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "מחבר — שליל דינו כבשר גם באכילה. בשליה, בעור, בגידים, בעצמות ובעיקרי הקרניים והטלפיים הרכים פטור."
+  },
+  {
+   "question_index": 25,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« שליל »). Le placenta est un distracteur proche du fœtus."
+  },
+  {
+   "question_index": 25,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le placenta est un distracteur proche du fœtus."
+  },
+  {
+   "question_index": 25,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. שליל"
+  },
+  {
+   "question_index": 26,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "ש״ך ס״ק כב — הש״ך מבחין בין פטור מעונש ובין היתר אכילה."
+  },
+  {
+   "question_index": 26,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« אין חיוב מלקות אך נשאר איסור »). Le mot פטור demande d'identifier ce qui reste interdit."
+  },
+  {
+   "question_index": 26,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le mot פטור demande d'identifier ce qui reste interdit."
+  },
+  {
+   "question_index": 26,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. אין חיוב מלקות אך נשאר איסור"
+  },
+  {
+   "question_index": 27,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "מחבר — בנסיובי הראשונים נשאר אוכל ולכן עדיין חל בהם איסור תורה."
+  },
+  {
+   "question_index": 27,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« אחרי בישול הנסיובי והסרת האוכל הצף »). Les choix décrivent trois étapes distinctes de fabrication."
+  },
+  {
+   "question_index": 27,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Les choix décrivent trois étapes distinctes de fabrication."
+  },
+  {
+   "question_index": 27,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. אחרי בישול הנסיובי והסרת האוכל הצף"
+  },
+  {
+   "question_index": 28,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "מחבר ורמ״א — לדעה הראשונה גם הצלול הוא פירשא. המנהג מחמיר בצלול."
+  },
+  {
+   "question_index": 28,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le même cas est posé à chaque autorité. Le liquide est explicitement clair."
+  },
+  {
+   "question_index": 28,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le liquide est explicitement clair."
+  },
+  {
+   "question_index": 28,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Attribution des positions exigible à l'oral. הדעה הראשונה במחבר – מותר לבשל / המנהג ברמ״א – אסור לבשל"
+  },
+  {
+   "question_index": 29,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "ט״ז ס״ק ז — רבנו תם מבחין בין קרוש לצלול. רש״י מחמיר גם בקרוש."
+  },
+  {
+   "question_index": 29,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le même cas est posé à chaque autorité. La coagulation est antérieure à l'abattage."
+  },
+  {
+   "question_index": 29,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "La coagulation est antérieure à l'abattage."
+  },
+  {
+   "question_index": 29,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Attribution des positions exigible à l'oral. רבנו תם – פירשא / רש״י – חלב"
+  },
+  {
+   "question_index": 30,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "רמ״א וש״ך ס״ק כו — הש״ך מסביר את הזהירות לכתחילה בתכונות החלב המשמש להעמדה."
+  },
+  {
+   "question_index": 30,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« מפני חריפותו וחמיצותו »). Le refroidissement est distingué de la macération."
+  },
+  {
+   "question_index": 30,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le refroidissement est distingué de la macération."
+  },
+  {
+   "question_index": 30,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. מפני חריפותו וחמיצותו"
+  },
+  {
+   "question_index": 31,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "ש״ך ס״ק כח — יום אחד שבמחבר הוא מעת לעת."
+  },
+  {
+   "question_index": 31,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« עשרים וארבע שעות רצופות »). Les vingt-quatre heures ne sont pas un changement de date."
+  },
+  {
+   "question_index": 31,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Les vingt-quatre heures ne sont pas un changement de date."
+  },
+  {
+   "question_index": 31,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. עשרים וארבע שעות רצופות"
+  },
+  {
+   "question_index": 32,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "רמ״א וש״ך ס״ק ל — הש״ך מפרש שקיבה האסורה כאן היא החלב שנאסר בה."
+  },
+  {
+   "question_index": 32,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« כמות חלב הקיבה האסור שהוסיפו »). Le liquide de présure est distingué de la paroi."
+  },
+  {
+   "question_index": 32,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le liquide de présure est distingué de la paroi."
+  },
+  {
+   "question_index": 32,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. כמות חלב הקיבה האסור שהוסיפו"
+  },
+  {
+   "question_index": 33,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "רמ״א — הקרוש מעיקרו נחשב פירשא. ההיתר מתייחס לגבינה שכבר הועמדה."
+  },
+  {
+   "question_index": 33,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« מותרת אף בלי שישים »). Le fromage est déjà fait et le contenu était coagulé du vivant de l'animal."
+  },
+  {
+   "question_index": 33,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le fromage est déjà fait et le contenu était coagulé du vivant de l'animal."
+  },
+  {
+   "question_index": 33,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. מותרת אף בלי שישים"
+  },
+  {
+   "question_index": 34,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "רמ״א וש״ך ס״ק לב — הש״ך מצרף את שיטות המקילים ומדגיש שמליחה אינה בישול מן התורה."
+  },
+  {
+   "question_index": 34,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« אפשר לסמוך על המחשיבים אותו לקרוש »). La perte importante et le moment de coagulation sont stipulés."
+  },
+  {
+   "question_index": 34,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La perte importante et le moment de coagulation sont stipulés."
+  },
+  {
+   "question_index": 34,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. אפשר לסמוך על המחשיבים אותו לקרוש"
+  },
+  {
+   "question_index": 35,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "רמ״א וש״ך ס״ק לג — היובש הגמור הוא יסוד ההיתר. הש״ך כותב שלכתחילה אין לעשות כן."
+  },
+  {
+   "question_index": 35,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« התייבש כעץ ואין בו לחלוחית בשר »). Le séchage complet est distingué du simple salage."
+  },
+  {
+   "question_index": 35,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le séchage complet est distingué du simple salage."
+  },
+  {
+   "question_index": 35,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. התייבש כעץ ואין בו לחלוחית בשר"
+  },
+  {
+   "question_index": 36,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "מחבר וש״ך ס״ק לד — כששני המרכיבים מותרים בפני עצמם, ההעמדה לבדה אינה אוסרת. הש״ך מבאר את השימוש בשישים למעשה."
+  },
+  {
+   "question_index": 36,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« האם העור נתן טעם בשר »). La question demande le critère du Mé'haber et non la technique de mesure actuelle."
+  },
+  {
+   "question_index": 36,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La question demande le critère du Mé'haber et non la technique de mesure actuelle."
+  },
+  {
+   "question_index": 36,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. האם העור נתן טעם בשר"
+  },
+  {
+   "question_index": 37,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "מחבר וש״ך ס״ק לה — למחבר המעמיד אסור בעצמו ולכן אינו בטל. הש״ך מביא את דעת מהרש״ל שמסתפק בשישים."
+  },
+  {
+   "question_index": 37,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le même cas est posé à chaque autorité. Le cas fixe le goût, la proportion et l'agent unique."
+  },
+  {
+   "question_index": 37,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le cas fixe le goût, la proportion et l'agent unique."
+  },
+  {
+   "question_index": 37,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Attribution des positions exigible à l'oral. המחבר – אסורה / מהרש״ל – מותרת"
+  },
+  {
+   "question_index": 38,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "ט״ז ס״ק יג — כשהאיסור מספיק להעמיד לבדו אין להתיר על סמך זה וזה גורם."
+  },
+  {
+   "question_index": 38,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« שהאסור לא היה מעמיד לבדו »). L'existence de soixante est acquise, seul le pouvoir du ferment reste à déterminer."
+  },
+  {
+   "question_index": 38,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "L'existence de soixante est acquise, seul le pouvoir du ferment reste à déterminer."
+  },
+  {
+   "question_index": 38,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. שהאסור לא היה מעמיד לבדו"
+  },
+  {
+   "question_index": 39,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "מחבר — בחיה ובעוף גזרו על האכילה והמחבר מתיר בישול והנאה מצד הדין."
+  },
+  {
+   "question_index": 39,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« הבישול והמכירה מותרים »). La précision « מצד איסור בשר בחלב עצמו » borne le cas."
+  },
+  {
+   "question_index": 39,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La précision « מצד איסור בשר בחלב עצמו » borne le cas."
+  },
+  {
+   "question_index": 39,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. הבישול והמכירה מותרים"
+  },
+  {
+   "question_index": 40,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "רמ״א וש״ך ס״ק ח — הרמ״א מבחין בין עוף לבהמה והש״ך מחמיר גם בעוף לעניין מראית העין."
+  },
+  {
+   "question_index": 40,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le même cas est posé à chaque autorité. Le public et le lait humain sont spécifiés."
+  },
+  {
+   "question_index": 40,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le public et le lait humain sont spécifiés."
+  },
+  {
+   "question_index": 40,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Attribution des positions exigible à l'oral. רמ״א – אין חוששים / ש״ך – חוששים"
+  },
+  {
+   "question_index": 41,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "ש״ך ס״ק טו — הש״ך מבחין בין משמעות דברי הרמב״ם ובין פסקו בדם מבושל."
+  },
+  {
+   "question_index": 41,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« אסורה מדרבנן »). La question isole l'interdit du sang lui-même."
+  },
+  {
+   "question_index": 41,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La question isole l'interdit du sang lui-même."
+  },
+  {
+   "question_index": 41,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. אסורה מדרבנן"
+  },
+  {
+   "question_index": 42,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "רמ״א וש״ך ס״ק כ — יש חשש שאריות בשר וחלב באפר. הש״ך מסביר מדוע חפיפת הראש עצמה אינה בכלל ההנאה האסורה כאן."
+  },
+  {
+   "question_index": 42,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« שימוש בכלי לצורכי אכילה »). L'usage alimentaire du récipient est distingué du lavage des cheveux."
+  },
+  {
+   "question_index": 42,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "L'usage alimentaire du récipient est distingué du lavage des cheveux."
+  },
+  {
+   "question_index": 42,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. שימוש בכלי לצורכי אכילה"
+  },
+  {
+   "question_index": 43,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "ש״ך ס״ק כז — הש״ך מצרף את הדעות המחשיבות אף צלול לפירשא ואת העובדה שמליחה אינה דרך בישול."
+  },
+  {
+   "question_index": 43,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« יש להקל במליחה זו »). Faible salage et fromage déjà fabriqué sont nécessaires."
+  },
+  {
+   "question_index": 43,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Faible salage et fromage déjà fabriqué sont nécessaires."
+  },
+  {
+   "question_index": 43,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. יש להקל במליחה זו"
+  },
+  {
+   "question_index": 44,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "ש״ך ס״ק כט — על אף מעמד הקרוש כפירשא, הוא קיבל טעם מן העור במליחה."
+  },
+  {
+   "question_index": 44,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« אין להעמיד בו »). La présure est encore inutilisée, ce qui distingue le cas de la question a posteriori."
+  },
+  {
+   "question_index": 44,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La présure est encore inutilisée, ce qui distingue le cas de la question a posteriori."
+  },
+  {
+   "question_index": 44,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. אין להעמיד בו"
+  },
+  {
+   "question_index": 45,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "מחבר ורמ״א — זה וזה גורם מסיר את החומרה המיוחדת של מעמיד יחיד אך עדיין נדרש שישים נגד האסור."
+  },
+  {
+   "question_index": 45,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« שישים כנגד האסור »). La capacité insuffisante du ferment interdit est posée au départ."
+  },
+  {
+   "question_index": 45,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La capacité insuffisante du ferment interdit est posée au départ."
+  },
+  {
+   "question_index": 45,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. שישים כנגד האסור"
+  },
+  {
+   "question_index": 46,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "טור — האכילה אסורה מדרבנן גם כשהבשר והחלב לא נתבשלו יחד."
+  },
+  {
+   "question_index": 46,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« שרק דרך בישול אוסרת אכילה מן התורה »). Le choix porte sur la portée de la formule biblique."
+  },
+  {
+   "question_index": 46,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le choix porte sur la portée de la formule biblique."
+  },
+  {
+   "question_index": 46,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. שרק דרך בישול אוסרת אכילה מן התורה"
+  },
+  {
+   "question_index": 47,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "דרכי משה אות א — המרדכי מביא דחייה לראיית ההיתר אך אינו מוצא ראיה מספקת לאסור."
+  },
+  {
+   "question_index": 47,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« אין מוחים בידו »). L'absence de protestation est moins forte qu'une preuve positive."
+  },
+  {
+   "question_index": 47,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "L'absence de protestation est moins forte qu'une preuve positive."
+  },
+  {
+   "question_index": 47,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. אין מוחים בידו"
+  },
+  {
+   "question_index": 48,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "טור — גם שור ושה בכלל, ואין צורך שהחלב יבוא מאם הבהמה."
+  },
+  {
+   "question_index": 48,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« הכתוב נקט מקרה מצוי »). Les deux lectures restrictives portent sur le texte du verset."
+  },
+  {
+   "question_index": 48,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Les deux lectures restrictives portent sur le texte du verset."
+  },
+  {
+   "question_index": 48,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. הכתוב נקט מקרה מצוי"
+  },
+  {
+   "question_index": 49,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "בית יוסף אות ג — במין טמא האכילה אסורה מכוח הטומאה. רק בחיה ובעוף נדרש האיסור מדרבנן משום בשר בחלב."
+  },
+  {
+   "question_index": 49,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« חיה ועוף בחלב טהורה »). Les mélanges avec un ingrédient impur restent interdits à un autre titre."
+  },
+  {
+   "question_index": 49,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Les mélanges avec un ingrédient impur restent interdits à un autre titre."
+  },
+  {
+   "question_index": 49,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. חיה ועוף בחלב טהורה"
+  },
+  {
+   "question_index": 50,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "בית יוסף אות ג — הבית יוסף מייחס לרבי עקיבא את הוצאת בשר חיה ועוף מאיסור תורה."
+  },
+  {
+   "question_index": 50,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« רבי עקיבא »). Deux noms proches imposent de connaître l'attribution."
+  },
+  {
+   "question_index": 50,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Deux noms proches imposent de connaître l'attribution."
+  },
+  {
+   "question_index": 50,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. רבי עקיבא"
+  },
+  {
+   "question_index": 51,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "בית יוסף אות ו ודרכי משה אות ד — דרכי משה מבאר שהמקור באורח חיים עוסק בדגים עם בשר. השאלה עוסקת בקריאת המקורות."
+  },
+  {
+   "question_index": 51,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le même cas est posé à chaque autorité. Les deux auteurs lisent différemment le renvoi à Ora'h 'Haïm."
+  },
+  {
+   "question_index": 51,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Les deux auteurs lisent différemment le renvoi à Ora'h 'Haïm."
+  },
+  {
+   "question_index": 51,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Attribution des positions exigible à l'oral. בית יוסף – כותב להימנע / דרכי משה – מתיר"
+  },
+  {
+   "question_index": 52,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "בית יוסף אות ד — הרשב״א תולה את האיסור במראית העין ולכן מקל בנפילה."
+  },
+  {
+   "question_index": 52,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« בישול אסור לכתחילה ונפילה אינה צריכה שיעור »). La chute de lait et la cuisson voulue sont les deux côtés d'une distinction."
+  },
+  {
+   "question_index": 52,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La chute de lait et la cuisson voulue sont les deux côtés d'une distinction."
+  },
+  {
+   "question_index": 52,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. בישול אסור לכתחילה ונפילה אינה צריכה שיעור"
+  },
+  {
+   "question_index": 53,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "טור ובית יוסף אות ה — המחלוקת עוסקת באיזה שלב הביצה נחשבת גמורה. אין לבלבל בין יצירת חלבון להתקשות הקליפה."
+  },
+  {
+   "question_index": 53,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le même cas est posé à chaque autorité. Le jaune achevé sans blanc isole le point de divergence."
+  },
+  {
+   "question_index": 53,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le jaune achevé sans blanc isole le point de divergence."
+  },
+  {
+   "question_index": 53,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Attribution des positions exigible à l'oral. רש״י לפי הטור – די בגמר החלמון / רשב״א – צריך גם חלבון"
+  },
+  {
+   "question_index": 54,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "בית יוסף אות ה — הרשב״א דוחה את הדעה המצריכה קליפה קשה."
+  },
+  {
+   "question_index": 54,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le même cas est posé à chaque autorité. La coquille dure distingue ici le Rashbam du Rashba."
+  },
+  {
+   "question_index": 54,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "La coquille dure distingue ici le Rashbam du Rashba."
+  },
+  {
+   "question_index": 54,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Attribution des positions exigible à l'oral. רשב״א – משיש חלבון וחלמון / רשב״ם – משנגמרה הקליפה והתקשתה"
+  },
+  {
+   "question_index": 55,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "בית יוסף אות ה — כשאין לביצים מה לפלוט יש לחשוש שיבלעו מהדם שהבשר פולט."
+  },
+  {
+   "question_index": 55,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« הביצים עלולות לבלוע דם מן הבשר »). Le risque est une absorption de sang pendant le salage conjoint."
+  },
+  {
+   "question_index": 55,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le risque est une absorption de sang pendant le salage conjoint."
+  },
+  {
+   "question_index": 55,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. הביצים עלולות לבלוע דם מן הבשר"
+  },
+  {
+   "question_index": 56,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "בית יוסף אות ז — הספק מחייב זהירות באיסור תורה אך אין לוקים עליו."
+  },
+  {
+   "question_index": 56,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« שאלה שלא הוכרעה בירושלמי »). La question demande pourquoi on ne prononce pas de peine certaine."
+  },
+  {
+   "question_index": 56,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La question demande pourquoi on ne prononce pas de peine certaine."
+  },
+  {
+   "question_index": 56,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. שאלה שלא הוכרעה בירושלמי"
+  },
+  {
+   "question_index": 57,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "טור בשם הרמב״ם — הפטור מדין בשר בחלב אינו מכריע את הדיון הנפרד באיסור דם."
+  },
+  {
+   "question_index": 57,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« אינו לוקה משום בשר בחלב »). La mention משום בשר בחלב borne la portée de l'exemption."
+  },
+  {
+   "question_index": 57,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La mention משום בשר בחלב borne la portée de l'exemption."
+  },
+  {
+   "question_index": 57,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. אינו לוקה משום בשר בחלב"
+  },
+  {
+   "question_index": 58,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "טור — שליל הוא בשר ואילו שליה נמנית עם החלקים שאין חייבים על בישולם בחלב."
+  },
+  {
+   "question_index": 58,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« בשליל חייב ובשליה פטור »). Les deux tissus sont comparés dans le même geste."
+  },
+  {
+   "question_index": 58,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Les deux tissus sont comparés dans le même geste."
+  },
+  {
+   "question_index": 58,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. בשליל חייב ובשליה פטור"
+  },
+  {
+   "question_index": 59,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.93,
+   "comment": "בית יוסף אות ח — הרא״ש מייחד את השם מי חלב לנוזל שנותר לאחר בישול והפרדה נוספת."
+  },
+  {
+   "question_index": 59,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "reject",
+   "confidence": 0.93,
+   "comment": "La question demande à la fois le statut et la lecture de la baraïta."
+  },
+  {
+   "question_index": 59,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "reject",
+   "confidence": 0.93,
+   "comment": "La question demande à la fois le statut et la lecture de la baraïta."
+  },
+  {
+   "question_index": 59,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "reject",
+   "confidence": 0.93,
+   "comment": "Reformuler avant l'évaluation. La question demande à la fois le statut et la lecture de la baraïta."
+  },
+  {
+   "question_index": 60,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "טור — הרי״ף רואה אף בצלול פירשא ורש״י אוסר אף בקרוש. רבנו תם מחלק בין המצבים."
+  },
+  {
+   "question_index": 60,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le même cas est posé à chaque autorité. Les trois positions sont distinctes même avec une option par décisionnaire."
+  },
+  {
+   "question_index": 60,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Les trois positions sont distinctes même avec une option par décisionnaire."
+  },
+  {
+   "question_index": 60,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Attribution des positions exigible à l'oral. רי״ף – לא הצלול ולא הקרוש / רש״י – גם הצלול וגם הקרוש / רבנו תם – הצלול בלבד"
+  },
+  {
+   "question_index": 61,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "בית יוסף אות ט — הטור נשען על סדר הבאת הדעות והבית יוסף על לשון הרא״ש ביחס לגרסת הסוגיה."
+  },
+  {
+   "question_index": 61,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le même cas est posé à chaque autorité. Il s'agit d'une divergence de lecture du Roch."
+  },
+  {
+   "question_index": 61,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Il s'agit d'une divergence de lecture du Roch."
+  },
+  {
+   "question_index": 61,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Attribution des positions exigible à l'oral. טור – לשיטת רבנו תם / בית יוסף – לשיטת רש״י"
+  },
+  {
+   "question_index": 62,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "בית יוסף אות י — החלב שכבר נאסר מתערב בחלב הגבינה. אין כאן שני מעברי טעם של היתר."
+  },
+  {
+   "question_index": 62,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« החלב שקיבל טעם בשר נעשה איסור »). L'état interdit du premier liquide écarte le simple transfert de goût permis."
+  },
+  {
+   "question_index": 62,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "L'état interdit du premier liquide écarte le simple transfert de goût permis."
+  },
+  {
+   "question_index": 62,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. החלב שקיבל טעם בשר נעשה איסור"
+  },
+  {
+   "question_index": 63,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "דרכי משה אות ח — דרכי משה דוחה את ההשוואה לדגים שעלו בקערה כי כאן הטעם התקבל מן העור עצמו."
+  },
+  {
+   "question_index": 63,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« הטעם שקיבל נידון כפירשא »). Le contact direct avec la paroi est central."
+  },
+  {
+   "question_index": 63,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le contact direct avec la paroi est central."
+  },
+  {
+   "question_index": 63,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. הטעם שקיבל נידון כפירשא"
+  },
+  {
+   "question_index": 64,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "דרכי משה אות ט — לאחר ריקון והדחה דינו כשאר בשר לעניין המליחה."
+  },
+  {
+   "question_index": 64,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« מותר למולחו עם בשר »). La vidange puis le rinçage sont explicités."
+  },
+  {
+   "question_index": 64,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La vidange puis le rinçage sont explicités."
+  },
+  {
+   "question_index": 64,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. מותר למולחו עם בשר"
+  },
+  {
+   "question_index": 65,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "בית יוסף אות יב — איסור בשר בחלב תלוי בחיבור בדרך נתינת טעם. מעמיד שכבר נאסר בעצמו נידון כנמצא בעין."
+  },
+  {
+   "question_index": 65,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« עור כשרה מותר בפני עצמו »). L'opposition porte sur l'interdit intrinsèque de la paroi."
+  },
+  {
+   "question_index": 65,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "L'opposition porte sur l'interdit intrinsèque de la paroi."
+  },
+  {
+   "question_index": 65,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. עור כשרה מותר בפני עצמו"
+  },
+  {
+   "question_index": 66,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק א — בשר בחלב נמנה עם החריגים לדין הרגיל של אכילה שלא כדרכה."
+  },
+  {
+   "question_index": 66,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« חייב אף שלא כדרך אכילה »). Le mode inhabituel d'ingestion est précisé."
+  },
+  {
+   "question_index": 66,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le mode inhabituel d'ingestion est précisé."
+  },
+  {
+   "question_index": 66,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. חייב אף שלא כדרך אכילה"
+  },
+  {
+   "question_index": 67,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק ב — בשר בחלב הוא מן הנקברים. שרפתו אינה מתירה את אפרו."
+  },
+  {
+   "question_index": 67,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« אסור בהנאה מן התורה »). Le produit était déjà interdit au profit avant combustion."
+  },
+  {
+   "question_index": 67,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le produit était déjà interdit au profit avant combustion."
+  },
+  {
+   "question_index": 67,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. אסור בהנאה מן התורה"
+  },
+  {
+   "question_index": 68,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק ב — חצי שיעור באכילה אסור מן התורה. הפרי מגדים מסתפק בהרחבה לבישול ולהנאה."
+  },
+  {
+   "question_index": 68,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« איסור תורה בבישול ובהנאה »). La réponse doit rester un doute du Pri Megadim."
+  },
+  {
+   "question_index": 68,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La réponse doit rester un doute du Pri Megadim."
+  },
+  {
+   "question_index": 68,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. איסור תורה בבישול ובהנאה"
+  },
+  {
+   "question_index": 69,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק ב — הראיה נוגעת לערך ההנאה ואינה קובעת שיעור חדש לאכילה."
+  },
+  {
+   "question_index": 69,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« שווי פרוטה »). La valeur monétaire est distinguée d'une mesure alimentaire."
+  },
+  {
+   "question_index": 69,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La valeur monétaire est distinguée d'une mesure alimentaire."
+  },
+  {
+   "question_index": 69,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. שווי פרוטה"
+  },
+  {
+   "question_index": 70,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "פתחי תשובה ס״ק ג — הפרי מגדים מצרף את הצד המקל בהפסד מרובה. זו מחלוקת על דרך ההכנה."
+  },
+  {
+   "question_index": 70,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le même cas est posé à chaque autorité. Le verbe מצדד préserve le caractère exploratoire de l'avis."
+  },
+  {
+   "question_index": 70,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le verbe מצדד préserve le caractère exploratoire de l'avis."
+  },
+  {
+   "question_index": 70,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Attribution des positions exigible à l'oral. פרי חדש – בכלל בישול / מהר״ם שיף – מצדד שאינו בכלל בישול"
+  },
+  {
+   "question_index": 71,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק ג — הבישול המאוחר יוצר איסור תורה אף כשהבליעה הראשונה לא הייתה בדרך בישול."
+  },
+  {
+   "question_index": 71,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« הבשר מתבשל כעת עם החלב הבלוע »). La cuisson est postérieure à l'absorption à froid."
+  },
+  {
+   "question_index": 71,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La cuisson est postérieure à l'absorption à froid."
+  },
+  {
+   "question_index": 71,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. הבשר מתבשל כעת עם החלב הבלוע"
+  },
+  {
+   "question_index": 72,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק ד — אף שמצוות לאו ליהנות ניתנו, כאן דרוש שיעור והמחבר מביא את סברת כתותי מכתת שיעורא."
+  },
+  {
+   "question_index": 72,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« איסור ההנאה פוגם בשיעור הנדרש לנר »). Le cas est expressément attribué au Chaar Efraïm."
+  },
+  {
+   "question_index": 72,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le cas est expressément attribué au Chaar Efraïm."
+  },
+  {
+   "question_index": 72,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. איסור ההנאה פוגם בשיעור הנדרש לנר"
+  },
+  {
+   "question_index": 73,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק ה — הפרי מגדים אינו סומך על סברת גדי ולא דם לבדה בכבד."
+  },
+  {
+   "question_index": 73,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« צירוף בלבד »). Le statut de simple argument d'appoint est l'objet de la question."
+  },
+  {
+   "question_index": 73,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le statut de simple argument d'appoint est l'objet de la question."
+  },
+  {
+   "question_index": 73,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. צירוף בלבד"
+  },
+  {
+   "question_index": 74,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "פתחי תשובה ס״ק ו — דגול מרבבה מבחין בין איסור הבישול ובין איסור ההנאה כשהבשר כבר נאסר באכילה."
+  },
+  {
+   "question_index": 74,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le même cas est posé à chaque autorité. La perte est précisée pour la permission du Dagoul Merevava."
+  },
+  {
+   "question_index": 74,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "La perte est précisée pour la permission du Dagoul Merevava."
+  },
+  {
+   "question_index": 74,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Attribution des positions exigible à l'oral. דגול מרבבה – יש על מי לסמוך להתיר / פרי מגדים – אסורה מן התורה"
+  },
+  {
+   "question_index": 75,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק ז — גם כשהבשר מבהמה טהורה, חלב חיה אינו מחיל איסור תורה."
+  },
+  {
+   "question_index": 75,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« מדרבנן »). Le cas inverse l'origine du lait et celle de la viande."
+  },
+  {
+   "question_index": 75,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le cas inverse l'origine du lait et celle de la viande."
+  },
+  {
+   "question_index": 75,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. מדרבנן"
+  },
+  {
+   "question_index": 76,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "פתחי תשובה ס״ק ט — פתחי תשובה מבחין בין דעות האחרונים ובין דג בחלב לדג בחמאה."
+  },
+  {
+   "question_index": 76,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le même cas est posé à chaque autorité. Le caractère a posteriori conditionne la divergence."
+  },
+  {
+   "question_index": 76,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le caractère a posteriori conditionne la divergence."
+  },
+  {
+   "question_index": 76,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Attribution des positions exigible à l'oral. פרי מגדים כפי שמבין הפתחי תשובה – אין לאסור / אדני פז – יש לאסור"
+  },
+  {
+   "question_index": 77,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק י — החילוק הוא בין מראית עין בפני הרבים ובין אכילה בביתו."
+  },
+  {
+   "question_index": 77,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« בסעודה בפני הרואים »). La présence de témoins est l'élément à restituer."
+  },
+  {
+   "question_index": 77,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La présence de témoins est l'élément à restituer."
+  },
+  {
+   "question_index": 77,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. בסעודה בפני הרואים"
+  },
+  {
+   "question_index": 78,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק יב — החומרה במנהג נוגעת לביצה שנמצאה בעוף לאחר שחיטה."
+  },
+  {
+   "question_index": 78,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« מותרת לכתחילה »). La ponte naturelle distingue ce cas de la découverte après abattage."
+  },
+  {
+   "question_index": 78,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La ponte naturelle distingue ce cas de la découverte après abattage."
+  },
+  {
+   "question_index": 78,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. מותרת לכתחילה"
+  },
+  {
+   "question_index": 79,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק יד — יכולת ההולדה מכניסה את חלבה לגדר חלב אמו אף שמעמדה לעניין שחיטה שונה."
+  },
+  {
+   "question_index": 79,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« מפני שהיא ראויה להיות אם »). La possibilité de devenir mère est la raison discutée."
+  },
+  {
+   "question_index": 79,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La possibilité de devenir mère est la raison discutée."
+  },
+  {
+   "question_index": 79,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. מפני שהיא ראויה להיות אם"
+  },
+  {
+   "question_index": 80,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "פתחי תשובה ס״ק טו — המחלוקת היא על ספק המוח. הפרי מגדים מעלה בנפרד את דין העצם עצמה."
+  },
+  {
+   "question_index": 80,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le même cas est posé à chaque autorité. Le volume de la cavité est défini et son contenu reste incertain."
+  },
+  {
+   "question_index": 80,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le volume de la cavité est défini et son contenu reste incertain."
+  },
+  {
+   "question_index": 80,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Attribution des positions exigible à l'oral. מנחת יעקב – חוששים ואוסרים / בית לחם יהודה – אין מחזיקים שהיה מוח"
+  },
+  {
+   "question_index": 81,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק טז — בישול מאוחר עלול להעלות את האיסור לדרגת תורה. הדבר מובא כאפשרות."
+  },
+  {
+   "question_index": 81,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« בישול הגבינות לאחר ההעמדה »). Le Pri Megadim est présenté comme hésitant."
+  },
+  {
+   "question_index": 81,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le Pri Megadim est présenté comme hésitant."
+  },
+  {
+   "question_index": 81,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. בישול הגבינות לאחר ההעמדה"
+  },
+  {
+   "question_index": 82,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק יט — רבי עקיבא איגר מגביל את חומרת הש״ך למקרה שאין שישים."
+  },
+  {
+   "question_index": 82,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« כשיש שישים »). La présure est sèche et le seul doute restant est la dilution voulue."
+  },
+  {
+   "question_index": 82,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La présure est sèche et le seul doute restant est la dilution voulue."
+  },
+  {
+   "question_index": 82,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. כשיש שישים"
+  },
+  {
+   "question_index": 83,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק יט — הפסקה בהוצאה מן המשקה מונעת כבישה רצופה. ההיתר שבדיון מצרף תנאים נוספים."
+  },
+  {
+   "question_index": 83,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« להפסיק את ההשריה לפני השלמת כל מעת לעת »). Les conditions économiques sont propres à la réponse citée."
+  },
+  {
+   "question_index": 83,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Les conditions économiques sont propres à la réponse citée."
+  },
+  {
+   "question_index": 83,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. להפסיק את ההשריה לפני השלמת כל מעת לעת"
+  },
+  {
+   "question_index": 84,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "פתחי תשובה ס״ק כא — הנודע ביהודה מבחין בין היווצרות איסור בשר בחלב לבין בשר שכבר היה אסור קודם הייבוש."
+  },
+  {
+   "question_index": 84,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Le même cas est posé à chaque autorité. La viande était permise avant le séchage."
+  },
+  {
+   "question_index": 84,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "La viande était permise avant le séchage."
+  },
+  {
+   "question_index": 84,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.94,
+   "comment": "Attribution des positions exigible à l'oral. פרי מגדים – בשר יבש עדיין אוסר / נודע ביהודה – בייבוש גמור לא נשאר טעם לאסור את החלב"
+  },
+  {
+   "question_index": 85,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק ג — חם בחם בלא רוטב אינו נידון כאן כדרך בישול."
+  },
+  {
+   "question_index": 85,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« מותרת »). Le contact sans sauce est distingué d'une cuisson ultérieure."
+  },
+  {
+   "question_index": 85,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le contact sans sauce est distingué d'une cuisson ultérieure."
+  },
+  {
+   "question_index": 85,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. מותרת"
+  },
+  {
+   "question_index": 86,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק ח — אין הרואים יודעים מה נבלע בקדרה, אולם המחבר המובא מציע להחמיר מכוח דין החיתוי."
+  },
+  {
+   "question_index": 86,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« יש להחמיר אף שיש צד להתיר מעיקר הדין »). La conclusion pratique se distingue du premier argument permissif."
+  },
+  {
+   "question_index": 86,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La conclusion pratique se distingue du premier argument permissif."
+  },
+  {
+   "question_index": 86,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. יש להחמיר אף שיש צד להתיר מעיקר הדין"
+  },
+  {
+   "question_index": 87,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק ו — הדלקה בידיים מעוררת שאלת בישול נפרדת משאלת ההנאה."
+  },
+  {
+   "question_index": 87,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« הטיפה שסביב השלהבת עלולה להתבשל »). La nouvelle cuisson au bord de la flamme est distincte du profit de la lumière."
+  },
+  {
+   "question_index": 87,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "La nouvelle cuisson au bord de la flamme est distincte du profit de la lumière."
+  },
+  {
+   "question_index": 87,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. הטיפה שסביב השלהבת עלולה להתבשל"
+  },
+  {
+   "question_index": 88,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק ו — החתם סופר מבחין בין הנרות הרגילים לנרות הנמנים למצות חנוכה."
+  },
+  {
+   "question_index": 88,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« אין סופרים אותו לשם מצווה כנר חנוכה »). Il s'agit de bougies ordinaires et non de bougies comptées pour la mitsva."
+  },
+  {
+   "question_index": 88,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Il s'agit de bougies ordinaires et non de bougies comptées pour la mitsva."
+  },
+  {
+   "question_index": 88,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. אין סופרים אותו לשם מצווה כנר חנוכה"
+  },
+  {
+   "question_index": 89,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק טו — הספק נסוב על עורות מיוחדים שעורותיהם כבשרם ולא על עצם דינו של השליל."
+  },
+  {
+   "question_index": 89,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« האם עור שדינו כבשר לעניין אחר נחשב כאן בשר גמור »). Les peaux exceptionnelles bornent le doute."
+  },
+  {
+   "question_index": 89,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Les peaux exceptionnelles bornent le doute."
+  },
+  {
+   "question_index": 89,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. האם עור שדינו כבשר לעניין אחר נחשב כאן בשר גמור"
+  },
+  {
+   "question_index": 90,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק יח — הוא מבחין בין טעם שנבלע בפירשא לבין חלב ממש, ואחר כך מפקפק במסקנה."
+  },
+  {
+   "question_index": 90,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« חלב גמור נבלע בקרוש ואחר כך בא הקרוש לבשר »). Le vrai lait absorbé est distingué de la simple saveur de la paroi."
+  },
+  {
+   "question_index": 90,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Le vrai lait absorbé est distingué de la simple saveur de la paroi."
+  },
+  {
+   "question_index": 90,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. חלב גמור נבלע בקרוש ואחר כך בא הקרוש לבשר"
+  },
+  {
+   "question_index": 91,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק כ — פתחי תשובה מביא יישום של סברת הייבוש בדברי תפארת צבי."
+  },
+  {
+   "question_index": 91,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« ייבושן לפני השימוש »). L'application est expressément attribuée au Tiféret Tsvi."
+  },
+  {
+   "question_index": 91,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "L'application est expressément attribuée au Tiféret Tsvi."
+  },
+  {
+   "question_index": 91,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. ייבושן לפני השימוש"
+  },
+  {
+   "question_index": 92,
+   "agent": "halakhiste",
+   "label": "L’Halakhiste",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "פתחי תשובה ס״ק כא — הנודע ביהודה מבחין בין מניעת חלות איסור בשר בחלב ובין הפקעת איסור קודם."
+  },
+  {
+   "question_index": 92,
+   "agent": "pedagogue",
+   "label": "Le Pédagogue",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Une seule réponse à restituer (« איסור שכבר חל אינו פוקע בייבוש »). L'interdiction a précédé le séchage."
+  },
+  {
+   "question_index": 92,
+   "agent": "devils_advocate",
+   "label": "L’Avocat du diable",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "L'interdiction a précédé le séchage."
+  },
+  {
+   "question_index": 92,
+   "agent": "examinateur",
+   "label": "L’Examinateur",
+   "vote": "keep",
+   "confidence": 0.96,
+   "comment": "Point à savoir appliquer à l'examen. איסור שכבר חל אינו פוקע בייבוש"
+  }
+ ]
+}

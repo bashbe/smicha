@@ -1,0 +1,1261 @@
+{
+  "siman": 87,
+  "chelek": "yd",
+  "parcours": "bassar_bechalav",
+  "sujets": [
+    {
+      "titre": "יסודות האיסור",
+      "seifim": [
+        1
+      ],
+      "resume": "נבדלים איסורי הבישול, האכילה וההנאה לפי אופן חיבור הבשר והחלב.",
+      "dinim": [
+        {
+          "seif": 1,
+          "description": "שלוש החזרות על הפסוק מלמדות שבישול, אכילה והנאה הם איסורים נפרדים.",
+          "section": "shulchan_aruch",
+          "difficulty": 1,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף א, מחבר",
+          "question_index": 0
+        },
+        {
+          "seif": 1,
+          "description": "כבישה ומליחה מעבירות טעם אך אינן דרך בישול לעניין איסור התורה.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף א, ש״ך ס״ק א",
+          "question_index": 1
+        },
+        {
+          "seif": 1,
+          "description": "הרמ״א מתיר הנאה כשאיסור התערובת מדרבנן בלבד. הט״ז מביא את חומרת מהרש״ל וחולק עליה.",
+          "section": "shulchan_aruch",
+          "difficulty": 3,
+          "type_suggere": "multiple_opinions_dropdown",
+          "source": "סימן פז סעיף א, רמ״א וט״ז ס״ק א",
+          "question_index": 2
+        },
+        {
+          "seif": 1,
+          "description": "האכילה אסורה מדרבנן גם כשהבשר והחלב לא נתבשלו יחד.",
+          "section": "tur",
+          "difficulty": 1,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף א, טור",
+          "question_index": 46
+        },
+        {
+          "seif": 1,
+          "description": "המרדכי מביא דחייה לראיית ההיתר אך אינו מוצא ראיה מספקת לאסור.",
+          "section": "tur",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף א, דרכי משה אות א",
+          "question_index": 47
+        },
+        {
+          "seif": 1,
+          "description": "בשר בחלב נמנה עם החריגים לדין הרגיל של אכילה שלא כדרכה.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף א, פתחי תשובה ס״ק א",
+          "question_index": 66
+        },
+        {
+          "seif": 1,
+          "description": "בשר בחלב הוא מן הנקברים. שרפתו אינה מתירה את אפרו.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף א, פתחי תשובה ס״ק ב",
+          "question_index": 67
+        },
+        {
+          "seif": 1,
+          "description": "חצי שיעור באכילה אסור מן התורה. הפרי מגדים מסתפק בהרחבה לבישול ולהנאה.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף א, פתחי תשובה ס״ק ב",
+          "question_index": 68
+        },
+        {
+          "seif": 1,
+          "description": "הראיה נוגעת לערך ההנאה ואינה קובעת שיעור חדש לאכילה.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף א, פתחי תשובה ס״ק ב",
+          "question_index": 69
+        },
+        {
+          "seif": 1,
+          "description": "הפרי מגדים מצרף את הצד המקל בהפסד מרובה. זו מחלוקת על דרך ההכנה.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_opinions_dropdown",
+          "source": "סימן פז סעיף א, פתחי תשובה ס״ק ג",
+          "question_index": 70
+        },
+        {
+          "seif": 1,
+          "description": "הבישול המאוחר יוצר איסור תורה אף כשהבליעה הראשונה לא הייתה בדרך בישול.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף א, פתחי תשובה ס״ק ג",
+          "question_index": 71
+        },
+        {
+          "seif": 1,
+          "description": "אף שמצוות לאו ליהנות ניתנו, כאן דרוש שיעור והמחבר מביא את סברת כתותי מכתת שיעורא.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף א, פתחי תשובה ס״ק ד",
+          "question_index": 72
+        },
+        {
+          "seif": 1,
+          "description": "חם בחם בלא רוטב אינו נידון כאן כדרך בישול.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף א, פתחי תשובה ס״ק ג",
+          "question_index": 85
+        }
+      ],
+      "machlokot": [
+        {
+          "seif": 1,
+          "cas": "בשר שנאסר בחלב במליחה בלבד, האם מותר למוכרו? התאימו כל פוסק לדעתו.",
+          "posek_a": "רמ״א",
+          "pos_a": "מותר למוכרו",
+          "posek_b": "מהרש״ל המובא בט״ז",
+          "pos_b": "אסור למוכרו"
+        },
+        {
+          "seif": 1,
+          "cas": "כיצד מסווגים הפוסקים טיגון בשר בחמאה לעניין דרך בישול?",
+          "posek_a": "פרי חדש",
+          "pos_a": "בכלל בישול",
+          "posek_b": "מהר״ם שיף",
+          "pos_b": "מצדד שאינו בכלל בישול"
+        }
+      ],
+      "chiffres": [
+        {
+          "seif": 1,
+          "valeur": "שווי פרוטה",
+          "contexte": "איזה שיעור מציע רבי עקיבא איגר לעניין הנאה על סמך הסוגיה בבבא קמא?"
+        }
+      ],
+      "cas_pratiques": [
+        {
+          "seif": 1,
+          "cas": "אדם בישל בשר בקר בחלב פרה כדי להשליך את התבשיל מיד. על איזה איסור עבר בעצם המעשה?",
+          "din": "בישול"
+        },
+        {
+          "seif": 1,
+          "cas": "בשר בקר נכבש בחלב קר מעת לעת. מה תוקף איסור האכילה?",
+          "din": "מדרבנן"
+        },
+        {
+          "seif": 1,
+          "cas": "מה נשאר בספק אצל הפרי מגדים בדין חצי שיעור בבשר בחלב?",
+          "din": "איסור תורה בבישול ובהנאה"
+        }
+      ]
+    },
+    {
+      "titre": "סוגי הבשר והחלב",
+      "seifim": [
+        2,
+        3
+      ],
+      "resume": "מין הבשר ומקור החלב קובעים את היקף האיסור.",
+      "dinim": [
+        {
+          "seif": 2,
+          "description": "גדי כולל גם בהמות טהורות אחרות, וחלב אמו כולל גם חלב בהמה טהורה אחרת.",
+          "section": "shulchan_aruch",
+          "difficulty": 1,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ב, מחבר",
+          "question_index": 3
+        },
+        {
+          "seif": 3,
+          "description": "המחבר כולל חיה ועוף באיסור האכילה מדרבנן ומתיר בבישול ובהנאה.",
+          "section": "shulchan_aruch",
+          "difficulty": 1,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ג, מחבר",
+          "question_index": 4
+        },
+        {
+          "seif": 3,
+          "description": "הש״ך מייחס למהרש״ל ולב״ח חיוב מן התורה וחולק עליהם.",
+          "section": "shulchan_aruch",
+          "difficulty": 3,
+          "type_suggere": "multiple_opinions_dropdown",
+          "source": "סימן פז סעיף ג, ש״ך ס״ק ד",
+          "question_index": 5
+        },
+        {
+          "seif": 3,
+          "description": "המחבר מוציא דגים וחגבים גם מן האיסור מדרבנן. דיון נפרד עוסק במנהג לגבי דגים.",
+          "section": "shulchan_aruch",
+          "difficulty": 1,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ג, מחבר",
+          "question_index": 6
+        },
+        {
+          "seif": 3,
+          "description": "הש״ך מצדד בבית יוסף ומביא את קריאת הב״ח בטור.",
+          "section": "shulchan_aruch",
+          "difficulty": 3,
+          "type_suggere": "multiple_opinions_dropdown",
+          "source": "סימן פז סעיף ג, ש״ך ס״ק ג",
+          "question_index": 7
+        },
+        {
+          "seif": 3,
+          "description": "בחיה ובעוף גזרו על האכילה והמחבר מתיר בישול והנאה מצד הדין.",
+          "section": "shulchan_aruch",
+          "difficulty": 1,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ג, מחבר",
+          "question_index": 39
+        },
+        {
+          "seif": 2,
+          "description": "גם שור ושה בכלל, ואין צורך שהחלב יבוא מאם הבהמה.",
+          "section": "tur",
+          "difficulty": 1,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ב, טור",
+          "question_index": 48
+        },
+        {
+          "seif": 3,
+          "description": "במין טמא האכילה אסורה מכוח הטומאה. רק בחיה ובעוף נדרש האיסור מדרבנן משום בשר בחלב.",
+          "section": "tur",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ג, בית יוסף אות ג",
+          "question_index": 49
+        },
+        {
+          "seif": 3,
+          "description": "הבית יוסף מייחס לרבי עקיבא את הוצאת בשר חיה ועוף מאיסור תורה.",
+          "section": "tur",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ג, בית יוסף אות ג",
+          "question_index": 50
+        },
+        {
+          "seif": 3,
+          "description": "דרכי משה מבאר שהמקור באורח חיים עוסק בדגים עם בשר. השאלה עוסקת בקריאת המקורות.",
+          "section": "tur",
+          "difficulty": 3,
+          "type_suggere": "multiple_opinions_dropdown",
+          "source": "סימן פז סעיף ג, בית יוסף אות ו ודרכי משה אות ד",
+          "question_index": 51
+        },
+        {
+          "seif": 3,
+          "description": "הפרי מגדים אינו סומך על סברת גדי ולא דם לבדה בכבד.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ג, פתחי תשובה ס״ק ה",
+          "question_index": 73
+        },
+        {
+          "seif": 3,
+          "description": "דגול מרבבה מבחין בין איסור הבישול ובין איסור ההנאה כשהבשר כבר נאסר באכילה.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_opinions_dropdown",
+          "source": "סימן פז סעיף ג, פתחי תשובה ס״ק ו",
+          "question_index": 74
+        },
+        {
+          "seif": 3,
+          "description": "גם כשהבשר מבהמה טהורה, חלב חיה אינו מחיל איסור תורה.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ג, פתחי תשובה ס״ק ז",
+          "question_index": 75
+        },
+        {
+          "seif": 3,
+          "description": "פתחי תשובה מבחין בין דעות האחרונים ובין דג בחלב לדג בחמאה.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_opinions_dropdown",
+          "source": "סימן פז סעיף ג, פתחי תשובה ס״ק ט",
+          "question_index": 76
+        },
+        {
+          "seif": 3,
+          "description": "אין הרואים יודעים מה נבלע בקדרה, אולם המחבר המובא מציע להחמיר מכוח דין החיתוי.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ג, פתחי תשובה ס״ק ח",
+          "question_index": 86
+        },
+        {
+          "seif": 3,
+          "description": "הדלקה בידיים מעוררת שאלת בישול נפרדת משאלת ההנאה.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ג, פתחי תשובה ס״ק ו",
+          "question_index": 87
+        },
+        {
+          "seif": 3,
+          "description": "החתם סופר מבחין בין הנרות הרגילים לנרות הנמנים למצות חנוכה.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ג, פתחי תשובה ס״ק ו",
+          "question_index": 88
+        }
+      ],
+      "machlokot": [
+        {
+          "seif": 3,
+          "cas": "מה תוקף איסור אכילת עוף שבושל בחלב, לפי הפוסקים שמביא הש״ך?",
+          "posek_a": "המחבר",
+          "pos_a": "מדרבנן",
+          "posek_b": "מהרש״ל",
+          "pos_b": "מן התורה"
+        },
+        {
+          "seif": 3,
+          "cas": "בשר בקר נתבשל בחלב טמא. האם יש באכילתו איסור נוסף של בשר בחלב מלבד איסור החלב הטמא?",
+          "posek_a": "בית יוסף",
+          "pos_a": "אין איסור נוסף",
+          "posek_b": "ב״ח",
+          "pos_b": "יש איסור נוסף מדרבנן"
+        },
+        {
+          "seif": 3,
+          "cas": "כיצד מתייחסים הבית יוסף ודרכי משה לאכילת דגים בחלב מצד החשש המוזכר באורח חיים?",
+          "posek_a": "בית יוסף",
+          "pos_a": "כותב להימנע",
+          "posek_b": "דרכי משה",
+          "pos_b": "מתיר"
+        },
+        {
+          "seif": 3,
+          "cas": "נבלת בהמה טהורה בושלה בחלב. מה דין ההנאה במקום הפסד לפי הדעות שמביא פתחי תשובה?",
+          "posek_a": "דגול מרבבה",
+          "pos_a": "יש על מי לסמוך להתיר",
+          "posek_b": "פרי מגדים",
+          "pos_b": "אסורה מן התורה"
+        },
+        {
+          "seif": 3,
+          "cas": "דגים נתבשלו בחלב. מה הדין בדיעבד לפי הדעות שמביא פתחי תשובה בדיון על מנהג האכילה?",
+          "posek_a": "פרי מגדים כפי שמבין הפתחי תשובה",
+          "pos_a": "אין לאסור",
+          "posek_b": "אדני פז",
+          "pos_b": "יש לאסור"
+        }
+      ],
+      "chiffres": [],
+      "cas_pratiques": [
+        {
+          "seif": 3,
+          "cas": "מהו דין אכילת בשר צבי שבושל בחלב פרה לפי המחבר?",
+          "din": "אסורה מדרבנן"
+        },
+        {
+          "seif": 3,
+          "cas": "איזה משקל נותן הפרי מגדים לסברה שכבד שטוגן בחמאה דינו כדם ולא כבשר?",
+          "din": "צירוף בלבד"
+        },
+        {
+          "seif": 3,
+          "cas": "בשר בקר בושל בחלב צבייה. מה תוקף איסור אכילתו לפי פתחי תשובה?",
+          "din": "מדרבנן"
+        },
+        {
+          "seif": 3,
+          "cas": "נר רגיל שנאסר מבשר בחלב התערב בנרות רגילים אחרים. מדוע אינו נחשב דבר שבמניין לפי החתם סופר?",
+          "din": "אין סופרים אותו לשם מצווה כנר חנוכה"
+        }
+      ]
+    },
+    {
+      "titre": "מראית העין",
+      "seifim": [
+        3,
+        4
+      ],
+      "resume": "מראה התבשיל ואופן הגשתו משפיעים על הצורך בהיכר.",
+      "dinim": [
+        {
+          "seif": 3,
+          "description": "השקדים מזהים לעיני הרואה את מקור המשקה.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ג, רמ״א",
+          "question_index": 8
+        },
+        {
+          "seif": 3,
+          "description": "הרמ״א מבחין בין עוף לבהמה והש״ך חושש למראית העין גם באיסור דרבנן.",
+          "section": "shulchan_aruch",
+          "difficulty": 3,
+          "type_suggere": "multiple_opinions_dropdown",
+          "source": "סימן פז סעיף ג, רמ״א וש״ך ס״ק ו",
+          "question_index": 9
+        },
+        {
+          "seif": 3,
+          "description": "הט״ז מעדיף היכר כשאפשר אך אינו מעכב אכילה בהעדר שקדים.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ג, ט״ז ס״ק ד",
+          "question_index": 10
+        },
+        {
+          "seif": 4,
+          "description": "האיסור לכתחילה הוא מפני מראית העין ולכן בנפילה לתבשיל אין צורך בשיעור.",
+          "section": "shulchan_aruch",
+          "difficulty": 1,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ד, מחבר",
+          "question_index": 11
+        },
+        {
+          "seif": 4,
+          "description": "היתר הבישול מעיקר הדין אינו פותר את החשש למראית העין.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ד, רמ״א",
+          "question_index": 12
+        },
+        {
+          "seif": 4,
+          "description": "הש״ך מביא צורך רפואי כדוגמה למקרה שבו החשש למראית העין מסתלק.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ד, ש״ך ס״ק ז",
+          "question_index": 13
+        },
+        {
+          "seif": 4,
+          "description": "הרמ״א מבחין בין עוף לבהמה והש״ך מחמיר גם בעוף לעניין מראית העין.",
+          "section": "shulchan_aruch",
+          "difficulty": 3,
+          "type_suggere": "multiple_opinions_dropdown",
+          "source": "סימן פז סעיף ד, רמ״א וש״ך ס״ק ח",
+          "question_index": 40
+        },
+        {
+          "seif": 4,
+          "description": "הרשב״א תולה את האיסור במראית העין ולכן מקל בנפילה.",
+          "section": "tur",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ד, בית יוסף אות ד",
+          "question_index": 52
+        },
+        {
+          "seif": 3,
+          "description": "החילוק הוא בין מראית עין בפני הרבים ובין אכילה בביתו.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ג, פתחי תשובה ס״ק י",
+          "question_index": 77
+        }
+      ],
+      "machlokot": [
+        {
+          "seif": 3,
+          "cas": "מגישים עוף בחלב שקדים בסעודה בפני אורחים. האם יש להניח שקדים להיכר לכתחילה?",
+          "posek_a": "רמ״א",
+          "pos_a": "אין צורך בהיכר",
+          "posek_b": "ש״ך",
+          "pos_b": "צריך היכר"
+        },
+        {
+          "seif": 4,
+          "cas": "מבקשים לבשל עוף בחלב אישה בפני הרואים. האם חוששים למראית העין לפי הרמ״א והש״ך?",
+          "posek_a": "רמ״א",
+          "pos_a": "אין חוששים",
+          "posek_b": "ש״ך",
+          "pos_b": "חוששים"
+        }
+      ],
+      "chiffres": [],
+      "cas_pratiques": [
+        {
+          "seif": 3,
+          "cas": "איזה היכר קבע הרמ״א להגשת בשר בקר שבושל בחלב שקדים?",
+          "din": "להניח שקדים ליד התבשיל"
+        },
+        {
+          "seif": 4,
+          "cas": "חלב אישה נפל בטעות לתבשיל בשר. איזה שיעור ביטול דורש המחבר?",
+          "din": "אין צורך בשיעור קבוע"
+        }
+      ]
+    },
+    {
+      "titre": "ביצים שנמצאו בעוף",
+      "seifim": [
+        5
+      ],
+      "resume": "שלבי היווצרות הביצה ואופן מציאתה משנים את דינה.",
+      "dinim": [
+        {
+          "seif": 5,
+          "description": "לפי המחבר השלמת החלבון והחלמון קובעת אף כשהביצה מעורה.",
+          "section": "shulchan_aruch",
+          "difficulty": 1,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ה, מחבר",
+          "question_index": 14
+        },
+        {
+          "seif": 5,
+          "description": "האיסור לאכול את החלמון עם חלב אינו מחייב המתנה אחרי אכילתו לבדו.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ה, מחבר וש״ך ס״ק יב",
+          "question_index": 15
+        },
+        {
+          "seif": 5,
+          "description": "כשאינה מעורה הש״ך מתיר בדיעבד ובמעורה הוא אוסר בנסיבות הרגילות.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ה, ש״ך ס״ק י",
+          "question_index": 16
+        },
+        {
+          "seif": 5,
+          "description": "הש״ך משווה לעוף עצמו שבישולו מותר ומבאר את הלשון ביחס לאכילה.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ה, ש״ך ס״ק יא",
+          "question_index": 17
+        },
+        {
+          "seif": 5,
+          "description": "המחלוקת עוסקת באיזה שלב הביצה נחשבת גמורה. אין לבלבל בין יצירת חלבון להתקשות הקליפה.",
+          "section": "tur",
+          "difficulty": 3,
+          "type_suggere": "multiple_opinions_dropdown",
+          "source": "סימן פז סעיף ה, טור ובית יוסף אות ה",
+          "question_index": 53
+        },
+        {
+          "seif": 5,
+          "description": "הרשב״א דוחה את הדעה המצריכה קליפה קשה.",
+          "section": "tur",
+          "difficulty": 3,
+          "type_suggere": "multiple_opinions_dropdown",
+          "source": "סימן פז סעיף ה, בית יוסף אות ה",
+          "question_index": 54
+        },
+        {
+          "seif": 5,
+          "description": "כשאין לביצים מה לפלוט יש לחשוש שיבלעו מהדם שהבשר פולט.",
+          "section": "tur",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ה, בית יוסף אות ה",
+          "question_index": 55
+        },
+        {
+          "seif": 5,
+          "description": "החומרה במנהג נוגעת לביצה שנמצאה בעוף לאחר שחיטה.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ה, פתחי תשובה ס״ק יב",
+          "question_index": 78
+        }
+      ],
+      "machlokot": [
+        {
+          "seif": 5,
+          "cas": "חלמון גדל כל צורכו אך טרם נוצר חלבון. מהו סף הבשלות לאכילת הביצה בחלב בשיטות שמביא הטור?",
+          "posek_a": "רש״י לפי הטור",
+          "pos_a": "די בגמר החלמון",
+          "posek_b": "רשב״א",
+          "pos_b": "צריך גם חלבון"
+        },
+        {
+          "seif": 5,
+          "cas": "באיזה שלב מתירים הרשב״א והרשב״ם שמביא הבית יוסף לאכול בחלב ביצה שנמצאה בעוף?",
+          "posek_a": "רשב״א",
+          "pos_a": "משיש חלבון וחלמון",
+          "posek_b": "רשב״ם",
+          "pos_b": "משנגמרה הקליפה והתקשתה"
+        }
+      ],
+      "chiffres": [],
+      "cas_pratiques": [
+        {
+          "seif": 5,
+          "cas": "בביצה שנמצאה בעוף שחוט יש חלמון וחלבון והיא מחוברת בגידים. מה דינה לאכילה עם חלב לפי המחבר?",
+          "din": "מותרת"
+        },
+        {
+          "seif": 5,
+          "cas": "לפי הש״ך, ביצה בעלת חלבון וחלמון וקליפה רכה נתבשלה בחלב. איזה פרט מכריע בדיעבד מעיקר הדין?",
+          "din": "האם הייתה מעורה בגידים"
+        }
+      ]
+    },
+    {
+      "titre": "דרכי בישול ומיני חלב",
+      "seifim": [
+        6
+      ],
+      "resume": "מקור החום, סוג החלב ואופן השימוש בכלי משפיעים על האיסור.",
+      "dinim": [
+        {
+          "seif": 6,
+          "description": "המחבר מונה את שתי הדרכים בין המקרים שאין לוקים עליהם. הש״ך מדגיש שנותר איסור.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ו, מחבר וש״ך ס״ק יג",
+          "question_index": 18
+        },
+        {
+          "seif": 6,
+          "description": "שעת יציאת החלב מכריעה גם כאשר הבהמה נשחטה ולא מתה מעצמה.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ו, ש״ך ס״ק יד",
+          "question_index": 19
+        },
+        {
+          "seif": 6,
+          "description": "הש״ך מיישב את הרמ״א עם המחבר על ידי הבחנה בין אדם לבהמה.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ו, ש״ך ס״ק טז",
+          "question_index": 20
+        },
+        {
+          "seif": 6,
+          "description": "מי חלב וחלב מתה אוסרים את המאכל אף שהמבשל בהם פטור. גם בישולם אסור לכתחילה.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ו, רמ״א",
+          "question_index": 21
+        },
+        {
+          "seif": 6,
+          "description": "הש״ך תולה את איסור ההנאה ביצירת התערובת בדרך בישול.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ו, ש״ך ס״ק יט",
+          "question_index": 22
+        },
+        {
+          "seif": 6,
+          "description": "החיתוי מוסיף חום. הרמ״א מונה זאת בין החומרות והש״ך דן בהיקף המנהג.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ו, רמ״א וש״ך ס״ק יח",
+          "question_index": 23
+        },
+        {
+          "seif": 6,
+          "description": "האש חוזרת ומלבנת את המתכת לאחר ההתזה.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ו, ש״ך ס״ק כא",
+          "question_index": 24
+        },
+        {
+          "seif": 6,
+          "description": "הש״ך מבחין בין משמעות דברי הרמב״ם ובין פסקו בדם מבושל.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ו, ש״ך ס״ק טו",
+          "question_index": 41
+        },
+        {
+          "seif": 6,
+          "description": "יש חשש שאריות בשר וחלב באפר. הש״ך מסביר מדוע חפיפת הראש עצמה אינה בכלל ההנאה האסורה כאן.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ו, רמ״א וש״ך ס״ק כ",
+          "question_index": 42
+        },
+        {
+          "seif": 6,
+          "description": "הספק מחייב זהירות באיסור תורה אך אין לוקים עליו.",
+          "section": "tur",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ו, בית יוסף אות ז",
+          "question_index": 56
+        },
+        {
+          "seif": 6,
+          "description": "הפטור מדין בשר בחלב אינו מכריע את הדיון הנפרד באיסור דם.",
+          "section": "tur",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ו, טור בשם הרמב״ם",
+          "question_index": 57
+        },
+        {
+          "seif": 6,
+          "description": "יכולת ההולדה מכניסה את חלבה לגדר חלב אמו אף שמעמדה לעניין שחיטה שונה.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ו, פתחי תשובה ס״ק יד",
+          "question_index": 79
+        }
+      ],
+      "machlokot": [],
+      "chiffres": [],
+      "cas_pratiques": [
+        {
+          "seif": 6,
+          "cas": "באיזה חלב זכר מעמיד הש״ך את היתר הרמ״א כשנפל לקדרת בשר?",
+          "din": "של אדם"
+        },
+        {
+          "seif": 6,
+          "cas": "דם שבושל בחלב, מה דין האוכלו לעניין מלקות משום בשר בחלב?",
+          "din": "אינו לוקה משום בשר בחלב"
+        }
+      ]
+    },
+    {
+      "titre": "חלקי הבהמה",
+      "seifim": [
+        7
+      ],
+      "resume": "יש להבחין בין בשר גמור, עצם, עור ושליה.",
+      "dinim": [
+        {
+          "seif": 7,
+          "description": "שליל דינו כבשר גם באכילה. בשליה, בעור, בגידים, בעצמות ובעיקרי הקרניים והטלפיים הרכים פטור.",
+          "section": "shulchan_aruch",
+          "difficulty": 1,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ז, מחבר",
+          "question_index": 25
+        },
+        {
+          "seif": 7,
+          "description": "הש״ך מבחין בין פטור מעונש ובין היתר אכילה.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ז, ש״ך ס״ק כב",
+          "question_index": 26
+        },
+        {
+          "seif": 7,
+          "description": "שליל הוא בשר ואילו שליה נמנית עם החלקים שאין חייבים על בישולם בחלב.",
+          "section": "tur",
+          "difficulty": 1,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ז, טור",
+          "question_index": 58
+        },
+        {
+          "seif": 7,
+          "description": "המחלוקת היא על ספק המוח. הפרי מגדים מעלה בנפרד את דין העצם עצמה.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_opinions_dropdown",
+          "source": "סימן פז סעיף ז, פתחי תשובה ס״ק טו",
+          "question_index": 80
+        },
+        {
+          "seif": 7,
+          "description": "הספק נסוב על עורות מיוחדים שעורותיהם כבשרם ולא על עצם דינו של השליל.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ז, פתחי תשובה ס״ק טו",
+          "question_index": 89
+        }
+      ],
+      "machlokot": [
+        {
+          "seif": 7,
+          "cas": "נמצאה עצם חלולה בתבשיל חלב ואין שישים כנגד החלל. מה הדין מחמת הספק אם היה בה מוח שנמס?",
+          "posek_a": "מנחת יעקב",
+          "pos_a": "חוששים ואוסרים",
+          "posek_b": "בית לחם יהודה",
+          "pos_b": "אין מחזיקים שהיה מוח"
+        }
+      ],
+      "chiffres": [],
+      "cas_pratiques": [
+        {
+          "seif": 7,
+          "cas": "מה נשאר בספק אצל הפרי מגדים בדין עור השליל שבושל בחלב?",
+          "din": "האם עור שדינו כבשר לעניין אחר נחשב כאן בשר גמור"
+        }
+      ]
+    },
+    {
+      "titre": "מי חלב",
+      "seifim": [
+        8
+      ],
+      "resume": "מבחינים בין הנסיובי לבין המים לאחר הוצאת האוכל.",
+      "dinim": [
+        {
+          "seif": 8,
+          "description": "בנסיובי הראשונים נשאר אוכל ולכן עדיין חל בהם איסור תורה.",
+          "section": "shulchan_aruch",
+          "difficulty": 1,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ח, מחבר",
+          "question_index": 27
+        },
+        {
+          "seif": 8,
+          "description": "הרא״ש מייחד את השם מי חלב לנוזל שנותר לאחר בישול והפרדה נוספת.",
+          "section": "tur",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף ח, בית יוסף אות ח",
+          "question_index": 59
+        }
+      ],
+      "machlokot": [],
+      "chiffres": [],
+      "cas_pratiques": []
+    },
+    {
+      "titre": "חלב וקיבת הבהמה",
+      "seifim": [
+        9,
+        10
+      ],
+      "resume": "מעמד חלב הקיבה תלוי בקרישה, מליחה, כבישה וייבוש העור.",
+      "dinim": [
+        {
+          "seif": 9,
+          "description": "לדעה הראשונה גם הצלול הוא פירשא. המנהג מחמיר בצלול.",
+          "section": "shulchan_aruch",
+          "difficulty": 3,
+          "type_suggere": "multiple_opinions_dropdown",
+          "source": "סימן פז סעיף ט, מחבר ורמ״א",
+          "question_index": 28
+        },
+        {
+          "seif": 9,
+          "description": "רבנו תם מבחין בין קרוש לצלול. רש״י מחמיר גם בקרוש.",
+          "section": "shulchan_aruch",
+          "difficulty": 3,
+          "type_suggere": "multiple_opinions_dropdown",
+          "source": "סימן פז סעיף ט, ט״ז ס״ק ז",
+          "question_index": 29
+        },
+        {
+          "seif": 10,
+          "description": "הש״ך מסביר את הזהירות לכתחילה בתכונות החלב המשמש להעמדה.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף י, רמ״א וש״ך ס״ק כו",
+          "question_index": 30
+        },
+        {
+          "seif": 10,
+          "description": "יום אחד שבמחבר הוא מעת לעת.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף י, ש״ך ס״ק כח",
+          "question_index": 31
+        },
+        {
+          "seif": 10,
+          "description": "הש״ך מפרש שקיבה האסורה כאן היא החלב שנאסר בה.",
+          "section": "shulchan_aruch",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף י, רמ״א וש״ך ס״ק ל",
+          "question_index": 32
+        },
+        {
+          "seif": 10,
+          "description": "הקרוש מעיקרו נחשב פירשא. ההיתר מתייחס לגבינה שכבר הועמדה.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף י, רמ״א",
+          "question_index": 33
+        },
+        {
+          "seif": 10,
+          "description": "הש״ך מצרף את שיטות המקילים ומדגיש שמליחה אינה בישול מן התורה.",
+          "section": "shulchan_aruch",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף י, רמ״א וש״ך ס״ק לב",
+          "question_index": 34
+        },
+        {
+          "seif": 10,
+          "description": "היובש הגמור הוא יסוד ההיתר. הש״ך כותב שלכתחילה אין לעשות כן.",
+          "section": "shulchan_aruch",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף י, רמ״א וש״ך ס״ק לג",
+          "question_index": 35
+        },
+        {
+          "seif": 10,
+          "description": "הש״ך מצרף את הדעות המחשיבות אף צלול לפירשא ואת העובדה שמליחה אינה דרך בישול.",
+          "section": "shulchan_aruch",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף י, ש״ך ס״ק כז",
+          "question_index": 43
+        },
+        {
+          "seif": 10,
+          "description": "על אף מעמד הקרוש כפירשא, הוא קיבל טעם מן העור במליחה.",
+          "section": "shulchan_aruch",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף י, ש״ך ס״ק כט",
+          "question_index": 44
+        },
+        {
+          "seif": 9,
+          "description": "הרי״ף רואה אף בצלול פירשא ורש״י אוסר אף בקרוש. רבנו תם מחלק בין המצבים.",
+          "section": "tur",
+          "difficulty": 3,
+          "type_suggere": "multiple_opinions_dropdown",
+          "source": "סימן פז סעיף ט, טור",
+          "question_index": 60
+        },
+        {
+          "seif": 9,
+          "description": "הטור נשען על סדר הבאת הדעות והבית יוסף על לשון הרא״ש ביחס לגרסת הסוגיה.",
+          "section": "tur",
+          "difficulty": 3,
+          "type_suggere": "multiple_opinions_dropdown",
+          "source": "סימן פז סעיף ט, בית יוסף אות ט",
+          "question_index": 61
+        },
+        {
+          "seif": 10,
+          "description": "החלב שכבר נאסר מתערב בחלב הגבינה. אין כאן שני מעברי טעם של היתר.",
+          "section": "tur",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף י, בית יוסף אות י",
+          "question_index": 62
+        },
+        {
+          "seif": 10,
+          "description": "דרכי משה דוחה את ההשוואה לדגים שעלו בקערה כי כאן הטעם התקבל מן העור עצמו.",
+          "section": "tur",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף י, דרכי משה אות ח",
+          "question_index": 63
+        },
+        {
+          "seif": 10,
+          "description": "לאחר ריקון והדחה דינו כשאר בשר לעניין המליחה.",
+          "section": "tur",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף י, דרכי משה אות ט",
+          "question_index": 64
+        },
+        {
+          "seif": 10,
+          "description": "בישול מאוחר עלול להעלות את האיסור לדרגת תורה. הדבר מובא כאפשרות.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף י, פתחי תשובה ס״ק טז",
+          "question_index": 81
+        },
+        {
+          "seif": 10,
+          "description": "רבי עקיבא איגר מגביל את חומרת הש״ך למקרה שאין שישים.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף י, פתחי תשובה ס״ק יט",
+          "question_index": 82
+        },
+        {
+          "seif": 10,
+          "description": "הפסקה בהוצאה מן המשקה מונעת כבישה רצופה. ההיתר שבדיון מצרף תנאים נוספים.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף י, פתחי תשובה ס״ק יט",
+          "question_index": 83
+        },
+        {
+          "seif": 10,
+          "description": "הנודע ביהודה מבחין בין היווצרות איסור בשר בחלב לבין בשר שכבר היה אסור קודם הייבוש.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_opinions_dropdown",
+          "source": "סימן פז סעיף י, פתחי תשובה ס״ק כא",
+          "question_index": 84
+        },
+        {
+          "seif": 10,
+          "description": "הוא מבחין בין טעם שנבלע בפירשא לבין חלב ממש, ואחר כך מפקפק במסקנה.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף י, פתחי תשובה ס״ק יח",
+          "question_index": 90
+        },
+        {
+          "seif": 10,
+          "description": "פתחי תשובה מביא יישום של סברת הייבוש בדברי תפארת צבי.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף י, פתחי תשובה ס״ק כ",
+          "question_index": 91
+        },
+        {
+          "seif": 10,
+          "description": "הנודע ביהודה מבחין בין מניעת חלות איסור בשר בחלב ובין הפקעת איסור קודם.",
+          "section": "ptei_teshuva",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף י, פתחי תשובה ס״ק כא",
+          "question_index": 92
+        }
+      ],
+      "machlokot": [
+        {
+          "seif": 9,
+          "cas": "מה הדין בבישול בשר בנוזל הצלול שנמצא בקיבה, לפי הדעה הראשונה במחבר ולפי המנהג ברמ״א?",
+          "posek_a": "הדעה הראשונה במחבר",
+          "pos_a": "מותר לבשל",
+          "posek_b": "המנהג ברמ״א",
+          "pos_b": "אסור לבשל"
+        },
+        {
+          "seif": 9,
+          "cas": "מה מעמד חלב שנקרש בקיבה בחיי הבהמה מעיקר הדין לפי הפוסקים שמביא הט״ז?",
+          "posek_a": "רבנו תם",
+          "pos_a": "פירשא",
+          "posek_b": "רש״י",
+          "pos_b": "חלב"
+        },
+        {
+          "seif": 9,
+          "cas": "איזה מתוכן הקיבה ממשיך להיחשב חלב לפי כל אחת מהשיטות שבטור?",
+          "posek_a": "רי״ף",
+          "pos_a": "לא הצלול ולא הקרוש",
+          "posek_b": "רש״י",
+          "pos_b": "גם הצלול וגם הקרוש"
+        },
+        {
+          "seif": 9,
+          "cas": "איזה מתוכן הקיבה ממשיך להיחשב חלב לפי כל אחת מהשיטות שבטור?",
+          "posek_a": "רי״ף",
+          "pos_a": "לא הצלול ולא הקרוש",
+          "posek_b": "רבנו תם",
+          "pos_b": "הצלול בלבד"
+        },
+        {
+          "seif": 9,
+          "cas": "לאיזו שיטה נוטה הרא״ש בדין חלב הקיבה לפי שתי הקריאות שמביא הבית יוסף?",
+          "posek_a": "טור",
+          "pos_a": "לשיטת רבנו תם",
+          "posek_b": "בית יוסף",
+          "pos_b": "לשיטת רש״י"
+        },
+        {
+          "seif": 10,
+          "cas": "בשר היתר התייבש כעץ לפני מגעו בחלב. מה משמעות הייבוש לעניין נתינת טעם לפי הדעות שבפתחי תשובה?",
+          "posek_a": "פרי מגדים",
+          "pos_a": "בשר יבש עדיין אוסר",
+          "posek_b": "נודע ביהודה",
+          "pos_b": "בייבוש גמור לא נשאר טעם לאסור את החלב"
+        }
+      ],
+      "chiffres": [
+        {
+          "seif": 10,
+          "valeur": "עשרים וארבע שעות רצופות",
+          "contexte": "חלב נשאר בקיבה בלי מלח. מהו שיעור השהייה הנחשב כבישה?"
+        },
+        {
+          "seif": 10,
+          "valeur": "מותרת אף בלי שישים",
+          "contexte": "חלב שכבר היה קרוש בחיי הבהמה נמלח בקיבה והעמידו בו גבינה. מה דינה בדיעבד לפי הרמ״א?"
+        },
+        {
+          "seif": 10,
+          "valeur": "כשיש שישים",
+          "contexte": "לפי רבי עקיבא איגר, באיזה תנאי ניתן להעמיד לכתחילה בעור קיבה יבש כשנותר רק חשש ביטול איסור לכתחילה?"
+        }
+      ],
+      "cas_pratiques": [
+        {
+          "seif": 10,
+          "cas": "חלב נשאר בקיבה בלי מלח. מהו שיעור השהייה הנחשב כבישה?",
+          "din": "עשרים וארבע שעות רצופות"
+        },
+        {
+          "seif": 10,
+          "cas": "העמידו גבינה בחלב קיבה צלול שנאסר במליחה עם העור. כנגד מה מודדים שישים?",
+          "din": "כמות חלב הקיבה האסור שהוסיפו"
+        },
+        {
+          "seif": 10,
+          "cas": "חלב שכבר היה קרוש בחיי הבהמה נמלח בקיבה והעמידו בו גבינה. מה דינה בדיעבד לפי הרמ״א?",
+          "din": "מותרת אף בלי שישים"
+        },
+        {
+          "seif": 10,
+          "cas": "חלב קיבה שהיה צלול בשחיטה ונקרש אחר כך נמלח בקיבה. מה פוסק הש״ך לגבי הגבינות במקום הפסד מרובה?",
+          "din": "אפשר לסמוך על המחשיבים אותו לקרוש"
+        },
+        {
+          "seif": 10,
+          "cas": "העמידו גבינות בחלב קיבה אחרי מליחה מועטת כדרך צלי בלבד. כיצד דן הש״ך בדיעבד?",
+          "din": "יש להקל במליחה זו"
+        },
+        {
+          "seif": 10,
+          "cas": "קרוש שנמלח בקיבה ועדיין לא השתמשו בו. מה הדין לכתחילה לעניין העמדת גבינה לפי הש״ך?",
+          "din": "אין להעמיד בו"
+        },
+        {
+          "seif": 10,
+          "cas": "גבינות הועמדו בחלב קיבה שנמלח מעט לזמן קצר. מהו השינוי שמחמתו מפקפק הפרי מגדים בהיתר בדיעבד?",
+          "din": "בישול הגבינות לאחר ההעמדה"
+        }
+      ]
+    },
+    {
+      "titre": "העמדת גבינה בעור קיבה",
+      "seifim": [
+        11
+      ],
+      "resume": "דין ההעמדה משתנה לפי מקור העור, נתינת טעם ומספר המעמידים.",
+      "dinim": [
+        {
+          "seif": 11,
+          "description": "כששני המרכיבים מותרים בפני עצמם, ההעמדה לבדה אינה אוסרת. הש״ך מבאר את השימוש בשישים למעשה.",
+          "section": "shulchan_aruch",
+          "difficulty": 3,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף יא, מחבר וש״ך ס״ק לד",
+          "question_index": 36
+        },
+        {
+          "seif": 11,
+          "description": "למחבר המעמיד אסור בעצמו ולכן אינו בטל. הש״ך מביא את דעת מהרש״ל שמסתפק בשישים.",
+          "section": "shulchan_aruch",
+          "difficulty": 3,
+          "type_suggere": "multiple_opinions_dropdown",
+          "source": "סימן פז סעיף יא, מחבר וש״ך ס״ק לה",
+          "question_index": 37
+        },
+        {
+          "seif": 11,
+          "description": "כשהאיסור מספיק להעמיד לבדו אין להתיר על סמך זה וזה גורם.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף יא, ט״ז ס״ק יג",
+          "question_index": 38
+        },
+        {
+          "seif": 11,
+          "description": "זה וזה גורם מסיר את החומרה המיוחדת של מעמיד יחיד אך עדיין נדרש שישים נגד האסור.",
+          "section": "shulchan_aruch",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף יא, מחבר ורמ״א",
+          "question_index": 45
+        },
+        {
+          "seif": 11,
+          "description": "איסור בשר בחלב תלוי בחיבור בדרך נתינת טעם. מעמיד שכבר נאסר בעצמו נידון כנמצא בעין.",
+          "section": "tur",
+          "difficulty": 2,
+          "type_suggere": "multiple_choice",
+          "source": "סימן פז סעיף יא, בית יוסף אות יב",
+          "question_index": 65
+        }
+      ],
+      "machlokot": [
+        {
+          "seif": 11,
+          "cas": "עור קיבת נבלה היה המעמיד היחיד ואין בגבינה טעם בשר. מה דינה לפי המחבר ולפי מהרש״ל כשיש שישים?",
+          "posek_a": "המחבר",
+          "pos_a": "אסורה",
+          "posek_b": "מהרש״ל",
+          "pos_b": "מותרת"
+        }
+      ],
+      "chiffres": [
+        {
+          "seif": 11,
+          "valeur": "שישים כנגד האסור",
+          "contexte": "מעמיד אסור אינו מסוגל להעמיד לבדו ופעל עם מעמיד מותר. כמה חלב נדרש כנגד האסור לפי הרמ״א?"
+        }
+      ],
+      "cas_pratiques": [
+        {
+          "seif": 11,
+          "cas": "העמידו גבינה במעמיד אסור ובמעמיד מותר ויש שישים כנגד האסור. מה צריך לברר לפי הט״ז כדי להתיר?",
+          "din": "שהאסור לא היה מעמיד לבדו"
+        }
+      ]
+    }
+  ],
+  "couverture_estimee": "93 שאלות משלוש חטיבות הלימוד"
+}

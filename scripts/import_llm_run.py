@@ -129,20 +129,24 @@ def _import_run_in_ctx(run_dir: str) -> dict:
         inserted += 1
 
     reviews_count = 0
+    final_path = os.path.join(run_dir, "final_reviews.json")
+    final_votes = _load_json(final_path) if os.path.isfile(final_path) else None
     for name in sorted(os.listdir(run_dir)):
         path = os.path.join(run_dir, name)
         m = REVIEW_RE.match(name)
         if m:
             iteration = int(m.group(2)) - 1
             data = _load_json(path)
-            is_final = name == "final_reviews.json"
+            if final_votes is not None and iteration == int(final_votes.get("iteration", 0)):
+                if data.get("reviews") != final_votes.get("reviews"):
+                    raise ValueError(f"Conflicting final reviews in {name} and final_reviews.json")
+                continue  # The final copy below links each vote to its imported question.
             for r in data.get("reviews", []):
                 q_idx = int(r["question_index"])
-                qid = imported_index_to_qid.get(q_idx) if is_final else None
                 db.session.add(LLMReview(
                     run_id=run_id,
                     question_index=q_idx,
-                    question_id=qid,
+                    question_id=None,
                     agent_name=r["agent"],
                     agent_label=r.get("label", r["agent"]),
                     vote=r["vote"],
