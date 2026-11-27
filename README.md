@@ -1091,6 +1091,47 @@ Le format JSON d'import accepte un tableau d'objets. Chaque objet est normalisé
 
 ---
 
+## Pipeline LLM de conception de questions (`/llm-pipeline`)
+
+Skill `.claude/commands/llm-pipeline.md` qui orchestre la conception d'un siman en 6 phases, exécutées par l'agent qui lance le skill (aucun appel API externe — le provider LLM est l'agent lui-même) :
+
+```
+Texte source complet du siman
+  ↓
+Phase 1 — Architecte      → plan structuré (sujets, dinim, machlokot, cas, sections)
+  ↓
+Phase 2 — Rédacteur       → questions JSON v1 (format import standard)
+  ↓
+Phase 3 — 4 validateurs   → Halakhiste · Pédagogue · Avocat du diable · Examinateur
+                             votent keep/reject/abstain + commentaire par question
+  ↓
+Phase 4 — Cohérencier     → analyse inter-questions : doublons (merge), non-atomiques (split),
+                             trous de couverture, incohérences section/difficulté/sujet
+  ↓
+Phase 5 — Correcteur      → régénère uniquement les questions rejetées + comble les trous
+                             → retour à la phase 3 (boucle, max --max-iter itérations, défaut 3)
+  ↓
+Phase 6 — Rapport         → final_questions.json + final_reviews.json + report.md
+```
+
+Chaque run écrit dans `docs/pipeline_runs/<run_id>/` (`00_plan.json`, `NN_questions_vN.json`, `NN_reviews_vN.json`, `NN_coherence_vN.json`, `final_questions.json`, `report.md`, `meta.json`).
+
+Utilisation :
+
+```bash
+# Dans Claude Code :
+/llm-pipeline --siman 26 --chelek ehy --parcours chupa_kidushin --source docs/sefaria_sources/ehy_26_ALL.txt
+
+# Puis importer le run en base (crée llm_pipeline_runs + importe les questions en
+# status="pending"/"a_revoir" + les votes dans llm_reviews + les rapports de cohérence) :
+python -m scripts.migrate_llm_pipeline        # une fois, sur une base existante
+python -m scripts.import_llm_run --run-id <run_id>
+```
+
+Règles : le pipeline ne publie jamais en `approved` (validation humaine obligatoire ensuite via `/admin/questions`). Les questions encore rejetées après `max_iter` itérations sont importées en `a_revoir`. Les votes LLM sont consultables dans `/admin/llm-runs`, au niveau de chaque run, et sur la fiche de chaque question dans `/admin/questions`.
+
+Tables : `llm_pipeline_runs` (métadonnées du run), `llm_reviews` (vote par agent/persona/question/itération), `llm_coherence_reports` (rapport du Cohérencier).
+
 ## Rôles et authentification
 
 **Mécanisme** : session Flask (`session["user_id"]`) + chargement dans `g.user` avant chaque requête via `@app.before_request`.
@@ -1150,6 +1191,8 @@ python -m scripts.migrate_phase2        # migration schéma sur une base EXISTAN
 python -m scripts.migrate_approve_pending  # (historique) approuve les questions "pending" — ancien défaut
 python -m scripts.migrate_requeue_approved  # rebascule les questions "approved" en "pending" — nouveau défaut (base EXISTANTE)
 python -m scripts.migrate_multi_parcours   # crée student_parcours + backfill (base EXISTANTE)
+python -m scripts.migrate_llm_pipeline     # crée llm_pipeline_runs/llm_reviews/llm_coherence_reports (base EXISTANTE)
+python -m scripts.import_llm_run --run-id <run_id>  # importe un run /llm-pipeline en base
 
 # Tests (sans pytest requis)
 python tests/test_fsrs.py
@@ -1158,6 +1201,7 @@ python tests/test_points.py
 python tests/test_multi_parcours.py
 python tests/test_protected_admin.py
 python tests/test_pending_parcours_visibility.py
+python tests/test_llm_pipeline.py
 
 # Vérifier l'état de la base en SQLite
 sqlite3 smiha.db ".tables"

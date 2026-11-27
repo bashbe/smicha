@@ -1,0 +1,82 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Run {{ run.id }} — Kinyan Admin{% endblock %}
+{% block content %}
+<div class="admin-page-header">
+  <div><p class="admin-eyebrow">LLM PIPELINE</p><h1>Run <code>{{ run.id }}</code></h1><p>{{ parcours_labels.get(run.parcours, run.parcours) }} · {{ run.chelek ~ ' · ' if run.chelek else '' }}siman {{ run.siman }} · <span class="admin-status {{ 'approved' if run.status == 'done' else ('rejected' if run.status == 'failed' else 'pending') }}">{{ run.status }}</span></p></div>
+  <a href="{{ url_for('admin.llm_runs') }}" class="admin-btn">All runs</a>
+</div>
+
+<div class="admin-metric-grid" style="margin-bottom:1.5rem">
+  <div class="admin-metric"><span>Iterations</span><strong>{{ run.iterations }} / {{ run.max_iterations }}</strong></div>
+  <div class="admin-metric"><span>Questions</span><strong>{{ run.total_questions }}</strong></div>
+  <div class="admin-metric"><span>LLM approved</span><strong>{{ run.llm_approved }}</strong></div>
+  <div class="admin-metric"><span>LLM flagged</span><strong>{{ run.llm_flagged }}</strong></div>
+  <div class="admin-metric"><span>Run directory</span><strong style="font-size:.8rem"><code>{{ run.run_dir }}</code></strong></div>
+</div>
+
+{% if coherence_reports %}
+<section class="admin-panel">
+  <div class="admin-section-heading"><div><h2>Coherence reports</h2><p>Inter-question analysis by the Cohérencier persona.</p></div></div>
+  {% for report in coherence_reports %}
+  <details class="admin-coherence-report">
+    <summary>Iteration {{ report.iteration }} — overall: <strong>{{ report.report_json.get('overall', '—') }}</strong></summary>
+    <div class="admin-form-grid" style="margin-top:.75rem">
+      {% if report.report_json.get('duplicates') %}<div><label>Duplicates (merge)</label><ul>{% for d in report.report_json.duplicates %}<li>Q{{ d.question_indices|join(', Q') }} — {{ d.reason }}</li>{% endfor %}</ul></div>{% endif %}
+      {% if report.report_json.get('should_split') %}<div><label>Should split</label><ul>{% for s in report.report_json.should_split %}<li>Q{{ s.question_index }} — {{ s.reason }}</li>{% endfor %}</ul></div>{% endif %}
+      {% if report.report_json.get('coverage_gaps') %}<div><label>Coverage gaps</label><ul>{% for g in report.report_json.coverage_gaps %}<li>Seif {{ g.seif }}: {{ g.suggestion }}</li>{% endfor %}</ul></div>{% endif %}
+      {% if report.report_json.get('section_inconsistencies') %}<div><label>Section fixes</label><ul>{% for s in report.report_json.section_inconsistencies %}<li>Q{{ s.question_index }}: {{ s.current }} → {{ s.suggested }}</li>{% endfor %}</ul></div>{% endif %}
+      {% if report.report_json.get('difficulty_miscalibration') %}<div><label>Difficulty fixes</label><ul>{% for d in report.report_json.difficulty_miscalibration %}<li>Q{{ d.question_index }}: {{ d.current }} → {{ d.suggested }} — {{ d.reason }}</li>{% endfor %}</ul></div>{% endif %}
+    </div>
+  </details>
+  {% endfor %}
+</section>
+{% endif %}
+
+<section class="admin-panel">
+  <div class="admin-section-heading"><div><h2>Imported questions & LLM votes</h2><p>{{ questions|length }} questions imported from this run.</p></div></div>
+  {% for q in questions %}
+  {% set votes = votes_by_question.get(q.id, []) %}
+  <details class="admin-llm-question">
+    <summary>
+      <a href="{{ url_for('admin.questions', id=q.id) }}" dir="rtl">{{ q.text|truncate(90) }}</a>
+      <span class="admin-status {{ q.status }}">{{ q.status }}</span>
+      {% if votes %}
+      <span class="admin-llm-votes">
+        {% for v in votes %}<span class="admin-llm-vote {{ v.vote }}" title="{{ v.agent_label }} (iter {{ v.iteration }}): {{ v.comment or '' }}">{{ {'keep':'🟢','reject':'🔴','abstain':'⚪'}.get(v.vote,'•') }} {{ v.agent_name }}</span>{% endfor %}
+      </span>
+      {% endif %}
+    </summary>
+    {% if votes %}
+    <ul class="admin-llm-review-list">
+      {% for v in votes %}
+      <li><strong>{{ v.agent_label }}</strong> (iter {{ v.iteration }}) — <span class="admin-llm-vote {{ v.vote }}">{{ v.vote }}</span> {% if v.confidence is not none %}({{ (v.confidence * 100)|round|int }}%){% endif %}<br/><span dir="rtl">{{ v.comment or '—' }}</span></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </details>
+  {% else %}
+  <p class="admin-empty">No questions were imported from this run (or none have votes linked yet).</p>
+  {% endfor %}
+</section>
+
+{% if reviews %}
+<section class="admin-panel">
+  <div class="admin-section-heading"><div><h2>All votes ({{ reviews|length }})</h2><p>Raw trace, including intermediate iterations.</p></div></div>
+  <table class="admin-table">
+    <thead><tr><th>Iteration</th><th>Q index</th><th>Agent</th><th>Vote</th><th>Conf.</th><th>Comment</th></tr></thead>
+    <tbody>
+      {% for r in reviews %}
+      <tr>
+        <td>{{ r.iteration }}</td>
+        <td>{% if r.question_id %}<a href="{{ url_for('admin.questions', id=r.question_id) }}">Q{{ r.question_index }}</a>{% else %}Q{{ r.question_index }}{% endif %}</td>
+        <td>{{ r.agent_label }}</td>
+        <td><span class="admin-llm-vote {{ r.vote }}">{{ r.vote }}</span></td>
+        <td>{% if r.confidence is not none %}{{ (r.confidence * 100)|round|int }}%{% endif %}</td>
+        <td dir="rtl">{{ r.comment|truncate(120) if r.comment else '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+{% endblock %}

@@ -21,6 +21,9 @@ from models import (
     APP_ROLES,
     FsrsCard,
     HiddenTag,
+    LLMCoherenceReport,
+    LLMPipelineRun,
+    LLMReview,
     Progression,
     Question,
     QuestionEdit,
@@ -932,6 +935,7 @@ def questions():
     question_groups = [{"label": key, "questions": grouped[key]} for key in group_order]
 
     selected_stats = None
+    selected_llm_reviews = []
     if selected:
         stats_query = UserAnswer.query.filter_by(question_id=selected.id)
         total = stats_query.count()
@@ -942,6 +946,11 @@ def questions():
             "avg_time": int(stats_query.with_entities(func.avg(UserAnswer.response_time_ms)).scalar() or 0),
             "reports": QuestionReport.query.filter_by(question_id=selected.id, status="open").count(),
         }
+        selected_llm_reviews = (
+            LLMReview.query.filter_by(question_id=selected.id)
+            .order_by(LLMReview.created_at.desc())
+            .all()
+        )
 
     filters = {
         "status": status, "type": qtype, "parcours": parcours_filter,
@@ -964,6 +973,7 @@ def questions():
         parcours_labels=PARCOURS_LABELS,
         hidden_tag_options=hidden_tag_options,
         selected_stats=selected_stats,
+        selected_llm_reviews=selected_llm_reviews,
         work_counts={
             "pending": Question.query.filter_by(status="pending").count(),
             "flagged": Question.query.filter_by(status="a_revoir").count(),
@@ -1109,6 +1119,52 @@ def edit_question(qid):
     _resolve_open_reports(q.id, user.id, "dismissed")
     db.session.commit()
     return redirect(url_for("admin.questions", **redirect_params))
+
+
+@bp.route("/llm-runs")
+@staff_required
+def llm_runs():
+    runs = LLMPipelineRun.query.order_by(LLMPipelineRun.created_at.desc()).all()
+    return render_template(
+        "admin/llm_runs.html",
+        runs=runs,
+        parcours_labels=PARCOURS_LABELS,
+    )
+
+
+@bp.route("/llm-runs/<run_id>")
+@staff_required
+def llm_run_detail(run_id):
+    run = LLMPipelineRun.query.get_or_404(run_id)
+    reviews = (
+        LLMReview.query.filter_by(run_id=run_id)
+        .order_by(LLMReview.iteration, LLMReview.question_index, LLMReview.agent_name)
+        .all()
+    )
+    coherence = (
+        LLMCoherenceReport.query.filter_by(run_id=run_id)
+        .order_by(LLMCoherenceReport.iteration)
+        .all()
+    )
+    questions = (
+        Question.query.filter(Question.id.in_([r.question_id for r in reviews if r.question_id]))
+        .order_by(Question.created_at.desc())
+        .all()
+        if any(r.question_id for r in reviews) else []
+    )
+    votes_by_question: dict[str, list[LLMReview]] = {}
+    for r in reviews:
+        if r.question_id:
+            votes_by_question.setdefault(r.question_id, []).append(r)
+    return render_template(
+        "admin/llm_run_detail.html",
+        run=run,
+        reviews=reviews,
+        coherence_reports=coherence,
+        questions=questions,
+        votes_by_question=votes_by_question,
+        parcours_labels=PARCOURS_LABELS,
+    )
 
 
 @bp.route("/subjects", methods=["GET", "POST"])

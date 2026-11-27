@@ -11,6 +11,7 @@ Au début de chaque nouvelle session dans ce dépôt, avant d'entamer toute tâc
 ### Mapping local
 
 - Demande de génération de cartes/questions à partir d'un texte hébreu (ou mention de `/generate-cards`) : lire et appliquer intégralement `.claude/commands/generate-cards.md`, en plus du présent fichier. Avant la génération, lire aussi `prompt_generation_questions.md` comme l'impose ce workflow.
+- Demande de pipeline LLM complet (plan du siman → rédaction → validation par personas → cohérence → correction en boucle, ou mention de `/llm-pipeline`) : lire et appliquer intégralement `.claude/commands/llm-pipeline.md`. Après le run, importer en base avec `python -m scripts.import_llm_run --run-id <run_id>`.
 
 Si un workflow Claude entre en conflit avec une instruction explicite de l'utilisateur ou une règle de sécurité Codex, signaler le conflit et suivre l'instruction prioritaire.
 

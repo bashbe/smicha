@@ -495,3 +495,110 @@ class UserSpeed(db.Model):
     log_rt_sd = db.Column(db.Float)
     n_responses = db.Column(db.Integer, default=0, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
+class LLMPipelineRun(db.Model):
+    """Une exécution complète du pipeline LLM de conception de questions
+    (skill `.claude/commands/llm-pipeline.md`).
+
+    Le provider LLM est l'agent qui exécute le skill — aucun appel API externe.
+    Les résultats intermédiaires (plan, questions, votes) sont écrits dans
+    `run_dir` (ex. `docs/pipeline_runs/<run_id>/`) puis importés en base par
+    `scripts/import_llm_run.py`. Le run reste en `running` tant que le skill
+    n'a pas écrit son `report.md` final ; `done` quand tout est importé.
+    """
+
+    __tablename__ = "llm_pipeline_runs"
+
+    id = db.Column(db.String(36), primary_key=True, default=_uuid)
+    siman = db.Column(db.Integer, nullable=False, index=True)
+    chelek = db.Column(db.String(16))
+    parcours = db.Column(db.String(64), nullable=False, index=True)
+    status = db.Column(db.String(16), default="running", nullable=False, index=True)  # running | done | failed
+    iterations = db.Column(db.Integer, default=0, nullable=False)
+    max_iterations = db.Column(db.Integer, default=3, nullable=False)
+    run_dir = db.Column(db.String(255), nullable=False)
+    total_questions = db.Column(db.Integer, default=0, nullable=False)
+    llm_approved = db.Column(db.Integer, default=0, nullable=False)
+    llm_flagged = db.Column(db.Integer, default=0, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    finished_at = db.Column(db.DateTime)
+
+    def as_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "siman": self.siman,
+            "chelek": self.chelek,
+            "parcours": self.parcours,
+            "status": self.status,
+            "iterations": self.iterations,
+            "max_iterations": self.max_iterations,
+            "run_dir": self.run_dir,
+            "total_questions": self.total_questions,
+            "llm_approved": self.llm_approved,
+            "llm_flagged": self.llm_flagged,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "finished_at": self.finished_at.isoformat() if self.finished_at else None,
+        }
+
+
+class LLMReview(db.Model):
+    """Vote d'un agent LLM (persona du pipeline) sur une question, à une itération donnée.
+
+    `question_index` = index de la question dans le lot du run (avant import en
+    base) ; `question_id` est renseigné après import via `scripts/import_llm_run.py`.
+    """
+
+    __tablename__ = "llm_reviews"
+    __table_args__ = (db.UniqueConstraint("run_id", "question_index", "agent_name", "iteration", name="uq_llm_review"),)
+
+    id = db.Column(db.String(36), primary_key=True, default=_uuid)
+    run_id = db.Column(db.String(36), db.ForeignKey("llm_pipeline_runs.id", ondelete="CASCADE"), nullable=False, index=True)
+    question_index = db.Column(db.Integer, nullable=False)
+    question_id = db.Column(db.String(36), db.ForeignKey("questions.id", ondelete="SET NULL"), index=True)
+    agent_name = db.Column(db.String(32), nullable=False)  # halakhiste | pedagogue | devils_advocate | examinateur
+    agent_label = db.Column(db.String(64), nullable=False)
+    vote = db.Column(db.String(16), nullable=False)  # keep | reject | abstain
+    confidence = db.Column(db.Float)
+    comment = db.Column(db.Text)
+    raw_response = db.Column(db.JSON)
+    iteration = db.Column(db.Integer, default=0, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    def as_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "run_id": self.run_id,
+            "question_index": self.question_index,
+            "question_id": self.question_id,
+            "agent_name": self.agent_name,
+            "agent_label": self.agent_label,
+            "vote": self.vote,
+            "confidence": self.confidence,
+            "comment": self.comment,
+            "iteration": self.iteration,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+class LLMCoherenceReport(db.Model):
+    """Rapport du persona « Cohérencier » : analyse inter-questions d'un lot
+    (doublons à fusionner, questions à splitter, trous de couverture,
+    incohérences de section/difficulté)."""
+
+    __tablename__ = "llm_coherence_reports"
+
+    id = db.Column(db.String(36), primary_key=True, default=_uuid)
+    run_id = db.Column(db.String(36), db.ForeignKey("llm_pipeline_runs.id", ondelete="CASCADE"), nullable=False, index=True)
+    iteration = db.Column(db.Integer, default=0, nullable=False)
+    report_json = db.Column(db.JSON, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    def as_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "run_id": self.run_id,
+            "iteration": self.iteration,
+            "report": self.report_json,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
