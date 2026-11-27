@@ -316,16 +316,21 @@ def data_explorer():
     if not current_user().has_role("super_admin"):
         return redirect(url_for("admin.denied"))
     inspector = inspect(db.engine)
-    tables = sorted(inspector.get_table_names())
+    schemas = {table: None for table in inspector.get_table_names()}
+    if current_app.config.get("ATTACHED_QUESTIONS_DB"):
+        schemas.update({table: "catalog" for table in inspector.get_table_names(schema="catalog")})
+    tables = sorted(schemas)
     selected = request.args.get("table", tables[0] if tables else "")
     if selected not in tables:
         selected = tables[0] if tables else ""
     columns, rows = [], []
     if selected:
-        columns = [col["name"] for col in inspector.get_columns(selected)]
+        schema = schemas[selected]
+        columns = [col["name"] for col in inspector.get_columns(selected, schema=schema)]
         page = max(int(request.args.get("page", 1)), 1)
         search = (request.args.get("q") or "").strip()
-        statement = text(f'SELECT * FROM "{selected}"')
+        qualified = f'"catalog"."{selected}"' if schema else f'"{selected}"'
+        statement = text(f"SELECT * FROM {qualified}")
         raw_rows = db.session.execute(statement).mappings().all()
         if search:
             raw_rows = [r for r in raw_rows if search.lower() in " ".join(str(v) for v in r.values()).lower()]
@@ -1364,8 +1369,13 @@ def reset_db():
     from protected_admin import restore_protected_admin, snapshot_protected_admin
     owner_snapshot = snapshot_protected_admin()
     db.session.remove()
-    db.drop_all()
-    db.create_all()
+    if current_app.config.get("ATTACHED_QUESTIONS_DB"):
+        private_tables = [table for table in db.metadata.tables.values() if table.schema is None]
+        db.metadata.drop_all(db.engine, tables=private_tables)
+        db.metadata.create_all(db.engine, tables=private_tables)
+    else:
+        db.drop_all()
+        db.create_all()
     restore_protected_admin(owner_snapshot)
     logout_user()
     flash("Database reset. The protected owner account was preserved; sign in again.", "success")

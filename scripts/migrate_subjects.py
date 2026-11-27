@@ -44,6 +44,10 @@ def migrate() -> None:
     with app.app_context():
         db.create_all()  # creates `subjects` (new table, no ALTER needed)
 
+        # Split databases already have the current schema and need no legacy backfill.
+        if app.config.get("ATTACHED_QUESTIONS_DB"):
+            print("skip backfill: the separate question catalog uses the current schema")
+            return
         insp = inspect(db.engine)
         for table in ("questions", "progression"):
             existing = {c["name"] for c in insp.get_columns(table)}

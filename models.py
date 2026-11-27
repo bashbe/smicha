@@ -9,6 +9,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
 
 db = SQLAlchemy()
+CATALOG_SCHEMA = "catalog"
 
 # Roles available in the system (was the app_role Postgres enum).
 APP_ROLES = ("super_admin", "importer", "validator", "student")
@@ -126,6 +127,7 @@ class Subject(db.Model):
     __tablename__ = "subjects"
     __table_args__ = (
         db.UniqueConstraint("parcours", "siman", "title", name="uq_subject_parcours_siman_title"),
+        {"schema": CATALOG_SCHEMA},
     )
 
     id = db.Column(db.String(36), primary_key=True, default=_uuid)
@@ -142,7 +144,7 @@ class HiddenTag(db.Model):
     ré-inventé à chaque siman (voir CLAUDE.md pour la logique de scope)."""
 
     __tablename__ = "hidden_tags"
-    __table_args__ = (db.UniqueConstraint("parcours", "name", name="uq_hidden_tag_parcours_name"),)
+    __table_args__ = (db.UniqueConstraint("parcours", "name", name="uq_hidden_tag_parcours_name"), {"schema": CATALOG_SCHEMA})
 
     id = db.Column(db.String(36), primary_key=True, default=_uuid)
     parcours = db.Column(db.String(64), nullable=False, index=True)
@@ -156,7 +158,7 @@ class VisibleTag(db.Model):
     TagRule actives du même parcours (voir tags.py::visible_tags_for)."""
 
     __tablename__ = "visible_tags"
-    __table_args__ = (db.UniqueConstraint("parcours", "name", name="uq_visible_tag_parcours_name"),)
+    __table_args__ = (db.UniqueConstraint("parcours", "name", name="uq_visible_tag_parcours_name"), {"schema": CATALOG_SCHEMA})
 
     id = db.Column(db.String(36), primary_key=True, default=_uuid)
     parcours = db.Column(db.String(64), nullable=False, index=True)
@@ -168,15 +170,17 @@ class VisibleTag(db.Model):
 # conservée en base mais dépréciée — voir Question.tags ci-dessous).
 question_hidden_tags = db.Table(
     "question_hidden_tags",
-    db.Column("question_id", db.String(36), db.ForeignKey("questions.id", ondelete="CASCADE"), primary_key=True),
-    db.Column("hidden_tag_id", db.String(36), db.ForeignKey("hidden_tags.id", ondelete="CASCADE"), primary_key=True),
+    db.Column("question_id", db.String(36), db.ForeignKey("catalog.questions.id", ondelete="CASCADE"), primary_key=True),
+    db.Column("hidden_tag_id", db.String(36), db.ForeignKey("catalog.hidden_tags.id", ondelete="CASCADE"), primary_key=True),
+    schema=CATALOG_SCHEMA,
 )
 
 # M2M tag_rule <-> tags cachés impliqués dans sa condition (voir TagRule.logic).
 tag_rule_hidden_tags = db.Table(
     "tag_rule_hidden_tags",
-    db.Column("rule_id", db.String(36), db.ForeignKey("tag_rules.id", ondelete="CASCADE"), primary_key=True),
-    db.Column("hidden_tag_id", db.String(36), db.ForeignKey("hidden_tags.id", ondelete="CASCADE"), primary_key=True),
+    db.Column("rule_id", db.String(36), db.ForeignKey("catalog.tag_rules.id", ondelete="CASCADE"), primary_key=True),
+    db.Column("hidden_tag_id", db.String(36), db.ForeignKey("catalog.hidden_tags.id", ondelete="CASCADE"), primary_key=True),
+    schema=CATALOG_SCHEMA,
 )
 
 
@@ -192,10 +196,11 @@ class TagRule(db.Model):
     """
 
     __tablename__ = "tag_rules"
+    __table_args__ = {"schema": CATALOG_SCHEMA}
 
     id = db.Column(db.String(36), primary_key=True, default=_uuid)
     visible_tag_id = db.Column(
-        db.String(36), db.ForeignKey("visible_tags.id", ondelete="CASCADE"), nullable=False, index=True
+        db.String(36), db.ForeignKey("catalog.visible_tags.id", ondelete="CASCADE"), nullable=False, index=True
     )
     logic = db.Column(db.String(8), default="or", nullable=False)  # "or" | "and"
     # active = en vigueur (affecte les étudiants) ; suggested = proposée par le
@@ -212,6 +217,7 @@ class TagRule(db.Model):
 
 class Question(db.Model):
     __tablename__ = "questions"
+    __table_args__ = {"schema": CATALOG_SCHEMA}
 
     id = db.Column(db.String(36), primary_key=True, default=_uuid)
     text = db.Column(db.Text)
@@ -234,7 +240,7 @@ class Question(db.Model):
     validated_by = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"))
     validator_note = db.Column(db.Text)
     # second-migration fields
-    subject_id = db.Column(db.String(36), db.ForeignKey("subjects.id", ondelete="SET NULL"), index=True)
+    subject_id = db.Column(db.String(36), db.ForeignKey("catalog.subjects.id", ondelete="SET NULL"), index=True)
     siman = db.Column(db.Integer, index=True)
     seif = db.Column(db.Integer)
     hint = db.Column(db.Text)
@@ -301,7 +307,7 @@ class QuestionReport(db.Model):
     __tablename__ = "question_reports"
 
     id = db.Column(db.String(36), primary_key=True, default=_uuid)
-    question_id = db.Column(db.String(36), db.ForeignKey("questions.id", ondelete="CASCADE"), nullable=False, index=True)
+    question_id = db.Column(db.String(36), db.ForeignKey("catalog.questions.id", ondelete="CASCADE"), nullable=False, index=True)
     reporter_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     reason = db.Column(db.Text)
     status = db.Column(db.String(16), default="open", nullable=False, index=True)  # open | confirmed | dismissed
@@ -314,7 +320,7 @@ class QuestionEdit(db.Model):
     __tablename__ = "question_edits"
 
     id = db.Column(db.String(36), primary_key=True, default=_uuid)
-    question_id = db.Column(db.String(36), db.ForeignKey("questions.id", ondelete="CASCADE"), nullable=False)
+    question_id = db.Column(db.String(36), db.ForeignKey("catalog.questions.id", ondelete="CASCADE"), nullable=False)
     editor_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"))
     action = db.Column(db.String(16), nullable=False)  # approved | corrected | rejected | reported
     previous_content = db.Column(db.JSON)
@@ -333,7 +339,7 @@ class QuestionSuggestion(db.Model):
     __tablename__ = "question_suggestions"
 
     id = db.Column(db.String(36), primary_key=True, default=_uuid)
-    question_id = db.Column(db.String(36), db.ForeignKey("questions.id", ondelete="CASCADE"), nullable=False, index=True)
+    question_id = db.Column(db.String(36), db.ForeignKey("catalog.questions.id", ondelete="CASCADE"), nullable=False, index=True)
     author_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"), nullable=False, index=True)
     message = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(16), default="open", nullable=False, index=True)  # open | applied | dismissed
@@ -405,7 +411,7 @@ class Progression(db.Model):
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     # Le siman est porté par Subject (subject_id l'implique déjà) — plus de
     # colonne siman séparée ici.
-    subject_id = db.Column(db.String(36), db.ForeignKey("subjects.id", ondelete="CASCADE"), nullable=False)
+    subject_id = db.Column(db.String(36), db.ForeignKey("catalog.subjects.id", ondelete="CASCADE"), nullable=False)
     status = db.Column(db.String(16), default="in_progress", nullable=False)
     average_score = db.Column(db.Float, default=0)
     questions_answered = db.Column(db.Integer, default=0, nullable=False)
@@ -417,7 +423,7 @@ class UserAnswer(db.Model):
 
     id = db.Column(db.String(36), primary_key=True, default=_uuid)
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    question_id = db.Column(db.String(36), db.ForeignKey("questions.id", ondelete="CASCADE"), nullable=False)
+    question_id = db.Column(db.String(36), db.ForeignKey("catalog.questions.id", ondelete="CASCADE"), nullable=False)
     given_answer = db.Column(db.Text, nullable=False)
     is_correct = db.Column(db.Boolean, nullable=False)
     response_time_ms = db.Column(db.Integer, default=0, nullable=False)
@@ -441,7 +447,7 @@ class FsrsCard(db.Model):
 
     id = db.Column(db.String(36), primary_key=True, default=_uuid)
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    question_id = db.Column(db.String(36), db.ForeignKey("questions.id", ondelete="CASCADE"), nullable=False)
+    question_id = db.Column(db.String(36), db.ForeignKey("catalog.questions.id", ondelete="CASCADE"), nullable=False)
     due_date = db.Column(db.Date, default=date.today, nullable=False, index=True)
     stability = db.Column(db.Float, default=0.5, nullable=False)
     fsrs_difficulty = db.Column(db.Float, default=5, nullable=False)
@@ -467,7 +473,7 @@ class ItemStats(db.Model):
     __tablename__ = "item_stats"
 
     question_id = db.Column(
-        db.String(36), db.ForeignKey("questions.id", ondelete="CASCADE"), primary_key=True
+        db.String(36), db.ForeignKey("catalog.questions.id", ondelete="CASCADE"), primary_key=True
     )
     question_type = db.Column(db.String(48))
     hidden_difficulty = db.Column(db.Integer)  # questions.difficulty (1..3) content prior
@@ -555,7 +561,7 @@ class LLMReview(db.Model):
     id = db.Column(db.String(36), primary_key=True, default=_uuid)
     run_id = db.Column(db.String(36), db.ForeignKey("llm_pipeline_runs.id", ondelete="CASCADE"), nullable=False, index=True)
     question_index = db.Column(db.Integer, nullable=False)
-    question_id = db.Column(db.String(36), db.ForeignKey("questions.id", ondelete="SET NULL"), index=True)
+    question_id = db.Column(db.String(36), db.ForeignKey("catalog.questions.id", ondelete="SET NULL"), index=True)
     agent_name = db.Column(db.String(32), nullable=False)  # halakhiste | pedagogue | devils_advocate | examinateur
     agent_label = db.Column(db.String(64), nullable=False)
     vote = db.Column(db.String(16), nullable=False)  # keep | reject | abstain

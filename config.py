@@ -1,6 +1,9 @@
 import os
 from datetime import timedelta
 
+from scripts.sync_prod_db import ENV_PATH, load_dotenv
+
+load_dotenv(ENV_PATH)
 
 PROTECTED_SUPER_ADMIN_EMAIL = "bcbeneghmos@gmail.com"
 
@@ -17,8 +20,9 @@ class Config:
     # SQL database. Defaults to a local SQLite file; set DATABASE_URL to point
     # at Postgres/MySQL in production (e.g. postgresql+psycopg://user:pw@host/db).
     SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "DATABASE_URL", "sqlite:///" + os.path.join(os.path.dirname(__file__), "smiha.db")
+        "DATABASE_URL", "sqlite:///" + os.path.join(os.path.dirname(__file__), "private", "users.sqlite3")
     )
+    QUESTIONS_DB_PATH = os.environ.get("QUESTIONS_DB_PATH")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Compte propriétaire immuable. Contrairement à SUPER_ADMIN_EMAIL, cette

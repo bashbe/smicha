@@ -1,4 +1,6 @@
-"""Télécharge la base SQLite de production (PythonAnywhere) et remplace la base locale.
+"""Outil historique : télécharge l'ancienne base mixte vers smiha.db.
+
+Pour les bases séparées, utiliser les sauvegardes ZIP du back-office.
 
 Utilise l'API "Files" de PythonAnywhere (https://www.pythonanywhere.com/api/v0/...),
 authentifiée par un token API personnel. Aucune dépendance externe (urllib seul).

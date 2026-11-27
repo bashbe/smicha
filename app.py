@@ -10,6 +10,7 @@ from flask import Flask, Response, render_template
 
 from config import Config
 from models import db
+from database_storage import configure_storage
 from auth_helpers import current_user
 
 
@@ -30,32 +31,6 @@ def _compute_app_version() -> str:
 
 
 APP_VERSION = _compute_app_version()
-
-
-def _maybe_sync_prod_db() -> None:
-    """Sync smiha.db from PythonAnywhere before serving, if AUTO_SYNC_DB=1.
-
-    Guarded by WERKZEUG_RUN_MAIN so the Werkzeug reloader's parent process
-    (which re-imports this module but never serves) doesn't trigger a
-    redundant download; only the child process that actually runs the
-    server does.
-    """
-    from scripts.sync_prod_db import ENV_PATH, load_dotenv, main as sync_prod_db
-
-    load_dotenv(ENV_PATH)  # so AUTO_SYNC_DB/PA_* from .env are visible below
-
-    if os.environ.get("AUTO_SYNC_DB") != "1":
-        return
-    if os.environ.get("WERKZEUG_RUN_MAIN", "true") != "true":
-        return
-
-    try:
-        sync_prod_db()
-    except SystemExit as e:
-        print(f"[AUTO_SYNC_DB] Échec de la synchronisation (code {e.code}) — démarrage avec la base locale existante.")
-
-
-_maybe_sync_prod_db()
 
 
 # Colonnes ajoutées à des modèles existants depuis la mise en place du schéma
@@ -154,6 +129,7 @@ def create_app(config_object: type = Config) -> Flask:
         return {"current_user": current_user(), "app_version": APP_VERSION}
 
     with app.app_context():
+        configure_storage()
         db.create_all()
         _ensure_additive_columns()
         from protected_admin import ensure_protected_admin_invariants

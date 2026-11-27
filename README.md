@@ -75,7 +75,8 @@ cd smiha-flask
 # 1. Installer les dépendances
 python -m pip install -r requirements.txt
 
-# 2. Initialiser la base de données + comptes de démo + questions d'exemple
+# 2. Charger les questions de Git, puis créer les comptes de démo
+python -m scripts.question_catalog import
 python seed.py
 
 # 3. Lancer le serveur de développement (debug + auto-reload)
@@ -90,7 +91,7 @@ python app.py
 | super_admin | bcbeneghmos@gmail.com | password123 |
 | student | student@example.com | password123 |
 
-> `seed.py` est idempotent à condition de partir d'une base vide. Pour tout remettre à zéro, supprimez `smiha.db` et relancez `python seed.py`. Un super_admin peut aussi utiliser le bouton **Réinitialiser la base** dans le dashboard admin.
+> Sur SQLite, le bouton **Réinitialiser la base** du dashboard efface les données privées tout en préservant le compte propriétaire et le catalogue.
 
 ---
 
@@ -101,7 +102,8 @@ Toutes les variables se trouvent dans `config.py` et sont surchargeables par var
 | Variable | Défaut | Description |
 |---|---|---|
 | `SECRET_KEY` | `"dev-change-me-in-production"` | Clé de signature des sessions Flask — **changer impérativement en prod** |
-| `DATABASE_URL` | `sqlite:///smiha.db` | URL de connexion SQLAlchemy. Passer `postgresql+psycopg://...` pour Postgres |
+| `DATABASE_URL` | Fichier SQLite sous `private/users.sqlite3` | Base privée. L'option PostgreSQL historique conserve un stockage dans une seule base. |
+| `QUESTIONS_DB_PATH` | Fichier SQLite voisin nommé `users.questions.sqlite3` | Chemin absolu facultatif de la banque de questions modifiable. |
 | `PROTECTED_SUPER_ADMIN_EMAIL` | `bcbeneghmos@gmail.com` | Compte propriétaire protégé, fixé dans le code et non surchargeable : rôle `super_admin` réparé au démarrage, retrait/suppression bloqués |
 | `SUPER_ADMIN_EMAIL` | `bcbeneghmos@gmail.com` | Email additionnel automatiquement promu `super_admin` à l'inscription ; ne remplace jamais le compte propriétaire protégé |
 | `ALLOWED_SIGNUP_EMAILS` | *(vide → `SUPER_ADMIN_EMAIL` seul)* | Liste blanche d'emails autorisés à s'inscrire via `/auth` (séparés par des virgules). Restriction temporaire — voir [Rôles et authentification](#rôles-et-authentification). Ne s'applique pas aux comptes créés par `seed.py` |
@@ -1175,10 +1177,17 @@ ni par un autre super-admin, ni par une écriture SQL directe sur la base SQLite
 
 ## Commandes utiles
 
+Avec SQLite sur disque, les comptes, réponses, statistiques et historiques internes restent dans la base privée. Le deuxième fichier contient la banque modifiable. Git versionne uniquement le catalogue éditorial [data/questions.json](data/questions.json), avec les identifiants stables des questions, leur contenu, leurs statuts, les sujets et les tags. Les identifiants des auteurs et validateurs, notes internes, signalements et historiques sont exclus de cet export.
+
+L'import met à jour les éléments présents par identifiant sans supprimer les lignes absentes. Pour retirer une question des révisions, publiez son changement de statut. Exportez les modifications éditoriales faites dans l'admin avant de réimporter une version Git qui pourrait les écraser.
+
 ```bash
-# Réinitialiser la base de données (repart de zéro)
-rm smiha.db && python seed.py          # Linux/Mac
-Remove-Item smiha.db; python seed.py   # PowerShell
+# Charger le catalogue de Git
+python -m scripts.question_catalog import
+
+# Exporter la banque du back-office, puis relire le diff avant publication
+python -m scripts.question_catalog export
+git diff -- data/questions.json
 
 # Lancer en mode développement (debug + auto-reload)
 python app.py
@@ -1204,26 +1213,12 @@ python tests/test_pending_parcours_visibility.py
 python tests/test_llm_pipeline.py
 
 # Vérifier l'état de la base en SQLite
-sqlite3 smiha.db ".tables"
-sqlite3 smiha.db "SELECT email, role FROM users JOIN user_roles ON users.id=user_roles.user_id;"
+sqlite3 private/users.sqlite3 ".tables"
+sqlite3 private/users.questions.sqlite3 ".tables"
 
 # Variables d'env pour la prod (Bash)
 export SECRET_KEY="..." DATABASE_URL="postgresql+psycopg://..." SUPER_ADMIN_EMAIL="..."
 python app.py
-
-# Synchroniser la base locale avec la base de prod (PythonAnywhere)
-# Nécessite PA_USERNAME + PA_API_TOKEN (Account > API Token sur pythonanywhere.com)
-# PA_DB_PATH optionnel si le chemin diffère de /home/<PA_USERNAME>/smiha-flask/smiha.db
-# Ces variables peuvent être mises dans un fichier .env à la racine (chargé automatiquement,
-# non commit — voir .gitignore) plutôt que exportées manuellement.
-export PA_USERNAME="..." PA_API_TOKEN="..."          # Bash
-$env:PA_USERNAME="..."; $env:PA_API_TOKEN="..."      # PowerShell
-python -m scripts.sync_prod_db && python app.py
-
-# Synchronisation automatique au démarrage (flask run / python app.py)
-# Ajouter AUTO_SYNC_DB=1 dans le .env (avec PA_USERNAME/PA_API_TOKEN) : app.py appelle
-# alors scripts/sync_prod_db.py avant de servir. Désactivé par défaut (opt-in) pour ne
-# jamais déclencher de téléchargement en prod.
 
 # Git — sauvegarder les credentials GitHub une seule fois (ex. sur PythonAnywhere)
 git config --global credential.helper store
@@ -1278,6 +1273,16 @@ qu'un navigateur affiche une version obsolète des assets `static/` après un d�
 ---
 
 ## Déploiement continu (PythonAnywhere)
+
+Pour passer aux deux bases SQLite, utilisez un nouveau fichier privé. L'ancien `smiha.db`
+peut rester sur place. Si `DATABASE_URL` est déjà défini dans le WSGI ou dans `.env`,
+retirez la valeur qui pointe vers l'ancienne base ou indiquez un nouveau fichier privé.
+Le WSGI et la console doivent utiliser la même configuration. Le projet charge `.env`
+dans les deux contextes. Dans le virtualenv du site, récupérez la branche à déployer, puis
+lancez `python -m pip install -r requirements.txt` et `python -m scripts.question_catalog import`.
+Rechargez le site via **Web → Reload** et créez le compte propriétaire via
+`/auth?mode=signup`. `seed.py` reste réservé aux démos. Les sauvegardes du back-office
+regroupent les deux fichiers dans un ZIP privé.
 
 PythonAnywhere (plan gratuit) n'autorise pas de processus persistant en dehors du serveur WSGI de
 l'app — impossible d'y faire tourner un service webhook séparé. `blueprints/webhook.py` fait donc
